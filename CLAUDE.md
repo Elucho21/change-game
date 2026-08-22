@@ -2,6 +2,8 @@
 
 Antes de escribir una sola línea de código en este repo, leé **`docs/REGLAS_DE_CODIGO.md`**. No es opcional: dos agentes trabajan en paralelo acá y ese documento es lo que evita que se pisen.
 
+Si sos Opus: el 22/08 Grok mergeó sistemas electorales, 100 días y 76 países **encima de tu Sprint 2**. Leé **`docs/NOTA_PARA_OPUS.md`** antes de tocar `lib/politics.ts`, `lib/simulation.ts` o `lib/store.ts`.
+
 Después, para entender qué hace el sistema: **`docs/ESPECIFICACION.md`** y **`lib/types.ts`**.
 
 ## Resumen de las reglas que más se rompen
