@@ -2,6 +2,7 @@
 
 import { getRelation, relLabel, useGame } from '@/lib/store';
 import { REL_COLORS } from '@/lib/engine';
+import { partnersOf, totalTrade, type TradeContext } from '@/lib/trade';
 import { DECISIONS } from '@/lib/decisions';
 import { previewDelta } from '@/lib/engine';
 
@@ -20,11 +21,22 @@ function Meter({ label, value, max = 100 }: { label: string; value: number; max?
 const BILATERAL = DECISIONS.filter((d) => d.needsTarget);
 
 export default function CountryPanel() {
-  const { countries, relations, blocs, playerCode, selected, capital, sanctions } = useGame();
+  const {
+    countries, relations, blocs, playerCode, selected, capital, sanctions,
+    disruptions, turn, tradeBase
+  } = useGame();
   const take = useGame((s) => s.takeDecision);
   const code = selected ?? playerCode;
   const c = countries[code];
   if (!c) return null;
+
+  const tradeCtx: TradeContext = {
+    countries, relations, blocs, sanctions, playerCode, disruptions, turn
+  };
+  const partners = partnersOf(code, tradeCtx).slice(0, 6);
+  const total = totalTrade(code, tradeCtx);
+  const base = tradeBase[code];
+  const tradeDelta = base ? ((total / base - 1) * 100) : 0;
 
   const isPlayer = code === playerCode;
   const rel = getRelation(relations, playerCode, code);
@@ -62,6 +74,29 @@ export default function CountryPanel() {
         <div className="row"><span>Balance fiscal</span><b className={c.economy.fiscal_balance < 0 ? 'bad' : 'good'}>{c.economy.fiscal_balance}%</b></div>
         <div className="row"><span>Reservas de oro</span><b>{c.economy.gold_reserves_tonnes} t</b></div>
         <div className="row"><span>Poblacion</span><b>{c.population.total_millions} M</b></div>
+      </div>
+
+      <div className="section">
+        <h3>Comercio</h3>
+        <div className="row">
+          <span>Intercambio total</span>
+          <b>{Math.round(total)} mil M USD</b>
+        </div>
+        {base ? (
+          <div className="row">
+            <span>Contra el inicio de la partida</span>
+            <b className={tradeDelta < -1 ? 'bad' : tradeDelta > 1 ? 'good' : ''}>
+              {tradeDelta > 0 ? '+' : ''}{tradeDelta.toFixed(1)}%
+            </b>
+          </div>
+        ) : null}
+        <p className="muted" style={{ fontSize: 11, margin: '6px 0 4px' }}>Socios principales</p>
+        {partners.map((f) => (
+          <div className="row" key={f.to}>
+            <span>{countries[f.to].flag} {countries[f.to].name}{f.sanctioned ? ' (sancionado)' : ''}</span>
+            <b className={f.sanctioned ? 'bad' : ''}>{Math.round(f.volume)}</b>
+          </div>
+        ))}
       </div>
 
       <div className="section">

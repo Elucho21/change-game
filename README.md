@@ -13,8 +13,11 @@ Inspirado en Pax Historia y en Power & Revolution, pero jugable en el navegador 
 - **Globo 3D**: 24 países jugables, click para seleccionar, cámara que viaja, tooltip con datos completos.
 - **4 modos de mapa**: relaciones, bloques, estabilidad y economía.
 - **Arcos diplomáticos**: alianzas militares, comercio y aduanas, tensión y sanciones, dibujados sobre el globo y actualizados cada turno.
+- **Flujos comerciales**: comercio bilateral calculado con un modelo de gravedad (tamaño de las economías, distancia, bloques, relación y sanciones). El grosor del arco es el volumen real.
+- **Rutas marítimas y chokepoints**: Ormuz, Malaca, Suez, Panamá y Gibraltar. Cuando un evento cierra un paso, la ruta se dibuja en rojo, el comercio de larga distancia cae y el barril sube.
+- **Capas que se prenden y apagan**: diplomacia, comercio y rutas marítimas.
 - **10 bloques con mecánica real**: OTAN, MERCOSUR, UE, BRICS+, T-MEC, Alianza del Pacífico, CAN, CELAC, Indo-Pacífico, OPEP+. Con cohesión, requisitos de ingreso, rivales y efectos económicos.
-- **32 eventos**: mundiales (shock petrolero, guerra comercial, pandemia), nacionales (piquetes, paro general, corrida cambiaria, FMI, juicio político) y de liderazgo.
+- **38 eventos**: mundiales (shock petrolero, guerra comercial, pandemia, cierre de Ormuz, bloqueo de Suez), nacionales (piquetes, paro general, corrida cambiaria, FMI, juicio político) y de liderazgo.
 - **25 decisiones** en economía, interior, comercio, diplomacia y defensa, con preview de impacto antes de confirmar.
 - **Capital político** como recurso: gobernar cuesta, y se recupera según cómo te va con la gente.
 - **Puente con Grok**: el motor local resuelve los números; Grok agrega reacciones realistas y la crónica del turno.
@@ -51,6 +54,8 @@ scripts/
 lib/
   types.ts               ← contrato de tipos de todo el juego
   blocs.ts               ← bloques, alianzas y uniones aduaneras
+  trade.ts               ← comercio bilateral (modelo de gravedad) y su efecto en el crecimiento
+  routes.ts              ← rutas maritimas, chokepoints y su interrupcion
   decisions.ts           ← las 25 decisiones del jugador
   events/world.ts        ← eventos mundiales
   events/national.ts     ← eventos nacionales y de liderazgo
@@ -65,7 +70,10 @@ components/
   EventCatalog.tsx       ← catálogo completo de eventos
   Feed.tsx               ← eventos pendientes, crónica del turno y gráfico
   GrokBridge.tsx         ← prompt del turno y aplicación de la respuesta de Grok
+AGENTS.md / CLAUDE.md    ← reglas que cargan automaticamente los agentes de IA
 docs/
+  REGLAS_DE_CODIGO.md    ← OBLIGATORIO antes de escribir codigo
+  ESPECIFICACION.md      ← como funciona todo el sistema
   PLAN_MEJORAS.md        ← qué se hizo y qué sigue
   EVENTOS.md             ← catálogo y cómo agregar eventos
   GROK.md                ← cómo trabajar con Grok sobre este repo
@@ -90,8 +98,11 @@ docs/
 | Sumar un bloque o alianza | `lib/blocs.ts` |
 | Cambiar cómo evoluciona la economía | `naturalDrift()` en `lib/engine.ts` |
 | Cambiar cómo reaccionan los países | `aiReactions()` en `lib/engine.ts` |
+| Sumar una ruta marítima o un chokepoint | `lib/routes.ts` |
+| Cambiar el modelo de comercio | `lib/trade.ts` |
 
 Después de cualquier cambio: `npx tsc --noEmit` y `npm run build`.
+Las reglas completas (capas, contratos, zonas de trabajo, estilo) están en **[docs/REGLAS_DE_CODIGO.md](docs/REGLAS_DE_CODIGO.md)**. Leelo antes de tocar código.
 
 ## Deploy
 

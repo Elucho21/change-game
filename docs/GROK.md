@@ -1,5 +1,7 @@
 # Trabajar con Grok sobre este repo
 
+> Las reglas de código completas están en **[REGLAS_DE_CODIGO.md](REGLAS_DE_CODIGO.md)** y el funcionamiento del sistema en **[ESPECIFICACION.md](ESPECIFICACION.md)**. Este documento es solo el puente durante la partida y el reparto de tareas.
+
 Dos formas de usar Grok acá, y conviene no mezclarlas.
 
 ---

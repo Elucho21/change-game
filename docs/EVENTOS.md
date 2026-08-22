@@ -11,7 +11,7 @@ Si un evento tiene `choices`, frena el turno y espera tu decisión. Si lo ignor�
 
 ---
 
-## Eventos mundiales (14)
+## Eventos mundiales (18)
 
 | Evento | Se dispara | Qué mueve | Opciones |
 |---|---|---|---|
@@ -29,6 +29,16 @@ Si un evento tiene `choices`, frena el turno y espera tu decisión. Si lo ignor�
 | 📊 Derrumbe de commodities | siempre | crecimiento −0.3 global, petróleo −10 | — |
 | 🏚️ Crisis de deuda en emergentes | siempre | deuda +2, inflación +0.4 global | — |
 | 🌀 Temporada extrema de desastres climáticos | siempre | fiscal −0.3, felicidad −2 global | — |
+| ⛴️ Cierre del Estrecho de Ormuz | siempre | **cierra Ormuz 3 turnos**, petróleo +18, inflación +1.2 global | — |
+| 🚢 Bloqueo del Canal de Suez | siempre | **cierra Suez 2 turnos**, inflación +0.6 global | — |
+| 🏜️ Sequía en el Canal de Panamá | siempre | **cierra Panamá 4 turnos**, inflación +0.4 global | — |
+| ⚓ Incidente en el Estrecho de Malaca | siempre | **cierra Malaca 2 turnos**, petróleo +7 | escoltar con fuerza naval / no involucrarte |
+
+### Chokepoints y su efecto
+
+Mientras un chokepoint está cerrado, las rutas que pasan por él se dibujan en rojo, el comercio de larga distancia (más de 6.000 km) cae hasta un 45% según el volumen afectado, y el barril sube cada turno en proporción a la participación petrolera del paso: Ormuz 20%, Malaca 15%, Suez 8%, Gibraltar 4%, Panamá 3%.
+
+Para que un evento cierre un paso, alcanza con agregarle `disrupts: ['ormuz']`. Se reabre solo después de `duration` turnos.
 
 ## Eventos nacionales (15)
 
@@ -94,5 +104,7 @@ Si un evento tiene `choices`, frena el turno y espera tu decisión. Si lo ignor�
 ```
 
 **Targets de relación disponibles**: `'todos'`, `'vecinos'` (misma región), `'bloc:militar'` / `'bloc:aduanera'` (socios de ese tipo de bloque), `'TARGET'` (el país seleccionado) o el código de un país (`'USA'`, `'Brazil'`).
+
+**Cerrar una ruta marítima**: agregá `disrupts: ['ormuz' | 'malaca' | 'suez' | 'panama' | 'gibraltar']` al evento.
 
 **Métricas que acepta `effects`**: `happiness`, `stability`, `gdp_growth`, `inflation`, `unemployment`, `fiscal_balance`, `debt_to_gdp`, `military_budget_bn`, `gold_reserves_tonnes`, `capital`, `global_tension`, `oil_price`.

@@ -1,6 +1,6 @@
 # Plan de mejoras — Change Game
 
-Documento de trabajo. Estado al 21 de agosto de 2026.
+Documento de trabajo. Estado al 22 de agosto de 2026.
 
 ---
 
@@ -25,18 +25,22 @@ Todo sobre los mismos datos: `engine/countries_mvp.json` sigue siendo la fuente 
 3. **Arcos diplomáticos** sobre el globo: alianzas militares (azul), comercio y aduanas (verde), tensión (naranja punteado y animado) y sanciones (rojo). Se recalculan solos cuando cambian las relaciones.
 4. **10 bloques** con mecánica real, no decorativa: OTAN, MERCOSUR, UE, BRICS+, T-MEC, Alianza del Pacífico, CAN, CELAC, Indo-Pacífico y OPEP+. Cada uno con tipo (militar / aduanera / económica / política), cohesión dinámica, reglas visibles y efectos que entran en el cálculo de crecimiento e inflación.
 5. **Ingresar, salir y convocar cumbres**: entrar exige relación mínima con todos los socios y tensa con los rivales del bloque; salir cuesta crecimiento y relaciones.
-6. **32 eventos** (14 mundiales, 15 nacionales, 4 de liderazgo) con condiciones de disparo, opciones de respuesta y riesgo de que la opción salga mal.
+6. **38 eventos** (18 mundiales, 16 nacionales, 4 de liderazgo) con condiciones de disparo, opciones de respuesta y riesgo de que la opción salga mal.
 7. **25 decisiones** en 5 categorías, con **preview de impacto** antes de confirmar y costo en capital político.
 8. **Capital político** como recurso central: se gasta en decidir, se recupera según cómo te va con la gente.
 9. **Feed del turno** con eventos, reacciones de otros países, decisiones tomadas y un gráfico de felicidad/estabilidad turno a turno.
 10. **Puente con Grok**: un botón genera el prompt compacto del turno; pegás la respuesta JSON y el juego aplica reacciones, efectos y crónica. El motor local resuelve números, Grok resuelve realismo.
 11. **Fin de partida**: golpe de Estado, renuncia forzada o hiperinflación.
+12. **Comercio bilateral** con modelo de gravedad (`lib/trade.ts`): el volumen con cada socio surge del tamaño de las economías, la distancia, los bloques compartidos, la relación y las sanciones. La variación contra el comercio inicial entra directo al crecimiento.
+13. **Rutas marítimas y chokepoints** (`lib/routes.ts`): seis rutas reales sobre el globo y cinco pasos críticos (Ormuz, Malaca, Suez, Gibraltar, Panamá). Cuatro eventos los cierran: mientras dura el bloqueo, el comercio de larga distancia cae y el barril sube todos los turnos.
+14. **Capas del globo**: diplomacia, comercio y rutas se prenden y apagan por separado.
 
 ## Próximos pasos
 
 ### Fase 1 — Profundidad de simulación (lo siguiente que más se nota)
 
-- [ ] **Comercio bilateral real**: matriz de flujos entre países en vez de un bonus agregado. Permite que una sanción duela distinto según cuánto le vendés a ese país.
+- [x] **Comercio bilateral real** — hecho el 22/08/2026 (`lib/trade.ts`). Modelo de gravedad calibrado; una sanción ahora duele en proporción a lo que comerciabas.
+- [x] **Rutas marítimas y chokepoints** — hecho el 22/08/2026 (`lib/routes.ts`). Seis rutas reales, cinco pasos críticos y cuatro eventos que los cierran.
 - [ ] **Aranceles como variable jugable**: hoy el arancel externo común es un número del bloque; falta que el jugador fije aranceles por país y por sector.
 - [ ] **Sectores productivos vivos**: `sectors` existe en el JSON pero todavía no reacciona. Que una sequía golpee agricultura y no servicios.
 - [ ] **Ciclo electoral**: mandato con fecha de vencimiento, resultado calculado desde felicidad + economía, y oposición con fuerza parlamentaria propia.

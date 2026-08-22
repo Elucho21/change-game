@@ -4,7 +4,7 @@
 export type RelationLabel = 'aliado' | 'amistoso' | 'neutral' | 'tenso' | 'hostil';
 export type BlocType = 'militar' | 'aduanera' | 'economica' | 'politica';
 export type EventScope = 'mundial' | 'nacional' | 'personal';
-export type ArcKind = 'alianza' | 'comercio' | 'tension' | 'sancion';
+export type ArcKind = 'alianza' | 'comercio' | 'tension' | 'sancion' | 'flujo';
 
 export interface Economy {
   gdp_trillion_usd: number;
@@ -145,6 +145,8 @@ export interface GameEvent {
   effects?: Delta;
   worldEffects?: Delta;       // aplica a todos los paises (solo scope mundial)
   choices?: EventChoice[];
+  /** ids de Chokepoint que este evento cierra durante `duration` turnos */
+  disrupts?: string[];
 }
 
 export interface EventContext {
@@ -188,6 +190,34 @@ export interface FeedItem {
   title: string;
   body: string;
   tone: 'bueno' | 'malo' | 'neutral';
+}
+
+/** Un chokepoint: paso obligado del comercio maritimo mundial. */
+export interface Chokepoint {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  oilShare: number;      // fraccion del petroleo mundial que pasa por aca
+  description: string;
+}
+
+/** Ruta maritima real, dibujada con pathsData en el globo. */
+export interface MaritimeRoute {
+  id: string;
+  name: string;
+  volume: number;              // importancia relativa (miles de millones USD/ano)
+  color: string;
+  chokepoints: string[];       // ids de Chokepoint por los que pasa
+  coords: [number, number][];  // [lat, lng] de cada tramo
+}
+
+/** Flujo de comercio bilateral, en miles de millones de USD al ano. */
+export interface TradeFlow {
+  from: string;
+  to: string;
+  volume: number;
+  sanctioned: boolean;
 }
 
 export interface DiploArc {

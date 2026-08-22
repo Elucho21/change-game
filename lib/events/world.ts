@@ -155,6 +155,78 @@ export const WORLD_EVENTS: GameEvent[] = [
     ]
   },
   {
+    id: 'cierre_ormuz',
+    scope: 'mundial',
+    title: 'Cierre del Estrecho de Ormuz',
+    emoji: '⛴️',
+    tags: ['energia', 'rutas', 'crisis'],
+    weight: 5,
+    duration: 3,
+    description:
+      'Un incidente naval cierra el Estrecho de Ormuz. Una quinta parte del petroleo del mundo deja de pasar y los seguros maritimos se disparan.',
+    disrupts: ['ormuz'],
+    worldEffects: { inflation: 1.2, gdp_growth: -0.4 },
+    effects: { global_tension: 9, oil_price: 18 }
+  },
+  {
+    id: 'bloqueo_suez',
+    scope: 'mundial',
+    title: 'Bloqueo del Canal de Suez',
+    emoji: '🚢',
+    tags: ['rutas', 'comercio'],
+    weight: 5,
+    duration: 2,
+    description:
+      'Un portacontenedores encallado bloquea el canal. Los buques entre Asia y Europa deben rodear Africa: dos semanas mas de viaje.',
+    disrupts: ['suez'],
+    worldEffects: { inflation: 0.6, gdp_growth: -0.3 },
+    effects: { global_tension: 3 }
+  },
+  {
+    id: 'sequia_panama',
+    scope: 'mundial',
+    title: 'Sequia en el Canal de Panama',
+    emoji: '🏜️',
+    tags: ['rutas', 'clima', 'comercio'],
+    weight: 5,
+    duration: 4,
+    description:
+      'La bajante de los lagos obliga a limitar el calado y el numero de cruces diarios. Se forma una cola de buques de semanas.',
+    disrupts: ['panama'],
+    worldEffects: { inflation: 0.4 },
+    effects: { global_tension: 2 }
+  },
+  {
+    id: 'incidente_malaca',
+    scope: 'mundial',
+    title: 'Incidente en el Estrecho de Malaca',
+    emoji: '⚓',
+    tags: ['rutas', 'seguridad', 'comercio'],
+    weight: 4,
+    duration: 2,
+    description:
+      'Ataques a buques mercantes en Malaca frenan el trafico asiatico. Las navieras desvian rutas y suben tarifas.',
+    disrupts: ['malaca'],
+    worldEffects: { inflation: 0.7, gdp_growth: -0.3 },
+    effects: { global_tension: 6, oil_price: 7 },
+    choices: [
+      {
+        id: 'escoltar',
+        label: 'Sumarte a la fuerza naval multinacional de escolta',
+        detail: 'Aportas buques para reabrir la ruta. Caro, visible y bien visto por los socios comerciales.',
+        cost: { capital: 12, fiscal: 0.4 },
+        effects: { fiscal_balance: -0.4, global_tension: -2 },
+        relations: [{ target: 'todos', amount: 7 }]
+      },
+      {
+        id: 'esperar_malaca',
+        label: 'No involucrarte y esperar',
+        detail: 'Cero costo militar, pero el flete se te encarece igual.',
+        effects: { inflation: 0.4 }
+      }
+    ]
+  },
+  {
     id: 'ciberataque',
     scope: 'mundial',
     title: 'Ciberataque a infraestructura critica',

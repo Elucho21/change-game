@@ -10,11 +10,20 @@ import {
   previewDelta, relLabel, resolveRelationTargets, rollEvents
 } from './engine';
 import type { Reaction } from './engine';
+import { oilShock } from './routes';
+import { tradeBaseline, tradeGrowthEffect, type TradeContext } from './trade';
 import type {
   ActiveEvent, Bloc, Country, Delta, FeedItem, GameEvent, GlobalState
 } from './types';
 
 export type MapMode = 'relaciones' | 'bloques' | 'estabilidad' | 'economia';
+
+/** Capas del globo que el jugador puede prender y apagar. */
+export interface Layers {
+  diplomacia: boolean;
+  comercio: boolean;
+  rutas: boolean;
+}
 
 const RAW = data as unknown as {
   countries: Record<string, Country>;
@@ -56,9 +65,15 @@ interface GameStore {
   history: HistoryPoint[];
   selected: string | null;
   mapMode: MapMode;
+  layers: Layers;
+  /** chokepoint id -> turno en que se reabre */
+  disruptions: Record<string, number>;
+  /** comercio total de cada pais al empezar la partida, para medir el impacto */
+  tradeBase: Record<string, number>;
   gameOver: { title: string; body: string } | null;
 
   start: (code: string) => void;
+  toggleLayer: (l: keyof Layers) => void;
   reset: () => void;
   select: (code: string | null) => void;
   setMapMode: (m: MapMode) => void;
@@ -91,6 +106,9 @@ const initial = () => ({
   history: [] as HistoryPoint[],
   selected: null as string | null,
   mapMode: 'relaciones' as MapMode,
+  layers: { diplomacia: true, comercio: true, rutas: true } as Layers,
+  disruptions: {} as Record<string, number>,
+  tradeBase: {} as Record<string, number>,
   gameOver: null as { title: string; body: string } | null
 });
 
@@ -100,11 +118,21 @@ export const useGame = create<GameStore>((set, get) => ({
   start: (code) => {
     const s = initial();
     const player = s.countries[code];
+    const baseline = tradeBaseline({
+      countries: s.countries,
+      relations: s.relations,
+      blocs: s.blocs,
+      sanctions: [],
+      playerCode: code,
+      disruptions: {},
+      turn: 1
+    });
     set({
       ...s,
       started: true,
       playerCode: code,
       selected: code,
+      tradeBase: baseline,
       feed: [
         {
           turn: 1,
@@ -131,6 +159,7 @@ export const useGame = create<GameStore>((set, get) => ({
 
   reset: () => set(initial()),
   select: (code) => set({ selected: code }),
+  toggleLayer: (l) => set((st) => ({ layers: { ...st.layers, [l]: !st.layers[l] } })),
   setMapMode: (m) => set({ mapMode: m }),
 
   // ----------------------------------------------------------
@@ -271,7 +300,29 @@ export const useGame = create<GameStore>((set, get) => ({
     // 2. avanza el mes y el mundo se mueve
     advanceMonth(world);
     const turn = st.turn + 1;
-    naturalDrift(countries, blocs, world);
+    const disruptions = { ...st.disruptions };
+
+    // el comercio bilateral de este turno decide cuanto empuja cada economia
+    const tradeCtx: TradeContext = {
+      countries, relations, blocs, sanctions: st.sanctions, playerCode: st.playerCode, disruptions, turn
+    };
+    const tradeEffect: Record<string, number> = {};
+    for (const code of Object.keys(countries)) {
+      tradeEffect[code] = tradeGrowthEffect(code, tradeCtx, st.tradeBase);
+    }
+    naturalDrift(countries, blocs, world, tradeEffect);
+
+    // rutas cerradas: el barril sube mientras dure el bloqueo
+    const shock = oilShock(disruptions, turn);
+    if (shock > 0) {
+      world.oil_price = Math.round((world.oil_price + shock) * 10) / 10;
+      feed.push({
+        turn, date: dateLabel(world), kind: 'sistema', emoji: '⛴️',
+        title: 'Rutas maritimas interrumpidas',
+        body: `El bloqueo sigue activo: el barril sube a ${world.oil_price} USD y el flete de larga distancia se encarece.`,
+        tone: 'malo'
+      });
+    }
 
     // 3. sanciones activas erosionan la relacion mes a mes
     for (const s of st.sanctions) adjustRelation(relations, st.playerCode, s, -2);
@@ -299,6 +350,7 @@ export const useGame = create<GameStore>((set, get) => ({
 
     for (const ev of rolled) {
       const key = `${ev.id}-${turn}`;
+      for (const cp of ev.disrupts ?? []) disruptions[cp] = turn + ev.duration;
       if (ev.worldEffects) {
         for (const c of Object.values(countries)) applyDelta(c, ev.worldEffects, undefined);
       }
@@ -367,6 +419,7 @@ export const useGame = create<GameStore>((set, get) => ({
       countries,
       relations,
       blocs,
+      disruptions,
       capital,
       reactions,
       lastActions: [],

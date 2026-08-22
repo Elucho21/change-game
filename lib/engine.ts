@@ -171,14 +171,23 @@ export function resolveRelationTargets(
 // DRIFT NATURAL (mismo criterio que engine/game_engine.py)
 // ============================================================
 
-export function naturalDrift(countries: Record<string, Country>, blocs: Bloc[], world: GlobalState) {
+export function naturalDrift(
+  countries: Record<string, Country>,
+  blocs: Bloc[],
+  world: GlobalState,
+  /** efecto del comercio bilateral por pais, de lib/trade.ts (opcional) */
+  tradeEffect: Record<string, number> = {}
+) {
   for (const c of Object.values(countries)) {
     const e = c.economy;
     const p = c.population;
     const fx = blocEffects(blocs, c.code);
 
-    // el comercio intrabloque empuja el crecimiento hacia arriba
-    const target = 2 + fx.tradeBonus - (e.inflation > 30 ? 1.5 : 0) - (world.global_tension > 70 ? 0.5 : 0);
+    // el comercio intrabloque y los flujos bilaterales empujan el crecimiento
+    const target =
+      2 + fx.tradeBonus + (tradeEffect[c.code] ?? 0)
+      - (e.inflation > 30 ? 1.5 : 0)
+      - (world.global_tension > 70 ? 0.5 : 0);
     e.gdp_growth = round(e.gdp_growth * 0.85 + target * 0.15);
 
     // el PBI acumula el crecimiento mensual
@@ -418,7 +427,8 @@ export const ARC_COLORS: Record<DiploArc['kind'], string> = {
   alianza: '#4f7cff',
   comercio: '#37c98a',
   tension: '#f0a742',
-  sancion: '#e5484d'
+  sancion: '#e5484d',
+  flujo: '#00e0a4'
 };
 
 // ============================================================

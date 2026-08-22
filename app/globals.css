@@ -190,3 +190,6 @@ textarea {
   .globe-wrap { height: 55vh; }
   .col { max-height: 45vh; border-left: none; border-right: none; border-top: 1px solid var(--line); }
 }
+
+.modes.layers { top: 48px; }
+.modes.layers button { font-size: 11px; }
