@@ -75,9 +75,9 @@ export const PORTS: MapPoint[] = [
   { id: 'puerto-novorossiysk', kind: 'puerto', name: 'Novorossiysk', lat: 44.72, lng: 37.77, country: 'Russia', weight: 0.5, description: 'Principal puerto ruso de granos y crudo sobre el Mar Negro.' },
   { id: 'puerto-nampo', kind: 'puerto', name: 'Nampo', lat: 38.73, lng: 125.41, country: 'NorthKorea', weight: 0.2, description: 'Salida maritima de Pyongyang; trafico limitado y controlado.' },
   // --- Hubs globales fuera del MVP (sin country hasta Fase 4) ---
-  { id: 'puerto-singapur', kind: 'puerto', name: 'Singapur', lat: 1.29, lng: 103.85, weight: 1, description: 'Hub de transbordo de Malaca. El comercio Asia-Europa pasa por aca.' },
-  { id: 'puerto-rotterdam', kind: 'puerto', name: 'Rotterdam', lat: 51.92, lng: 4.48, weight: 0.95, description: 'Mayor puerto de Europa y terminal de las rutas Asia-Europa.' },
-  { id: 'puerto-jebelali', kind: 'puerto', name: 'Jebel Ali', lat: 25.01, lng: 55.06, weight: 0.85, description: 'Hub del Golfo, junto a Ormuz. Reexporta hacia Asia y Africa.' }
+  { id: 'puerto-singapur', kind: 'puerto', name: 'Singapur', lat: 1.29, lng: 103.85, country: 'Singapore', weight: 1, description: 'Hub de transbordo de Malaca. El comercio Asia-Europa pasa por aca.' },
+  { id: 'puerto-rotterdam', kind: 'puerto', name: 'Rotterdam', lat: 51.92, lng: 4.48, country: 'Netherlands', weight: 0.95, description: 'Mayor puerto de Europa y terminal de las rutas Asia-Europa.' },
+  { id: 'puerto-jebelali', kind: 'puerto', name: 'Jebel Ali', lat: 25.01, lng: 55.06, country: 'UAE', weight: 0.85, description: 'Hub del Golfo, junto a Ormuz. Reexporta hacia Asia y Africa.' }
 ];
 
 /** Aeropuertos: hubs internacionales de los 24 paises, weight por trafico. */
@@ -109,8 +109,8 @@ export const AIRPORTS: MapPoint[] = [
   { id: 'aeropuerto-geo', kind: 'aeropuerto', name: 'Cheddi Jagan (GEO)', lat: 6.5, lng: -58.25, country: 'Guyana', weight: 0.2, description: 'Puerta aerea de Georgetown hacia el Caribe y EE.UU.' },
   { id: 'aeropuerto-pbm', kind: 'aeropuerto', name: 'Zanderij (PBM)', lat: 5.45, lng: -55.19, country: 'Suriname', weight: 0.18, description: 'Aeropuerto internacional de Paramaribo.' },
   { id: 'aeropuerto-svo', kind: 'aeropuerto', name: 'Sheremetyevo (SVO)', lat: 55.97, lng: 37.41, country: 'Russia', weight: 0.7, description: 'Hub de Aeroflot en Moscu.' },
-  { id: 'aeropuerto-dxb', kind: 'aeropuerto', name: 'Dubai (DXB)', lat: 25.25, lng: 55.36, weight: 0.95, description: 'Hub global del Golfo. Conecta Europa, Asia y Africa.' },
-  { id: 'aeropuerto-sin', kind: 'aeropuerto', name: 'Changi (SIN)', lat: 1.36, lng: 103.99, weight: 0.85, description: 'Hub de transbordo de Malaca, junto al estrecho.' }
+  { id: 'aeropuerto-dxb', kind: 'aeropuerto', name: 'Dubai (DXB)', lat: 25.25, lng: 55.36, country: 'UAE', weight: 0.95, description: 'Hub global del Golfo. Conecta Europa, Asia y Africa.' },
+  { id: 'aeropuerto-sin', kind: 'aeropuerto', name: 'Changi (SIN)', lat: 1.36, lng: 103.99, country: 'Singapore', weight: 0.85, description: 'Hub de transbordo de Malaca, junto al estrecho.' }
 ];
 
 /** Chokepoints como puntos del mapa, con su estado de bloqueo. */

@@ -3,8 +3,8 @@
     "version": "1.0",
     "year": 2025,
     "description": "Base de datos MVP - Pax Historia style geopolítica. Datos lógicos y proporcionales, no exactos al 100%.",
-    "countries_count": 24,
-    "notes": "Todos los países tienen datos completos desde el inicio. Solo los listados son plenamente jugables en MVP."
+    "countries_count": 76,
+    "notes": "Datos logicos y proporcionales, no exactos. Todos los listados son jugables."
   },
   "countries": {
     "USA": {
@@ -81,7 +81,12 @@
         "aggression": 0.4,
         "risk_tolerance": 0.6,
         "nuclear_doctrine": "first_use_possible",
-        "priorities": ["maintain_hegemony", "contain_china_russia", "protect_allies", "economic_growth"]
+        "priorities": [
+          "maintain_hegemony",
+          "contain_china_russia",
+          "protect_allies",
+          "economic_growth"
+        ]
       }
     },
     "China": {
@@ -146,7 +151,12 @@
         "aggression": 0.55,
         "risk_tolerance": 0.45,
         "nuclear_doctrine": "no_first_use",
-        "priorities": ["reunify_taiwan", "economic_supremacy", "secure_supply_chains", "expand_influence"]
+        "priorities": [
+          "reunify_taiwan",
+          "economic_supremacy",
+          "secure_supply_chains",
+          "expand_influence"
+        ]
       }
     },
     "Russia": {
@@ -212,7 +222,12 @@
         "aggression": 0.7,
         "risk_tolerance": 0.65,
         "nuclear_doctrine": "escalate_to_deescalate",
-        "priorities": ["secure_near_abroad", "weaken_nato", "energy_leverage", "great_power_status"]
+        "priorities": [
+          "secure_near_abroad",
+          "weaken_nato",
+          "energy_leverage",
+          "great_power_status"
+        ]
       }
     },
     "Japan": {
@@ -275,7 +290,12 @@
         "aggression": 0.2,
         "risk_tolerance": 0.3,
         "nuclear_doctrine": "none",
-        "priorities": ["economic_stability", "alliance_usa", "counter_china", "demographic_challenge"]
+        "priorities": [
+          "economic_stability",
+          "alliance_usa",
+          "counter_china",
+          "demographic_challenge"
+        ]
       }
     },
     "SouthKorea": {
@@ -337,7 +357,12 @@
         "aggression": 0.35,
         "risk_tolerance": 0.4,
         "nuclear_doctrine": "none",
-        "priorities": ["deter_north", "alliance_usa", "tech_leadership", "demographic_crisis"]
+        "priorities": [
+          "deter_north",
+          "alliance_usa",
+          "tech_leadership",
+          "demographic_crisis"
+        ]
       }
     },
     "NorthKorea": {
@@ -348,7 +373,7 @@
       "playable": true,
       "economy": {
         "gdp_trillion_usd": 0.028,
-        "gdp_growth": 1.0,
+        "gdp_growth": 1,
         "unemployment": 25,
         "inflation": 15,
         "gold_reserves_tonnes": 36,
@@ -400,7 +425,12 @@
         "aggression": 0.85,
         "risk_tolerance": 0.8,
         "nuclear_doctrine": "first_use_possible",
-        "priorities": ["regime_survival", "nuclear_deterrence", "extract_aid", "propaganda"]
+        "priorities": [
+          "regime_survival",
+          "nuclear_deterrence",
+          "extract_aid",
+          "propaganda"
+        ]
       }
     },
     "UK": {
@@ -466,7 +496,12 @@
         "aggression": 0.35,
         "risk_tolerance": 0.5,
         "nuclear_doctrine": "first_use_possible",
-        "priorities": ["special_relationship_usa", "nato", "financial_hub", "post_brexit_trade"]
+        "priorities": [
+          "special_relationship_usa",
+          "nato",
+          "financial_hub",
+          "post_brexit_trade"
+        ]
       }
     },
     "France": {
@@ -532,7 +567,12 @@
         "aggression": 0.4,
         "risk_tolerance": 0.55,
         "nuclear_doctrine": "first_use_possible",
-        "priorities": ["european_leadership", "nuclear_deterrence", "africa_influence", "strategic_autonomy"]
+        "priorities": [
+          "european_leadership",
+          "nuclear_deterrence",
+          "africa_influence",
+          "strategic_autonomy"
+        ]
       }
     },
     "Germany": {
@@ -597,7 +637,12 @@
         "aggression": 0.2,
         "risk_tolerance": 0.3,
         "nuclear_doctrine": "none",
-        "priorities": ["export_economy", "eu_stability", "energy_security", "nato_commitment"]
+        "priorities": [
+          "export_economy",
+          "eu_stability",
+          "energy_security",
+          "nato_commitment"
+        ]
       }
     },
     "Spain": {
@@ -620,8 +665,8 @@
       },
       "population": {
         "total_millions": 48.5,
-        "male_pct": 49.0,
-        "female_pct": 51.0,
+        "male_pct": 49,
+        "female_pct": 51,
         "unemployed_millions": 2.8,
         "minorities": {
           "spanish": 85,
@@ -662,7 +707,12 @@
         "aggression": 0.25,
         "risk_tolerance": 0.35,
         "nuclear_doctrine": "none",
-        "priorities": ["tourism", "eu_funds", "latin_america_ties", "internal_stability"]
+        "priorities": [
+          "tourism",
+          "eu_funds",
+          "latin_america_ties",
+          "internal_stability"
+        ]
       }
     },
     "Canada": {
@@ -726,7 +776,12 @@
         "aggression": 0.15,
         "risk_tolerance": 0.25,
         "nuclear_doctrine": "none",
-        "priorities": ["us_alliance", "resources", "immigration", "arctic"]
+        "priorities": [
+          "us_alliance",
+          "resources",
+          "immigration",
+          "arctic"
+        ]
       }
     },
     "Mexico": {
@@ -737,7 +792,7 @@
       "playable": true,
       "economy": {
         "gdp_trillion_usd": 1.8,
-        "gdp_growth": 2.0,
+        "gdp_growth": 2,
         "unemployment": 2.9,
         "inflation": 4.5,
         "gold_reserves_tonnes": 120,
@@ -790,7 +845,12 @@
         "aggression": 0.2,
         "risk_tolerance": 0.3,
         "nuclear_doctrine": "none",
-        "priorities": ["us_trade", "cartels", "nearshoring", "energy"]
+        "priorities": [
+          "us_trade",
+          "cartels",
+          "nearshoring",
+          "energy"
+        ]
       }
     },
     "Brazil": {
@@ -854,7 +914,12 @@
         "aggression": 0.25,
         "risk_tolerance": 0.4,
         "nuclear_doctrine": "none",
-        "priorities": ["regional_leadership", "amazon", "agriculture_exports", "brics"]
+        "priorities": [
+          "regional_leadership",
+          "amazon",
+          "agriculture_exports",
+          "brics"
+        ]
       }
     },
     "Argentina": {
@@ -865,12 +930,12 @@
       "playable": true,
       "economy": {
         "gdp_trillion_usd": 0.65,
-        "gdp_growth": 2.0,
-        "unemployment": 7.0,
+        "gdp_growth": 2,
+        "unemployment": 7,
         "inflation": 140,
         "gold_reserves_tonnes": 62,
         "debt_to_gdp": 90,
-        "fiscal_balance": -3.0,
+        "fiscal_balance": -3,
         "tax_iva": 21,
         "tax_corporate": 35,
         "tax_income_avg": 25
@@ -918,7 +983,12 @@
         "aggression": 0.2,
         "risk_tolerance": 0.45,
         "nuclear_doctrine": "none",
-        "priorities": ["inflation_control", "exports", "debt_management", "regional_influence"]
+        "priorities": [
+          "inflation_control",
+          "exports",
+          "debt_management",
+          "regional_influence"
+        ]
       }
     },
     "Chile": {
@@ -941,8 +1011,8 @@
       },
       "population": {
         "total_millions": 19.8,
-        "male_pct": 49.0,
-        "female_pct": 51.0,
+        "male_pct": 49,
+        "female_pct": 51,
         "unemployed_millions": 0.9,
         "minorities": {
           "mestizo": 65,
@@ -981,7 +1051,12 @@
         "aggression": 0.2,
         "risk_tolerance": 0.3,
         "nuclear_doctrine": "none",
-        "priorities": ["copper", "stability", "trade", "pacific_alliance"]
+        "priorities": [
+          "copper",
+          "stability",
+          "trade",
+          "pacific_alliance"
+        ]
       }
     },
     "Colombia": {
@@ -992,20 +1067,20 @@
       "playable": true,
       "economy": {
         "gdp_trillion_usd": 0.4,
-        "gdp_growth": 2.0,
-        "unemployment": 10.0,
+        "gdp_growth": 2,
+        "unemployment": 10,
         "inflation": 5.5,
         "gold_reserves_tonnes": 5,
         "debt_to_gdp": 55,
-        "fiscal_balance": -4.0,
+        "fiscal_balance": -4,
         "tax_iva": 19,
         "tax_corporate": 35,
         "tax_income_avg": 25
       },
       "population": {
         "total_millions": 52.5,
-        "male_pct": 49.0,
-        "female_pct": 51.0,
+        "male_pct": 49,
+        "female_pct": 51,
         "unemployed_millions": 2.6,
         "minorities": {
           "mestizo": 58,
@@ -1045,7 +1120,12 @@
         "aggression": 0.3,
         "risk_tolerance": 0.4,
         "nuclear_doctrine": "none",
-        "priorities": ["security", "peace_process", "us_aid", "oil"]
+        "priorities": [
+          "security",
+          "peace_process",
+          "us_aid",
+          "oil"
+        ]
       }
     },
     "Peru": {
@@ -1109,7 +1189,12 @@
         "aggression": 0.2,
         "risk_tolerance": 0.3,
         "nuclear_doctrine": "none",
-        "priorities": ["mining", "stability", "china_trade", "internal_order"]
+        "priorities": [
+          "mining",
+          "stability",
+          "china_trade",
+          "internal_order"
+        ]
       }
     },
     "Venezuela": {
@@ -1120,7 +1205,7 @@
       "playable": true,
       "economy": {
         "gdp_trillion_usd": 0.1,
-        "gdp_growth": 3.0,
+        "gdp_growth": 3,
         "unemployment": 15,
         "inflation": 60,
         "gold_reserves_tonnes": 150,
@@ -1132,8 +1217,8 @@
       },
       "population": {
         "total_millions": 28.5,
-        "male_pct": 49.0,
-        "female_pct": 51.0,
+        "male_pct": 49,
+        "female_pct": 51,
         "unemployed_millions": 2.5,
         "minorities": {
           "mestizo": 50,
@@ -1175,7 +1260,12 @@
         "aggression": 0.4,
         "risk_tolerance": 0.5,
         "nuclear_doctrine": "none",
-        "priorities": ["regime_survival", "oil", "allies_russia_china", "control_opposition"]
+        "priorities": [
+          "regime_survival",
+          "oil",
+          "allies_russia_china",
+          "control_opposition"
+        ]
       }
     },
     "Ecuador": {
@@ -1187,11 +1277,11 @@
       "economy": {
         "gdp_trillion_usd": 0.12,
         "gdp_growth": 1.5,
-        "unemployment": 4.0,
+        "unemployment": 4,
         "inflation": 2.5,
         "gold_reserves_tonnes": 10,
         "debt_to_gdp": 55,
-        "fiscal_balance": -2.0,
+        "fiscal_balance": -2,
         "tax_iva": 12,
         "tax_corporate": 25,
         "tax_income_avg": 18
@@ -1239,7 +1329,12 @@
         "aggression": 0.2,
         "risk_tolerance": 0.3,
         "nuclear_doctrine": "none",
-        "priorities": ["oil", "dollarization", "security", "china_loans"]
+        "priorities": [
+          "oil",
+          "dollarization",
+          "security",
+          "china_loans"
+        ]
       }
     },
     "Bolivia": {
@@ -1250,12 +1345,12 @@
       "playable": true,
       "economy": {
         "gdp_trillion_usd": 0.045,
-        "gdp_growth": 2.0,
-        "unemployment": 5.0,
-        "inflation": 4.0,
+        "gdp_growth": 2,
+        "unemployment": 5,
+        "inflation": 4,
         "gold_reserves_tonnes": 28,
         "debt_to_gdp": 70,
-        "fiscal_balance": -5.0,
+        "fiscal_balance": -5,
         "tax_iva": 13,
         "tax_corporate": 25,
         "tax_income_avg": 15
@@ -1302,7 +1397,12 @@
         "aggression": 0.25,
         "risk_tolerance": 0.35,
         "nuclear_doctrine": "none",
-        "priorities": ["lithium", "gas", "indigenous_rights", "anti_imperialism"]
+        "priorities": [
+          "lithium",
+          "gas",
+          "indigenous_rights",
+          "anti_imperialism"
+        ]
       }
     },
     "Paraguay": {
@@ -1314,19 +1414,19 @@
       "economy": {
         "gdp_trillion_usd": 0.045,
         "gdp_growth": 3.5,
-        "unemployment": 6.0,
-        "inflation": 4.0,
+        "unemployment": 6,
+        "inflation": 4,
         "gold_reserves_tonnes": 8,
         "debt_to_gdp": 40,
-        "fiscal_balance": -2.0,
+        "fiscal_balance": -2,
         "tax_iva": 10,
         "tax_corporate": 10,
         "tax_income_avg": 10
       },
       "population": {
         "total_millions": 7.5,
-        "male_pct": 50.0,
-        "female_pct": 50.0,
+        "male_pct": 50,
+        "female_pct": 50,
         "unemployed_millions": 0.25,
         "minorities": {
           "mestizo": 95,
@@ -1362,7 +1462,12 @@
         "aggression": 0.15,
         "risk_tolerance": 0.25,
         "nuclear_doctrine": "none",
-        "priorities": ["agriculture", "itaipu", "stability", "trade"]
+        "priorities": [
+          "agriculture",
+          "itaipu",
+          "stability",
+          "trade"
+        ]
       }
     },
     "Uruguay": {
@@ -1373,12 +1478,12 @@
       "playable": true,
       "economy": {
         "gdp_trillion_usd": 0.07,
-        "gdp_growth": 2.0,
-        "unemployment": 8.0,
-        "inflation": 5.0,
+        "gdp_growth": 2,
+        "unemployment": 8,
+        "inflation": 5,
         "gold_reserves_tonnes": 0.1,
         "debt_to_gdp": 65,
-        "fiscal_balance": -3.0,
+        "fiscal_balance": -3,
         "tax_iva": 22,
         "tax_corporate": 25,
         "tax_income_avg": 25
@@ -1423,7 +1528,12 @@
         "aggression": 0.1,
         "risk_tolerance": 0.2,
         "nuclear_doctrine": "none",
-        "priorities": ["stability", "agriculture", "tourism", "social_policy"]
+        "priorities": [
+          "stability",
+          "agriculture",
+          "tourism",
+          "social_policy"
+        ]
       }
     },
     "Guyana": {
@@ -1434,12 +1544,12 @@
       "playable": true,
       "economy": {
         "gdp_trillion_usd": 0.02,
-        "gdp_growth": 25.0,
-        "unemployment": 12.0,
-        "inflation": 4.0,
+        "gdp_growth": 25,
+        "unemployment": 12,
+        "inflation": 4,
         "gold_reserves_tonnes": 5,
         "debt_to_gdp": 30,
-        "fiscal_balance": 5.0,
+        "fiscal_balance": 5,
         "tax_iva": 14,
         "tax_corporate": 25,
         "tax_income_avg": 20
@@ -1486,7 +1596,12 @@
         "aggression": 0.2,
         "risk_tolerance": 0.3,
         "nuclear_doctrine": "none",
-        "priorities": ["oil_boom", "border_dispute", "development", "foreign_investment"]
+        "priorities": [
+          "oil_boom",
+          "border_dispute",
+          "development",
+          "foreign_investment"
+        ]
       }
     },
     "Suriname": {
@@ -1498,19 +1613,19 @@
       "economy": {
         "gdp_trillion_usd": 0.004,
         "gdp_growth": 2.5,
-        "unemployment": 8.0,
+        "unemployment": 8,
         "inflation": 40,
         "gold_reserves_tonnes": 5,
         "debt_to_gdp": 120,
-        "fiscal_balance": -5.0,
+        "fiscal_balance": -5,
         "tax_iva": 10,
         "tax_corporate": 36,
         "tax_income_avg": 20
       },
       "population": {
         "total_millions": 0.63,
-        "male_pct": 50.0,
-        "female_pct": 50.0,
+        "male_pct": 50,
+        "female_pct": 50,
         "unemployed_millions": 0.03,
         "minorities": {
           "hindustani": 27,
@@ -1549,7 +1664,3439 @@
         "aggression": 0.15,
         "risk_tolerance": 0.25,
         "nuclear_doctrine": "none",
-        "priorities": ["gold", "oil", "debt", "stability"]
+        "priorities": [
+          "gold",
+          "oil",
+          "debt",
+          "stability"
+        ]
+      }
+    },
+    "India": {
+      "name": "India",
+      "name_en": "India",
+      "region": "South Asia",
+      "capital": "New Delhi",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 3.9,
+        "gdp_growth": 6.5,
+        "unemployment": 8,
+        "inflation": 4.8,
+        "gold_reserves_tonnes": 800,
+        "debt_to_gdp": 82,
+        "fiscal_balance": -5.6,
+        "tax_iva": 18,
+        "tax_corporate": 25,
+        "tax_income_avg": 20
+      },
+      "population": {
+        "total_millions": 1440,
+        "male_pct": 52,
+        "female_pct": 48,
+        "unemployed_millions": 115.2,
+        "minorities": {
+          "hindu": 80,
+          "muslim": 14,
+          "other": 6
+        },
+        "happiness": 58,
+        "stability": 62
+      },
+      "military": {
+        "active_soldiers": 1450000,
+        "reserves": 1150000,
+        "aircraft": 2100,
+        "submarines": 18,
+        "nuclear_warheads": 170,
+        "tanks": 4600,
+        "naval_ships": 150,
+        "military_budget_bn": 85
+      },
+      "sectors": {
+        "industry": 25,
+        "agriculture": 16,
+        "services": 49,
+        "commerce": 10,
+        "tourism": 2
+      },
+      "relations": {
+        "USA": "amistoso",
+        "China": "tenso",
+        "Russia": "amistoso",
+        "Pakistan": "hostil",
+        "UK": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "liberal_democracy",
+        "aggression": 0.35,
+        "risk_tolerance": 0.45,
+        "nuclear_doctrine": "no_first_use",
+        "priorities": [
+          "growth",
+          "contain_china",
+          "food",
+          "tech"
+        ]
+      }
+    },
+    "Indonesia": {
+      "name": "Indonesia",
+      "name_en": "Indonesia",
+      "region": "Southeast Asia",
+      "capital": "Jakarta",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 1.4,
+        "gdp_growth": 5,
+        "unemployment": 5.3,
+        "inflation": 2.6,
+        "gold_reserves_tonnes": 79,
+        "debt_to_gdp": 40,
+        "fiscal_balance": -2.3,
+        "tax_iva": 11,
+        "tax_corporate": 22,
+        "tax_income_avg": 22
+      },
+      "population": {
+        "total_millions": 279,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 14.8,
+        "minorities": {
+          "javanese": 40,
+          "sundanese": 16,
+          "other": 44
+        },
+        "happiness": 64,
+        "stability": 60
+      },
+      "military": {
+        "active_soldiers": 400000,
+        "reserves": 600000,
+        "aircraft": 420,
+        "submarines": 4,
+        "nuclear_warheads": 0,
+        "tanks": 167,
+        "naval_ships": 220,
+        "military_budget_bn": 10
+      },
+      "sectors": {
+        "industry": 40,
+        "agriculture": 13,
+        "services": 43,
+        "commerce": 10,
+        "tourism": 4
+      },
+      "relations": {
+        "China": "tenso",
+        "USA": "amistoso",
+        "Australia": "amistoso",
+        "Japan": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "liberal_democracy",
+        "aggression": 0.25,
+        "risk_tolerance": 0.4,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "growth",
+          "malacca",
+          "islam_politics",
+          "nickel"
+        ]
+      }
+    },
+    "Turkey": {
+      "name": "Turquia",
+      "name_en": "Turkey",
+      "region": "West Asia",
+      "capital": "Ankara",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 1.1,
+        "gdp_growth": 3.2,
+        "unemployment": 9.4,
+        "inflation": 45,
+        "gold_reserves_tonnes": 540,
+        "debt_to_gdp": 35,
+        "fiscal_balance": -5,
+        "tax_iva": 20,
+        "tax_corporate": 25,
+        "tax_income_avg": 27
+      },
+      "population": {
+        "total_millions": 86,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 8.1,
+        "minorities": {
+          "turkish": 75,
+          "kurdish": 18,
+          "other": 7
+        },
+        "happiness": 48,
+        "stability": 52
+      },
+      "military": {
+        "active_soldiers": 355000,
+        "reserves": 380000,
+        "aircraft": 1050,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 3000,
+        "naval_ships": 115,
+        "military_budget_bn": 16
+      },
+      "sectors": {
+        "industry": 31,
+        "agriculture": 7,
+        "services": 54,
+        "commerce": 12,
+        "tourism": 8
+      },
+      "relations": {
+        "USA": "tenso",
+        "Russia": "amistoso",
+        "Germany": "amistoso",
+        "Iran": "tenso",
+        "Israel": "hostil",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "authoritarian",
+        "aggression": 0.55,
+        "risk_tolerance": 0.6,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "regional_power",
+          "nato_leverage",
+          "industry"
+        ]
+      }
+    },
+    "SaudiArabia": {
+      "name": "Arabia Saudita",
+      "name_en": "Saudi Arabia",
+      "region": "Middle East",
+      "capital": "Riyadh",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 1.1,
+        "gdp_growth": 1.5,
+        "unemployment": 5,
+        "inflation": 1.8,
+        "gold_reserves_tonnes": 323,
+        "debt_to_gdp": 30,
+        "fiscal_balance": -2,
+        "tax_iva": 15,
+        "tax_corporate": 20,
+        "tax_income_avg": 0
+      },
+      "population": {
+        "total_millions": 37,
+        "male_pct": 57.5,
+        "female_pct": 42.5,
+        "unemployed_millions": 1.9,
+        "minorities": {
+          "saudi": 58,
+          "foreign": 42
+        },
+        "happiness": 61,
+        "stability": 72
+      },
+      "military": {
+        "active_soldiers": 257000,
+        "reserves": 385500,
+        "aircraft": 850,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 1000,
+        "naval_ships": 55,
+        "military_budget_bn": 75
+      },
+      "sectors": {
+        "industry": 48,
+        "agriculture": 2,
+        "services": 42,
+        "commerce": 8,
+        "tourism": 3
+      },
+      "relations": {
+        "USA": "amistoso",
+        "Iran": "hostil",
+        "Israel": "tenso",
+        "China": "amistoso",
+        "UAE": "aliado",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "monarchy",
+        "aggression": 0.4,
+        "risk_tolerance": 0.35,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "oil",
+          "vision2030",
+          "contain_iran"
+        ]
+      }
+    },
+    "Iran": {
+      "name": "Iran",
+      "name_en": "Iran",
+      "region": "Middle East",
+      "capital": "Tehran",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.4,
+        "gdp_growth": 2.5,
+        "unemployment": 9,
+        "inflation": 35,
+        "gold_reserves_tonnes": 320,
+        "debt_to_gdp": 35,
+        "fiscal_balance": -4,
+        "tax_iva": 9,
+        "tax_corporate": 25,
+        "tax_income_avg": 25
+      },
+      "population": {
+        "total_millions": 90,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 8.1,
+        "minorities": {
+          "persian": 61,
+          "azeri": 16,
+          "kurdish": 10,
+          "other": 13
+        },
+        "happiness": 42,
+        "stability": 50
+      },
+      "military": {
+        "active_soldiers": 580000,
+        "reserves": 350000,
+        "aircraft": 350,
+        "submarines": 17,
+        "nuclear_warheads": 0,
+        "tanks": 1600,
+        "naval_ships": 70,
+        "military_budget_bn": 16
+      },
+      "sectors": {
+        "industry": 35,
+        "agriculture": 10,
+        "services": 47,
+        "commerce": 8,
+        "tourism": 1
+      },
+      "relations": {
+        "USA": "hostil",
+        "Israel": "hostil",
+        "SaudiArabia": "hostil",
+        "Russia": "amistoso",
+        "China": "amistoso",
+        "default": "tenso"
+      },
+      "traits": {
+        "ideology": "authoritarian",
+        "aggression": 0.7,
+        "risk_tolerance": 0.55,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "hormuz",
+          "nuclear",
+          "axis"
+        ]
+      }
+    },
+    "Israel": {
+      "name": "Israel",
+      "name_en": "Israel",
+      "region": "Middle East",
+      "capital": "Jerusalem",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.53,
+        "gdp_growth": 2,
+        "unemployment": 3.4,
+        "inflation": 2.8,
+        "gold_reserves_tonnes": 0,
+        "debt_to_gdp": 62,
+        "fiscal_balance": -4.5,
+        "tax_iva": 17,
+        "tax_corporate": 23,
+        "tax_income_avg": 31
+      },
+      "population": {
+        "total_millions": 9.8,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 0.3,
+        "minorities": {
+          "jewish": 74,
+          "arab": 21,
+          "other": 5
+        },
+        "happiness": 64,
+        "stability": 58
+      },
+      "military": {
+        "active_soldiers": 170000,
+        "reserves": 465000,
+        "aircraft": 600,
+        "submarines": 6,
+        "nuclear_warheads": 90,
+        "tanks": 1400,
+        "naval_ships": 65,
+        "military_budget_bn": 24
+      },
+      "sectors": {
+        "industry": 17,
+        "agriculture": 1,
+        "services": 70,
+        "commerce": 10,
+        "tourism": 2
+      },
+      "relations": {
+        "USA": "aliado",
+        "Iran": "hostil",
+        "Turkey": "hostil",
+        "Egypt": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "liberal_democracy",
+        "aggression": 0.65,
+        "risk_tolerance": 0.7,
+        "nuclear_doctrine": "opacity",
+        "priorities": [
+          "security",
+          "tech",
+          "usa"
+        ]
+      }
+    },
+    "Iraq": {
+      "name": "Irak",
+      "name_en": "Iraq",
+      "region": "Middle East",
+      "capital": "Baghdad",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.25,
+        "gdp_growth": 2.8,
+        "unemployment": 14,
+        "inflation": 4,
+        "gold_reserves_tonnes": 130,
+        "debt_to_gdp": 48,
+        "fiscal_balance": -1.5,
+        "tax_iva": 0,
+        "tax_corporate": 15,
+        "tax_income_avg": 15
+      },
+      "population": {
+        "total_millions": 45,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 6.3,
+        "minorities": {
+          "shia": 60,
+          "sunni": 20,
+          "kurdish": 15,
+          "other": 5
+        },
+        "happiness": 40,
+        "stability": 35
+      },
+      "military": {
+        "active_soldiers": 193000,
+        "reserves": 289500,
+        "aircraft": 90,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 400,
+        "naval_ships": 8,
+        "military_budget_bn": 7
+      },
+      "sectors": {
+        "industry": 48,
+        "agriculture": 5,
+        "services": 42,
+        "commerce": 5,
+        "tourism": 0
+      },
+      "relations": {
+        "Iran": "amistoso",
+        "USA": "tenso",
+        "SaudiArabia": "tenso",
+        "Turkey": "tenso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "authoritarian",
+        "aggression": 0.4,
+        "risk_tolerance": 0.3,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "oil",
+          "stability",
+          "sovereignty"
+        ]
+      }
+    },
+    "UAE": {
+      "name": "Emiratos Arabes Unidos",
+      "name_en": "United Arab Emirates",
+      "region": "Middle East",
+      "capital": "Abu Dhabi",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.51,
+        "gdp_growth": 4,
+        "unemployment": 2.5,
+        "inflation": 2,
+        "gold_reserves_tonnes": 74,
+        "debt_to_gdp": 32,
+        "fiscal_balance": 4,
+        "tax_iva": 5,
+        "tax_corporate": 9,
+        "tax_income_avg": 0
+      },
+      "population": {
+        "total_millions": 10.5,
+        "male_pct": 69,
+        "female_pct": 31,
+        "unemployed_millions": 0.3,
+        "minorities": {
+          "emirati": 12,
+          "foreign": 88
+        },
+        "happiness": 72,
+        "stability": 80
+      },
+      "military": {
+        "active_soldiers": 65000,
+        "reserves": 97500,
+        "aircraft": 550,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 101,
+        "naval_ships": 40,
+        "military_budget_bn": 23
+      },
+      "sectors": {
+        "industry": 47,
+        "agriculture": 1,
+        "services": 44,
+        "commerce": 12,
+        "tourism": 8
+      },
+      "relations": {
+        "USA": "amistoso",
+        "SaudiArabia": "aliado",
+        "Iran": "tenso",
+        "India": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "monarchy",
+        "aggression": 0.3,
+        "risk_tolerance": 0.5,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "trade_hub",
+          "oil",
+          "soft_power"
+        ]
+      }
+    },
+    "Australia": {
+      "name": "Australia",
+      "name_en": "Australia",
+      "region": "Oceania",
+      "capital": "Canberra",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 1.8,
+        "gdp_growth": 1.8,
+        "unemployment": 4.1,
+        "inflation": 3.2,
+        "gold_reserves_tonnes": 80,
+        "debt_to_gdp": 50,
+        "fiscal_balance": -1.5,
+        "tax_iva": 10,
+        "tax_corporate": 30,
+        "tax_income_avg": 32
+      },
+      "population": {
+        "total_millions": 27,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 1.1,
+        "minorities": {
+          "anglo": 57,
+          "asian": 18,
+          "other": 25
+        },
+        "happiness": 72,
+        "stability": 82
+      },
+      "military": {
+        "active_soldiers": 59000,
+        "reserves": 88500,
+        "aircraft": 420,
+        "submarines": 6,
+        "nuclear_warheads": 0,
+        "tanks": 190,
+        "naval_ships": 50,
+        "military_budget_bn": 33
+      },
+      "sectors": {
+        "industry": 25,
+        "agriculture": 3,
+        "services": 65,
+        "commerce": 10,
+        "tourism": 4
+      },
+      "relations": {
+        "USA": "aliado",
+        "China": "tenso",
+        "Japan": "amistoso",
+        "Indonesia": "amistoso",
+        "UK": "aliado",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "liberal_democracy",
+        "aggression": 0.25,
+        "risk_tolerance": 0.35,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "aukus",
+          "china_trade",
+          "minerals"
+        ]
+      }
+    },
+    "NewZealand": {
+      "name": "Nueva Zelanda",
+      "name_en": "New Zealand",
+      "region": "Oceania",
+      "capital": "Wellington",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.25,
+        "gdp_growth": 1.2,
+        "unemployment": 4.6,
+        "inflation": 3,
+        "gold_reserves_tonnes": 0,
+        "debt_to_gdp": 45,
+        "fiscal_balance": -2.5,
+        "tax_iva": 15,
+        "tax_corporate": 28,
+        "tax_income_avg": 33
+      },
+      "population": {
+        "total_millions": 5.3,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 0.2,
+        "minorities": {
+          "european": 70,
+          "maori": 17,
+          "asian": 13
+        },
+        "happiness": 74,
+        "stability": 85
+      },
+      "military": {
+        "active_soldiers": 9000,
+        "reserves": 13500,
+        "aircraft": 50,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 80,
+        "naval_ships": 11,
+        "military_budget_bn": 3.5
+      },
+      "sectors": {
+        "industry": 20,
+        "agriculture": 6,
+        "services": 66,
+        "commerce": 10,
+        "tourism": 8
+      },
+      "relations": {
+        "Australia": "aliado",
+        "USA": "amistoso",
+        "China": "amistoso",
+        "UK": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "social_democracy",
+        "aggression": 0.1,
+        "risk_tolerance": 0.25,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "dairy",
+          "pacific",
+          "climate"
+        ]
+      }
+    },
+    "Italy": {
+      "name": "Italia",
+      "name_en": "Italy",
+      "region": "Europe",
+      "capital": "Rome",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 2.3,
+        "gdp_growth": 0.7,
+        "unemployment": 7.5,
+        "inflation": 1.5,
+        "gold_reserves_tonnes": 2452,
+        "debt_to_gdp": 138,
+        "fiscal_balance": -4,
+        "tax_iva": 22,
+        "tax_corporate": 24,
+        "tax_income_avg": 36
+      },
+      "population": {
+        "total_millions": 59,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 4.4,
+        "minorities": {
+          "italian": 92,
+          "other": 8
+        },
+        "happiness": 62,
+        "stability": 68
+      },
+      "military": {
+        "active_soldiers": 165000,
+        "reserves": 247500,
+        "aircraft": 760,
+        "submarines": 8,
+        "nuclear_warheads": 0,
+        "tanks": 214,
+        "naval_ships": 180,
+        "military_budget_bn": 32
+      },
+      "sectors": {
+        "industry": 24,
+        "agriculture": 2,
+        "services": 66,
+        "commerce": 11,
+        "tourism": 8
+      },
+      "relations": {
+        "Germany": "aliado",
+        "France": "aliado",
+        "USA": "aliado",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "liberal_democracy",
+        "aggression": 0.2,
+        "risk_tolerance": 0.3,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "debt",
+          "eu",
+          "industry"
+        ]
+      }
+    },
+    "Poland": {
+      "name": "Polonia",
+      "name_en": "Poland",
+      "region": "Europe",
+      "capital": "Warsaw",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.85,
+        "gdp_growth": 2.8,
+        "unemployment": 2.9,
+        "inflation": 4,
+        "gold_reserves_tonnes": 360,
+        "debt_to_gdp": 54,
+        "fiscal_balance": -5,
+        "tax_iva": 23,
+        "tax_corporate": 19,
+        "tax_income_avg": 32
+      },
+      "population": {
+        "total_millions": 37.5,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 1.1,
+        "minorities": {
+          "polish": 97,
+          "other": 3
+        },
+        "happiness": 63,
+        "stability": 70
+      },
+      "military": {
+        "active_soldiers": 190000,
+        "reserves": 285000,
+        "aircraft": 450,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 600,
+        "naval_ships": 50,
+        "military_budget_bn": 35
+      },
+      "sectors": {
+        "industry": 32,
+        "agriculture": 2,
+        "services": 58,
+        "commerce": 10,
+        "tourism": 2
+      },
+      "relations": {
+        "USA": "aliado",
+        "Germany": "amistoso",
+        "Ukraine": "amistoso",
+        "Russia": "hostil",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "liberal_democracy",
+        "aggression": 0.4,
+        "risk_tolerance": 0.4,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "nato_east",
+          "ukraine",
+          "energy"
+        ]
+      }
+    },
+    "Netherlands": {
+      "name": "Paises Bajos",
+      "name_en": "Netherlands",
+      "region": "Europe",
+      "capital": "Amsterdam",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 1.2,
+        "gdp_growth": 1.1,
+        "unemployment": 3.7,
+        "inflation": 2.8,
+        "gold_reserves_tonnes": 612,
+        "debt_to_gdp": 48,
+        "fiscal_balance": -0.5,
+        "tax_iva": 21,
+        "tax_corporate": 25,
+        "tax_income_avg": 37
+      },
+      "population": {
+        "total_millions": 18,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 0.7,
+        "minorities": {
+          "dutch": 76,
+          "other": 24
+        },
+        "happiness": 75,
+        "stability": 84
+      },
+      "military": {
+        "active_soldiers": 41000,
+        "reserves": 61500,
+        "aircraft": 160,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 155,
+        "naval_ships": 30,
+        "military_budget_bn": 16
+      },
+      "sectors": {
+        "industry": 18,
+        "agriculture": 2,
+        "services": 70,
+        "commerce": 14,
+        "tourism": 4
+      },
+      "relations": {
+        "Germany": "aliado",
+        "USA": "aliado",
+        "UK": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "liberal_democracy",
+        "aggression": 0.15,
+        "risk_tolerance": 0.4,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "trade_hub",
+          "eu",
+          "ports"
+        ]
+      }
+    },
+    "Belgium": {
+      "name": "Belgica",
+      "name_en": "Belgium",
+      "region": "Europe",
+      "capital": "Brussels",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.65,
+        "gdp_growth": 1,
+        "unemployment": 5.6,
+        "inflation": 2.5,
+        "gold_reserves_tonnes": 227,
+        "debt_to_gdp": 108,
+        "fiscal_balance": -4.5,
+        "tax_iva": 21,
+        "tax_corporate": 25,
+        "tax_income_avg": 40
+      },
+      "population": {
+        "total_millions": 11.7,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 0.7,
+        "minorities": {
+          "flemish": 57,
+          "walloon": 32,
+          "other": 11
+        },
+        "happiness": 68,
+        "stability": 72
+      },
+      "military": {
+        "active_soldiers": 25000,
+        "reserves": 37500,
+        "aircraft": 80,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 114,
+        "naval_ships": 9,
+        "military_budget_bn": 7
+      },
+      "sectors": {
+        "industry": 22,
+        "agriculture": 1,
+        "services": 69,
+        "commerce": 12,
+        "tourism": 3
+      },
+      "relations": {
+        "France": "aliado",
+        "Germany": "aliado",
+        "Netherlands": "aliado",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "liberal_democracy",
+        "aggression": 0.1,
+        "risk_tolerance": 0.25,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "eu_capital",
+          "nato_hq"
+        ]
+      }
+    },
+    "Sweden": {
+      "name": "Suecia",
+      "name_en": "Sweden",
+      "region": "Europe",
+      "capital": "Stockholm",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.6,
+        "gdp_growth": 1.2,
+        "unemployment": 8.2,
+        "inflation": 2,
+        "gold_reserves_tonnes": 126,
+        "debt_to_gdp": 35,
+        "fiscal_balance": -0.8,
+        "tax_iva": 25,
+        "tax_corporate": 21,
+        "tax_income_avg": 32
+      },
+      "population": {
+        "total_millions": 10.5,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 0.9,
+        "minorities": {
+          "swedish": 80,
+          "other": 20
+        },
+        "happiness": 76,
+        "stability": 82
+      },
+      "military": {
+        "active_soldiers": 24000,
+        "reserves": 36000,
+        "aircraft": 200,
+        "submarines": 5,
+        "nuclear_warheads": 0,
+        "tanks": 110,
+        "naval_ships": 40,
+        "military_budget_bn": 12
+      },
+      "sectors": {
+        "industry": 22,
+        "agriculture": 1,
+        "services": 70,
+        "commerce": 10,
+        "tourism": 3
+      },
+      "relations": {
+        "USA": "aliado",
+        "Germany": "aliado",
+        "Russia": "tenso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "social_democracy",
+        "aggression": 0.2,
+        "risk_tolerance": 0.3,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "nato",
+          "tech",
+          "welfare"
+        ]
+      }
+    },
+    "Norway": {
+      "name": "Noruega",
+      "name_en": "Norway",
+      "region": "Europe",
+      "capital": "Oslo",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.5,
+        "gdp_growth": 1.5,
+        "unemployment": 3.8,
+        "inflation": 2.6,
+        "gold_reserves_tonnes": 37,
+        "debt_to_gdp": 44,
+        "fiscal_balance": 12,
+        "tax_iva": 25,
+        "tax_corporate": 22,
+        "tax_income_avg": 28
+      },
+      "population": {
+        "total_millions": 5.5,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 0.2,
+        "minorities": {
+          "norwegian": 83,
+          "other": 17
+        },
+        "happiness": 78,
+        "stability": 88
+      },
+      "military": {
+        "active_soldiers": 23000,
+        "reserves": 34500,
+        "aircraft": 110,
+        "submarines": 6,
+        "nuclear_warheads": 0,
+        "tanks": 100,
+        "naval_ships": 60,
+        "military_budget_bn": 9
+      },
+      "sectors": {
+        "industry": 32,
+        "agriculture": 2,
+        "services": 58,
+        "commerce": 8,
+        "tourism": 3
+      },
+      "relations": {
+        "USA": "aliado",
+        "UK": "aliado",
+        "Russia": "tenso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "social_democracy",
+        "aggression": 0.15,
+        "risk_tolerance": 0.25,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "oil_fund",
+          "arctic",
+          "nato"
+        ]
+      }
+    },
+    "Switzerland": {
+      "name": "Suiza",
+      "name_en": "Switzerland",
+      "region": "Europe",
+      "capital": "Bern",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.9,
+        "gdp_growth": 1.3,
+        "unemployment": 2.4,
+        "inflation": 1.2,
+        "gold_reserves_tonnes": 1040,
+        "debt_to_gdp": 38,
+        "fiscal_balance": 0.5,
+        "tax_iva": 8,
+        "tax_corporate": 15,
+        "tax_income_avg": 22
+      },
+      "population": {
+        "total_millions": 8.9,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 0.2,
+        "minorities": {
+          "german": 62,
+          "french": 23,
+          "italian": 8,
+          "other": 7
+        },
+        "happiness": 80,
+        "stability": 92
+      },
+      "military": {
+        "active_soldiers": 20000,
+        "reserves": 140000,
+        "aircraft": 80,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 134,
+        "naval_ships": 10,
+        "military_budget_bn": 6
+      },
+      "sectors": {
+        "industry": 25,
+        "agriculture": 1,
+        "services": 71,
+        "commerce": 10,
+        "tourism": 3
+      },
+      "relations": {
+        "Germany": "amistoso",
+        "France": "amistoso",
+        "USA": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "liberal_democracy",
+        "aggression": 0.05,
+        "risk_tolerance": 0.15,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "finance",
+          "neutrality",
+          "pharma"
+        ]
+      }
+    },
+    "Portugal": {
+      "name": "Portugal",
+      "name_en": "Portugal",
+      "region": "Europe",
+      "capital": "Lisbon",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.3,
+        "gdp_growth": 1.8,
+        "unemployment": 6.4,
+        "inflation": 2.4,
+        "gold_reserves_tonnes": 383,
+        "debt_to_gdp": 98,
+        "fiscal_balance": -0.8,
+        "tax_iva": 23,
+        "tax_corporate": 21,
+        "tax_income_avg": 28
+      },
+      "population": {
+        "total_millions": 10.4,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 0.7,
+        "minorities": {
+          "portuguese": 95,
+          "other": 5
+        },
+        "happiness": 66,
+        "stability": 75
+      },
+      "military": {
+        "active_soldiers": 27000,
+        "reserves": 40500,
+        "aircraft": 90,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 80,
+        "naval_ships": 20,
+        "military_budget_bn": 4
+      },
+      "sectors": {
+        "industry": 19,
+        "agriculture": 2,
+        "services": 69,
+        "commerce": 10,
+        "tourism": 12
+      },
+      "relations": {
+        "Spain": "aliado",
+        "Brazil": "amistoso",
+        "USA": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "social_democracy",
+        "aggression": 0.1,
+        "risk_tolerance": 0.25,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "eu",
+          "tourism",
+          "lusophone"
+        ]
+      }
+    },
+    "Greece": {
+      "name": "Grecia",
+      "name_en": "Greece",
+      "region": "Europe",
+      "capital": "Athens",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.24,
+        "gdp_growth": 2,
+        "unemployment": 10,
+        "inflation": 2.8,
+        "gold_reserves_tonnes": 114,
+        "debt_to_gdp": 162,
+        "fiscal_balance": -1,
+        "tax_iva": 24,
+        "tax_corporate": 22,
+        "tax_income_avg": 22
+      },
+      "population": {
+        "total_millions": 10.4,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 1,
+        "minorities": {
+          "greek": 93,
+          "other": 7
+        },
+        "happiness": 55,
+        "stability": 62
+      },
+      "military": {
+        "active_soldiers": 142000,
+        "reserves": 213000,
+        "aircraft": 350,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 80,
+        "naval_ships": 70,
+        "military_budget_bn": 7
+      },
+      "sectors": {
+        "industry": 16,
+        "agriculture": 4,
+        "services": 68,
+        "commerce": 10,
+        "tourism": 18
+      },
+      "relations": {
+        "France": "amistoso",
+        "Turkey": "tenso",
+        "Germany": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "liberal_democracy",
+        "aggression": 0.3,
+        "risk_tolerance": 0.3,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "debt",
+          "aegean",
+          "tourism"
+        ]
+      }
+    },
+    "Ukraine": {
+      "name": "Ucrania",
+      "name_en": "Ukraine",
+      "region": "Europe",
+      "capital": "Kyiv",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.18,
+        "gdp_growth": 3.5,
+        "unemployment": 18,
+        "inflation": 8,
+        "gold_reserves_tonnes": 27,
+        "debt_to_gdp": 90,
+        "fiscal_balance": -18,
+        "tax_iva": 20,
+        "tax_corporate": 18,
+        "tax_income_avg": 18
+      },
+      "population": {
+        "total_millions": 37,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 6.7,
+        "minorities": {
+          "ukrainian": 78,
+          "russian": 17,
+          "other": 5
+        },
+        "happiness": 38,
+        "stability": 32
+      },
+      "military": {
+        "active_soldiers": 900000,
+        "reserves": 1350000,
+        "aircraft": 200,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 1500,
+        "naval_ships": 20,
+        "military_budget_bn": 30
+      },
+      "sectors": {
+        "industry": 20,
+        "agriculture": 10,
+        "services": 62,
+        "commerce": 8,
+        "tourism": 1
+      },
+      "relations": {
+        "USA": "aliado",
+        "Poland": "aliado",
+        "Russia": "hostil",
+        "Germany": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "liberal_democracy",
+        "aggression": 0.5,
+        "risk_tolerance": 0.4,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "survival",
+          "eu",
+          "grain"
+        ]
+      }
+    },
+    "Czechia": {
+      "name": "Chequia",
+      "name_en": "Czechia",
+      "region": "Europe",
+      "capital": "Prague",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.33,
+        "gdp_growth": 1.5,
+        "unemployment": 2.6,
+        "inflation": 2.5,
+        "gold_reserves_tonnes": 12,
+        "debt_to_gdp": 44,
+        "fiscal_balance": -2.5,
+        "tax_iva": 21,
+        "tax_corporate": 21,
+        "tax_income_avg": 15
+      },
+      "population": {
+        "total_millions": 10.9,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 0.3,
+        "minorities": {
+          "czech": 64,
+          "moravian": 5,
+          "other": 31
+        },
+        "happiness": 67,
+        "stability": 78
+      },
+      "military": {
+        "active_soldiers": 27000,
+        "reserves": 40500,
+        "aircraft": 40,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 120,
+        "naval_ships": 6,
+        "military_budget_bn": 5
+      },
+      "sectors": {
+        "industry": 35,
+        "agriculture": 2,
+        "services": 55,
+        "commerce": 10,
+        "tourism": 3
+      },
+      "relations": {
+        "Germany": "aliado",
+        "Poland": "amistoso",
+        "USA": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "liberal_democracy",
+        "aggression": 0.2,
+        "risk_tolerance": 0.3,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "industry",
+          "eu",
+          "energy"
+        ]
+      }
+    },
+    "Hungary": {
+      "name": "Hungria",
+      "name_en": "Hungary",
+      "region": "Europe",
+      "capital": "Budapest",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.22,
+        "gdp_growth": 1,
+        "unemployment": 4.3,
+        "inflation": 4.5,
+        "gold_reserves_tonnes": 94,
+        "debt_to_gdp": 74,
+        "fiscal_balance": -5,
+        "tax_iva": 27,
+        "tax_corporate": 9,
+        "tax_income_avg": 15
+      },
+      "population": {
+        "total_millions": 9.6,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 0.4,
+        "minorities": {
+          "hungarian": 85,
+          "other": 15
+        },
+        "happiness": 55,
+        "stability": 60
+      },
+      "military": {
+        "active_soldiers": 22000,
+        "reserves": 33000,
+        "aircraft": 30,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 50,
+        "naval_ships": 6,
+        "military_budget_bn": 5
+      },
+      "sectors": {
+        "industry": 30,
+        "agriculture": 3,
+        "services": 59,
+        "commerce": 10,
+        "tourism": 4
+      },
+      "relations": {
+        "Germany": "tenso",
+        "Russia": "amistoso",
+        "Poland": "amistoso",
+        "USA": "tenso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "authoritarian",
+        "aggression": 0.25,
+        "risk_tolerance": 0.45,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "sovereignty",
+          "illiberal",
+          "eu_funds"
+        ]
+      }
+    },
+    "Romania": {
+      "name": "Rumania",
+      "name_en": "Romania",
+      "region": "Europe",
+      "capital": "Bucharest",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.35,
+        "gdp_growth": 2.2,
+        "unemployment": 5.5,
+        "inflation": 5.5,
+        "gold_reserves_tonnes": 104,
+        "debt_to_gdp": 50,
+        "fiscal_balance": -6,
+        "tax_iva": 19,
+        "tax_corporate": 16,
+        "tax_income_avg": 10
+      },
+      "population": {
+        "total_millions": 19,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 1,
+        "minorities": {
+          "romanian": 89,
+          "hungarian": 6,
+          "other": 5
+        },
+        "happiness": 58,
+        "stability": 64
+      },
+      "military": {
+        "active_soldiers": 70000,
+        "reserves": 105000,
+        "aircraft": 80,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 400,
+        "naval_ships": 6,
+        "military_budget_bn": 8
+      },
+      "sectors": {
+        "industry": 28,
+        "agriculture": 4,
+        "services": 60,
+        "commerce": 10,
+        "tourism": 2
+      },
+      "relations": {
+        "USA": "aliado",
+        "France": "amistoso",
+        "Russia": "tenso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "liberal_democracy",
+        "aggression": 0.25,
+        "risk_tolerance": 0.3,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "nato_east",
+          "energy",
+          "eu"
+        ]
+      }
+    },
+    "Ireland": {
+      "name": "Irlanda",
+      "name_en": "Ireland",
+      "region": "Europe",
+      "capital": "Dublin",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.55,
+        "gdp_growth": 2.5,
+        "unemployment": 4.4,
+        "inflation": 2.2,
+        "gold_reserves_tonnes": 6,
+        "debt_to_gdp": 43,
+        "fiscal_balance": 1.5,
+        "tax_iva": 23,
+        "tax_corporate": 15,
+        "tax_income_avg": 40
+      },
+      "population": {
+        "total_millions": 5.3,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 0.2,
+        "minorities": {
+          "irish": 82,
+          "other": 18
+        },
+        "happiness": 73,
+        "stability": 80
+      },
+      "military": {
+        "active_soldiers": 8500,
+        "reserves": 12750,
+        "aircraft": 0,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 105,
+        "naval_ships": 8,
+        "military_budget_bn": 1.2
+      },
+      "sectors": {
+        "industry": 38,
+        "agriculture": 1,
+        "services": 55,
+        "commerce": 8,
+        "tourism": 4
+      },
+      "relations": {
+        "UK": "amistoso",
+        "USA": "amistoso",
+        "France": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "liberal_democracy",
+        "aggression": 0.05,
+        "risk_tolerance": 0.4,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "tech_fdi",
+          "neutrality",
+          "eu"
+        ]
+      }
+    },
+    "SouthAfrica": {
+      "name": "Sudafrica",
+      "name_en": "South Africa",
+      "region": "Africa",
+      "capital": "Pretoria",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.4,
+        "gdp_growth": 1,
+        "unemployment": 32,
+        "inflation": 4.8,
+        "gold_reserves_tonnes": 125,
+        "debt_to_gdp": 75,
+        "fiscal_balance": -5,
+        "tax_iva": 15,
+        "tax_corporate": 27,
+        "tax_income_avg": 31
+      },
+      "population": {
+        "total_millions": 63,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 20.2,
+        "minorities": {
+          "black": 81,
+          "coloured": 9,
+          "white": 7,
+          "indian": 3
+        },
+        "happiness": 48,
+        "stability": 50
+      },
+      "military": {
+        "active_soldiers": 74000,
+        "reserves": 111000,
+        "aircraft": 220,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 89,
+        "naval_ships": 40,
+        "military_budget_bn": 3
+      },
+      "sectors": {
+        "industry": 25,
+        "agriculture": 2,
+        "services": 61,
+        "commerce": 12,
+        "tourism": 3
+      },
+      "relations": {
+        "China": "amistoso",
+        "USA": "neutral",
+        "Russia": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "social_democracy",
+        "aggression": 0.2,
+        "risk_tolerance": 0.35,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "brics",
+          "minerals",
+          "inequality"
+        ]
+      }
+    },
+    "Nigeria": {
+      "name": "Nigeria",
+      "name_en": "Nigeria",
+      "region": "Africa",
+      "capital": "Abuja",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.25,
+        "gdp_growth": 3.2,
+        "unemployment": 33,
+        "inflation": 28,
+        "gold_reserves_tonnes": 21,
+        "debt_to_gdp": 50,
+        "fiscal_balance": -4,
+        "tax_iva": 7.5,
+        "tax_corporate": 30,
+        "tax_income_avg": 24
+      },
+      "population": {
+        "total_millions": 227,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 74.9,
+        "minorities": {
+          "hausa": 30,
+          "yoruba": 21,
+          "igbo": 18,
+          "other": 31
+        },
+        "happiness": 45,
+        "stability": 40
+      },
+      "military": {
+        "active_soldiers": 135000,
+        "reserves": 202500,
+        "aircraft": 130,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 80,
+        "naval_ships": 75,
+        "military_budget_bn": 3.2
+      },
+      "sectors": {
+        "industry": 22,
+        "agriculture": 24,
+        "services": 46,
+        "commerce": 10,
+        "tourism": 1
+      },
+      "relations": {
+        "USA": "amistoso",
+        "China": "amistoso",
+        "UK": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "liberal_democracy",
+        "aggression": 0.3,
+        "risk_tolerance": 0.4,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "oil",
+          "security",
+          "demography"
+        ]
+      }
+    },
+    "Egypt": {
+      "name": "Egipto",
+      "name_en": "Egypt",
+      "region": "Africa",
+      "capital": "Cairo",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.4,
+        "gdp_growth": 3.8,
+        "unemployment": 7,
+        "inflation": 25,
+        "gold_reserves_tonnes": 126,
+        "debt_to_gdp": 96,
+        "fiscal_balance": -3.5,
+        "tax_iva": 14,
+        "tax_corporate": 22,
+        "tax_income_avg": 25
+      },
+      "population": {
+        "total_millions": 114,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 8,
+        "minorities": {
+          "arab": 99,
+          "other": 1
+        },
+        "happiness": 50,
+        "stability": 55
+      },
+      "military": {
+        "active_soldiers": 440000,
+        "reserves": 480000,
+        "aircraft": 1050,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 4500,
+        "naval_ships": 320,
+        "military_budget_bn": 5
+      },
+      "sectors": {
+        "industry": 32,
+        "agriculture": 11,
+        "services": 50,
+        "commerce": 10,
+        "tourism": 5
+      },
+      "relations": {
+        "USA": "amistoso",
+        "Israel": "amistoso",
+        "SaudiArabia": "amistoso",
+        "Iran": "tenso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "authoritarian",
+        "aggression": 0.4,
+        "risk_tolerance": 0.35,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "suez",
+          "imf",
+          "stability"
+        ]
+      }
+    },
+    "Kenya": {
+      "name": "Kenia",
+      "name_en": "Kenya",
+      "region": "Africa",
+      "capital": "Nairobi",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.12,
+        "gdp_growth": 5,
+        "unemployment": 5.5,
+        "inflation": 6,
+        "gold_reserves_tonnes": 0,
+        "debt_to_gdp": 70,
+        "fiscal_balance": -5.5,
+        "tax_iva": 16,
+        "tax_corporate": 30,
+        "tax_income_avg": 25
+      },
+      "population": {
+        "total_millions": 55,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 3,
+        "minorities": {
+          "kikuyu": 17,
+          "luhya": 14,
+          "other": 69
+        },
+        "happiness": 52,
+        "stability": 55
+      },
+      "military": {
+        "active_soldiers": 24000,
+        "reserves": 36000,
+        "aircraft": 40,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 80,
+        "naval_ships": 6,
+        "military_budget_bn": 1.2
+      },
+      "sectors": {
+        "industry": 16,
+        "agriculture": 22,
+        "services": 55,
+        "commerce": 10,
+        "tourism": 8
+      },
+      "relations": {
+        "USA": "amistoso",
+        "China": "amistoso",
+        "UK": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "liberal_democracy",
+        "aggression": 0.2,
+        "risk_tolerance": 0.4,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "east_africa_hub",
+          "debt",
+          "climate"
+        ]
+      }
+    },
+    "Morocco": {
+      "name": "Marruecos",
+      "name_en": "Morocco",
+      "region": "Africa",
+      "capital": "Rabat",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.15,
+        "gdp_growth": 3,
+        "unemployment": 13,
+        "inflation": 2.5,
+        "gold_reserves_tonnes": 22,
+        "debt_to_gdp": 70,
+        "fiscal_balance": -4.5,
+        "tax_iva": 20,
+        "tax_corporate": 31,
+        "tax_income_avg": 38
+      },
+      "population": {
+        "total_millions": 38,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 4.9,
+        "minorities": {
+          "arab_berber": 99,
+          "other": 1
+        },
+        "happiness": 58,
+        "stability": 68
+      },
+      "military": {
+        "active_soldiers": 195000,
+        "reserves": 292500,
+        "aircraft": 280,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 600,
+        "naval_ships": 70,
+        "military_budget_bn": 5
+      },
+      "sectors": {
+        "industry": 25,
+        "agriculture": 12,
+        "services": 55,
+        "commerce": 10,
+        "tourism": 8
+      },
+      "relations": {
+        "France": "amistoso",
+        "Spain": "tenso",
+        "USA": "amistoso",
+        "Algeria": "hostil",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "monarchy",
+        "aggression": 0.3,
+        "risk_tolerance": 0.35,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "sahara",
+          "eu_trade",
+          "phosphate"
+        ]
+      }
+    },
+    "Algeria": {
+      "name": "Argelia",
+      "name_en": "Algeria",
+      "region": "Africa",
+      "capital": "Algiers",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.25,
+        "gdp_growth": 3,
+        "unemployment": 12,
+        "inflation": 6,
+        "gold_reserves_tonnes": 174,
+        "debt_to_gdp": 55,
+        "fiscal_balance": -3,
+        "tax_iva": 19,
+        "tax_corporate": 26,
+        "tax_income_avg": 35
+      },
+      "population": {
+        "total_millions": 46,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 5.5,
+        "minorities": {
+          "arab_berber": 99,
+          "other": 1
+        },
+        "happiness": 50,
+        "stability": 58
+      },
+      "military": {
+        "active_soldiers": 130000,
+        "reserves": 195000,
+        "aircraft": 250,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 1200,
+        "naval_ships": 70,
+        "military_budget_bn": 18
+      },
+      "sectors": {
+        "industry": 45,
+        "agriculture": 12,
+        "services": 40,
+        "commerce": 6,
+        "tourism": 1
+      },
+      "relations": {
+        "France": "tenso",
+        "Russia": "amistoso",
+        "Morocco": "hostil",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "authoritarian",
+        "aggression": 0.4,
+        "risk_tolerance": 0.3,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "gas",
+          "sahara",
+          "non_aligned"
+        ]
+      }
+    },
+    "Ethiopia": {
+      "name": "Etiopia",
+      "name_en": "Ethiopia",
+      "region": "Africa",
+      "capital": "Addis Ababa",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.16,
+        "gdp_growth": 6.5,
+        "unemployment": 18,
+        "inflation": 20,
+        "gold_reserves_tonnes": 0.3,
+        "debt_to_gdp": 40,
+        "fiscal_balance": -3,
+        "tax_iva": 15,
+        "tax_corporate": 30,
+        "tax_income_avg": 35
+      },
+      "population": {
+        "total_millions": 129,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 23.2,
+        "minorities": {
+          "oromo": 35,
+          "amhara": 27,
+          "other": 38
+        },
+        "happiness": 46,
+        "stability": 40
+      },
+      "military": {
+        "active_soldiers": 150000,
+        "reserves": 225000,
+        "aircraft": 80,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 300,
+        "naval_ships": 6,
+        "military_budget_bn": 0.5
+      },
+      "sectors": {
+        "industry": 22,
+        "agriculture": 32,
+        "services": 40,
+        "commerce": 6,
+        "tourism": 2
+      },
+      "relations": {
+        "China": "amistoso",
+        "USA": "tenso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "authoritarian",
+        "aggression": 0.45,
+        "risk_tolerance": 0.4,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "nile",
+          "growth",
+          "federation"
+        ]
+      }
+    },
+    "Ghana": {
+      "name": "Ghana",
+      "name_en": "Ghana",
+      "region": "Africa",
+      "capital": "Accra",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.08,
+        "gdp_growth": 3.5,
+        "unemployment": 14,
+        "inflation": 18,
+        "gold_reserves_tonnes": 9,
+        "debt_to_gdp": 84,
+        "fiscal_balance": -5,
+        "tax_iva": 15,
+        "tax_corporate": 25,
+        "tax_income_avg": 25
+      },
+      "population": {
+        "total_millions": 34,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 4.8,
+        "minorities": {
+          "akan": 48,
+          "other": 52
+        },
+        "happiness": 55,
+        "stability": 60
+      },
+      "military": {
+        "active_soldiers": 15500,
+        "reserves": 23250,
+        "aircraft": 32,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 80,
+        "naval_ships": 6,
+        "military_budget_bn": 0.3
+      },
+      "sectors": {
+        "industry": 32,
+        "agriculture": 20,
+        "services": 42,
+        "commerce": 8,
+        "tourism": 3
+      },
+      "relations": {
+        "USA": "amistoso",
+        "China": "amistoso",
+        "UK": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "liberal_democracy",
+        "aggression": 0.15,
+        "risk_tolerance": 0.35,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "cocoa",
+          "gold",
+          "democracy"
+        ]
+      }
+    },
+    "Angola": {
+      "name": "Angola",
+      "name_en": "Angola",
+      "region": "Africa",
+      "capital": "Luanda",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.09,
+        "gdp_growth": 2.5,
+        "unemployment": 15,
+        "inflation": 18,
+        "gold_reserves_tonnes": 0,
+        "debt_to_gdp": 60,
+        "fiscal_balance": -1,
+        "tax_iva": 14,
+        "tax_corporate": 25,
+        "tax_income_avg": 17
+      },
+      "population": {
+        "total_millions": 37,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 5.6,
+        "minorities": {
+          "ovimbundu": 37,
+          "other": 63
+        },
+        "happiness": 44,
+        "stability": 50
+      },
+      "military": {
+        "active_soldiers": 107000,
+        "reserves": 160500,
+        "aircraft": 270,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 80,
+        "naval_ships": 6,
+        "military_budget_bn": 1.5
+      },
+      "sectors": {
+        "industry": 42,
+        "agriculture": 10,
+        "services": 43,
+        "commerce": 5,
+        "tourism": 1
+      },
+      "relations": {
+        "China": "amistoso",
+        "Portugal": "amistoso",
+        "USA": "neutral",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "authoritarian",
+        "aggression": 0.25,
+        "risk_tolerance": 0.3,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "oil",
+          "cabinda",
+          "china"
+        ]
+      }
+    },
+    "Tanzania": {
+      "name": "Tanzania",
+      "name_en": "Tanzania",
+      "region": "Africa",
+      "capital": "Dodoma",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.08,
+        "gdp_growth": 5.5,
+        "unemployment": 9,
+        "inflation": 3.5,
+        "gold_reserves_tonnes": 0,
+        "debt_to_gdp": 48,
+        "fiscal_balance": -3.5,
+        "tax_iva": 18,
+        "tax_corporate": 30,
+        "tax_income_avg": 30
+      },
+      "population": {
+        "total_millions": 67,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 6,
+        "minorities": {
+          "sukuma": 16,
+          "other": 84
+        },
+        "happiness": 54,
+        "stability": 62
+      },
+      "military": {
+        "active_soldiers": 27000,
+        "reserves": 40500,
+        "aircraft": 32,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 80,
+        "naval_ships": 6,
+        "military_budget_bn": 0.8
+      },
+      "sectors": {
+        "industry": 28,
+        "agriculture": 26,
+        "services": 40,
+        "commerce": 6,
+        "tourism": 8
+      },
+      "relations": {
+        "China": "amistoso",
+        "India": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "authoritarian",
+        "aggression": 0.15,
+        "risk_tolerance": 0.25,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "ports",
+          "minerals",
+          "union"
+        ]
+      }
+    },
+    "CongoDR": {
+      "name": "Republica Democratica del Congo",
+      "name_en": "DR Congo",
+      "region": "Africa",
+      "capital": "Kinshasa",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.07,
+        "gdp_growth": 6,
+        "unemployment": 12,
+        "inflation": 12,
+        "gold_reserves_tonnes": 0,
+        "debt_to_gdp": 15,
+        "fiscal_balance": -1.5,
+        "tax_iva": 16,
+        "tax_corporate": 30,
+        "tax_income_avg": 30
+      },
+      "population": {
+        "total_millions": 102,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 12.2,
+        "minorities": {
+          "kongo": 16,
+          "luba": 18,
+          "other": 66
+        },
+        "happiness": 38,
+        "stability": 28
+      },
+      "military": {
+        "active_soldiers": 135000,
+        "reserves": 202500,
+        "aircraft": 32,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 80,
+        "naval_ships": 6,
+        "military_budget_bn": 0.4
+      },
+      "sectors": {
+        "industry": 45,
+        "agriculture": 20,
+        "services": 32,
+        "commerce": 3,
+        "tourism": 0
+      },
+      "relations": {
+        "China": "amistoso",
+        "USA": "neutral",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "authoritarian",
+        "aggression": 0.35,
+        "risk_tolerance": 0.3,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "minerals",
+          "east_conflict",
+          "state"
+        ]
+      }
+    },
+    "Senegal": {
+      "name": "Senegal",
+      "name_en": "Senegal",
+      "region": "Africa",
+      "capital": "Dakar",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.03,
+        "gdp_growth": 5,
+        "unemployment": 20,
+        "inflation": 3.5,
+        "gold_reserves_tonnes": 0,
+        "debt_to_gdp": 80,
+        "fiscal_balance": -5,
+        "tax_iva": 18,
+        "tax_corporate": 30,
+        "tax_income_avg": 40
+      },
+      "population": {
+        "total_millions": 18,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 3.6,
+        "minorities": {
+          "wolof": 43,
+          "other": 57
+        },
+        "happiness": 56,
+        "stability": 62
+      },
+      "military": {
+        "active_soldiers": 17000,
+        "reserves": 25500,
+        "aircraft": 32,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 80,
+        "naval_ships": 6,
+        "military_budget_bn": 0.4
+      },
+      "sectors": {
+        "industry": 22,
+        "agriculture": 16,
+        "services": 54,
+        "commerce": 8,
+        "tourism": 5
+      },
+      "relations": {
+        "France": "amistoso",
+        "USA": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "liberal_democracy",
+        "aggression": 0.15,
+        "risk_tolerance": 0.3,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "democracy",
+          "sahel",
+          "ports"
+        ]
+      }
+    },
+    "Thailand": {
+      "name": "Tailandia",
+      "name_en": "Thailand",
+      "region": "Southeast Asia",
+      "capital": "Bangkok",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.5,
+        "gdp_growth": 2.5,
+        "unemployment": 1.1,
+        "inflation": 1,
+        "gold_reserves_tonnes": 244,
+        "debt_to_gdp": 62,
+        "fiscal_balance": -3,
+        "tax_iva": 7,
+        "tax_corporate": 20,
+        "tax_income_avg": 25
+      },
+      "population": {
+        "total_millions": 72,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 0.8,
+        "minorities": {
+          "thai": 98,
+          "other": 2
+        },
+        "happiness": 62,
+        "stability": 58
+      },
+      "military": {
+        "active_soldiers": 360000,
+        "reserves": 540000,
+        "aircraft": 470,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 100,
+        "naval_ships": 80,
+        "military_budget_bn": 6
+      },
+      "sectors": {
+        "industry": 35,
+        "agriculture": 8,
+        "services": 49,
+        "commerce": 10,
+        "tourism": 12
+      },
+      "relations": {
+        "USA": "amistoso",
+        "China": "amistoso",
+        "Japan": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "monarchy",
+        "aggression": 0.25,
+        "risk_tolerance": 0.3,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "tourism",
+          "export",
+          "palace"
+        ]
+      }
+    },
+    "Vietnam": {
+      "name": "Vietnam",
+      "name_en": "Vietnam",
+      "region": "Southeast Asia",
+      "capital": "Hanoi",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.45,
+        "gdp_growth": 6,
+        "unemployment": 2.2,
+        "inflation": 3.5,
+        "gold_reserves_tonnes": 0,
+        "debt_to_gdp": 38,
+        "fiscal_balance": -3.5,
+        "tax_iva": 10,
+        "tax_corporate": 20,
+        "tax_income_avg": 20
+      },
+      "population": {
+        "total_millions": 100,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 2.2,
+        "minorities": {
+          "viet": 85,
+          "other": 15
+        },
+        "happiness": 64,
+        "stability": 72
+      },
+      "military": {
+        "active_soldiers": 470000,
+        "reserves": 705000,
+        "aircraft": 280,
+        "submarines": 6,
+        "nuclear_warheads": 0,
+        "tanks": 95,
+        "naval_ships": 100,
+        "military_budget_bn": 7
+      },
+      "sectors": {
+        "industry": 38,
+        "agriculture": 12,
+        "services": 42,
+        "commerce": 10,
+        "tourism": 4
+      },
+      "relations": {
+        "USA": "amistoso",
+        "China": "tenso",
+        "Russia": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "authoritarian_state_capitalism",
+        "aggression": 0.3,
+        "risk_tolerance": 0.4,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "export",
+          "south_china_sea",
+          "party"
+        ]
+      }
+    },
+    "Philippines": {
+      "name": "Filipinas",
+      "name_en": "Philippines",
+      "region": "Southeast Asia",
+      "capital": "Manila",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.45,
+        "gdp_growth": 5.5,
+        "unemployment": 4.3,
+        "inflation": 3.2,
+        "gold_reserves_tonnes": 164,
+        "debt_to_gdp": 60,
+        "fiscal_balance": -4,
+        "tax_iva": 12,
+        "tax_corporate": 25,
+        "tax_income_avg": 25
+      },
+      "population": {
+        "total_millions": 115,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 4.9,
+        "minorities": {
+          "tagalog": 28,
+          "other": 72
+        },
+        "happiness": 63,
+        "stability": 55
+      },
+      "military": {
+        "active_soldiers": 150000,
+        "reserves": 225000,
+        "aircraft": 170,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 95,
+        "naval_ships": 90,
+        "military_budget_bn": 4
+      },
+      "sectors": {
+        "industry": 30,
+        "agriculture": 9,
+        "services": 53,
+        "commerce": 10,
+        "tourism": 5
+      },
+      "relations": {
+        "USA": "aliado",
+        "China": "tenso",
+        "Japan": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "liberal_democracy",
+        "aggression": 0.3,
+        "risk_tolerance": 0.45,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "south_china_sea",
+          "remittances",
+          "usa"
+        ]
+      }
+    },
+    "Malaysia": {
+      "name": "Malasia",
+      "name_en": "Malaysia",
+      "region": "Southeast Asia",
+      "capital": "Kuala Lumpur",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.45,
+        "gdp_growth": 4.5,
+        "unemployment": 3.3,
+        "inflation": 2,
+        "gold_reserves_tonnes": 39,
+        "debt_to_gdp": 66,
+        "fiscal_balance": -4.5,
+        "tax_iva": 8,
+        "tax_corporate": 24,
+        "tax_income_avg": 26
+      },
+      "population": {
+        "total_millions": 34,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 1.1,
+        "minorities": {
+          "malay": 69,
+          "chinese": 23,
+          "indian": 7,
+          "other": 1
+        },
+        "happiness": 65,
+        "stability": 68
+      },
+      "military": {
+        "active_soldiers": 113000,
+        "reserves": 169500,
+        "aircraft": 170,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 95,
+        "naval_ships": 60,
+        "military_budget_bn": 4
+      },
+      "sectors": {
+        "industry": 37,
+        "agriculture": 8,
+        "services": 47,
+        "commerce": 10,
+        "tourism": 6
+      },
+      "relations": {
+        "China": "amistoso",
+        "USA": "amistoso",
+        "Singapore": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "liberal_democracy",
+        "aggression": 0.2,
+        "risk_tolerance": 0.35,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "malacca",
+          "palm",
+          "islam"
+        ]
+      }
+    },
+    "Singapore": {
+      "name": "Singapur",
+      "name_en": "Singapore",
+      "region": "Southeast Asia",
+      "capital": "Singapore",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.5,
+        "gdp_growth": 2.5,
+        "unemployment": 2.1,
+        "inflation": 2.5,
+        "gold_reserves_tonnes": 222,
+        "debt_to_gdp": 168,
+        "fiscal_balance": 3,
+        "tax_iva": 9,
+        "tax_corporate": 17,
+        "tax_income_avg": 22
+      },
+      "population": {
+        "total_millions": 5.9,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 0.1,
+        "minorities": {
+          "chinese": 76,
+          "malay": 15,
+          "indian": 7,
+          "other": 2
+        },
+        "happiness": 70,
+        "stability": 90
+      },
+      "military": {
+        "active_soldiers": 51000,
+        "reserves": 250000,
+        "aircraft": 200,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 100,
+        "naval_ships": 40,
+        "military_budget_bn": 16
+      },
+      "sectors": {
+        "industry": 25,
+        "agriculture": 0,
+        "services": 70,
+        "commerce": 16,
+        "tourism": 4
+      },
+      "relations": {
+        "USA": "amistoso",
+        "China": "amistoso",
+        "Malaysia": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "authoritarian",
+        "aggression": 0.15,
+        "risk_tolerance": 0.3,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "hub",
+          "malacca",
+          "finance"
+        ]
+      }
+    },
+    "Bangladesh": {
+      "name": "Bangladesh",
+      "name_en": "Bangladesh",
+      "region": "South Asia",
+      "capital": "Dhaka",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.45,
+        "gdp_growth": 6,
+        "unemployment": 5,
+        "inflation": 9.5,
+        "gold_reserves_tonnes": 14,
+        "debt_to_gdp": 40,
+        "fiscal_balance": -4.5,
+        "tax_iva": 15,
+        "tax_corporate": 27,
+        "tax_income_avg": 25
+      },
+      "population": {
+        "total_millions": 173,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 8.7,
+        "minorities": {
+          "bengali": 98,
+          "other": 2
+        },
+        "happiness": 55,
+        "stability": 50
+      },
+      "military": {
+        "active_soldiers": 160000,
+        "reserves": 240000,
+        "aircraft": 80,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 95,
+        "naval_ships": 50,
+        "military_budget_bn": 4.5
+      },
+      "sectors": {
+        "industry": 33,
+        "agriculture": 12,
+        "services": 50,
+        "commerce": 8,
+        "tourism": 1
+      },
+      "relations": {
+        "India": "amistoso",
+        "China": "amistoso",
+        "USA": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "authoritarian",
+        "aggression": 0.2,
+        "risk_tolerance": 0.3,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "garments",
+          "climate",
+          "growth"
+        ]
+      }
+    },
+    "Pakistan": {
+      "name": "Pakistan",
+      "name_en": "Pakistan",
+      "region": "South Asia",
+      "capital": "Islamabad",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.35,
+        "gdp_growth": 2.5,
+        "unemployment": 8,
+        "inflation": 12,
+        "gold_reserves_tonnes": 65,
+        "debt_to_gdp": 78,
+        "fiscal_balance": -7,
+        "tax_iva": 18,
+        "tax_corporate": 29,
+        "tax_income_avg": 20
+      },
+      "population": {
+        "total_millions": 241,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 19.3,
+        "minorities": {
+          "punjabi": 45,
+          "pashtun": 15,
+          "sindhi": 14,
+          "other": 26
+        },
+        "happiness": 46,
+        "stability": 38
+      },
+      "military": {
+        "active_soldiers": 654000,
+        "reserves": 981000,
+        "aircraft": 1400,
+        "submarines": 8,
+        "nuclear_warheads": 170,
+        "tanks": 2500,
+        "naval_ships": 100,
+        "military_budget_bn": 10
+      },
+      "sectors": {
+        "industry": 20,
+        "agriculture": 22,
+        "services": 52,
+        "commerce": 8,
+        "tourism": 1
+      },
+      "relations": {
+        "China": "aliado",
+        "India": "hostil",
+        "USA": "tenso",
+        "SaudiArabia": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "authoritarian",
+        "aggression": 0.55,
+        "risk_tolerance": 0.4,
+        "nuclear_doctrine": "no_first_use",
+        "priorities": [
+          "india",
+          "imf",
+          "army"
+        ]
+      }
+    },
+    "Kazakhstan": {
+      "name": "Kazajistan",
+      "name_en": "Kazakhstan",
+      "region": "Central Asia",
+      "capital": "Astana",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.26,
+        "gdp_growth": 4,
+        "unemployment": 4.8,
+        "inflation": 8,
+        "gold_reserves_tonnes": 400,
+        "debt_to_gdp": 25,
+        "fiscal_balance": -2,
+        "tax_iva": 12,
+        "tax_corporate": 20,
+        "tax_income_avg": 10
+      },
+      "population": {
+        "total_millions": 20,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 1,
+        "minorities": {
+          "kazakh": 70,
+          "russian": 15,
+          "other": 15
+        },
+        "happiness": 60,
+        "stability": 70
+      },
+      "military": {
+        "active_soldiers": 45000,
+        "reserves": 67500,
+        "aircraft": 200,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 300,
+        "naval_ships": 6,
+        "military_budget_bn": 1.5
+      },
+      "sectors": {
+        "industry": 32,
+        "agriculture": 5,
+        "services": 55,
+        "commerce": 8,
+        "tourism": 1
+      },
+      "relations": {
+        "Russia": "aliado",
+        "China": "amistoso",
+        "USA": "neutral",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "authoritarian",
+        "aggression": 0.2,
+        "risk_tolerance": 0.25,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "oil",
+          "multivector",
+          "steppe"
+        ]
+      }
+    },
+    "Cuba": {
+      "name": "Cuba",
+      "name_en": "Cuba",
+      "region": "Caribbean",
+      "capital": "Havana",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.1,
+        "gdp_growth": -1.5,
+        "unemployment": 3,
+        "inflation": 30,
+        "gold_reserves_tonnes": 0,
+        "debt_to_gdp": 50,
+        "fiscal_balance": -8,
+        "tax_iva": 0,
+        "tax_corporate": 35,
+        "tax_income_avg": 0
+      },
+      "population": {
+        "total_millions": 11,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 0.3,
+        "minorities": {
+          "white": 64,
+          "mestizo": 27,
+          "black": 9
+        },
+        "happiness": 42,
+        "stability": 55
+      },
+      "military": {
+        "active_soldiers": 49000,
+        "reserves": 39000,
+        "aircraft": 80,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 80,
+        "naval_ships": 6,
+        "military_budget_bn": 0.5
+      },
+      "sectors": {
+        "industry": 22,
+        "agriculture": 4,
+        "services": 68,
+        "commerce": 4,
+        "tourism": 8
+      },
+      "relations": {
+        "USA": "hostil",
+        "China": "amistoso",
+        "Russia": "amistoso",
+        "Venezuela": "aliado",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "socialist",
+        "aggression": 0.2,
+        "risk_tolerance": 0.2,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "embargo",
+          "tourism",
+          "medicine"
+        ]
+      }
+    },
+    "Panama": {
+      "name": "Panama",
+      "name_en": "Panama",
+      "region": "Central America",
+      "capital": "Panama City",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.08,
+        "gdp_growth": 4.5,
+        "unemployment": 8,
+        "inflation": 1.5,
+        "gold_reserves_tonnes": 0,
+        "debt_to_gdp": 55,
+        "fiscal_balance": -3,
+        "tax_iva": 7,
+        "tax_corporate": 25,
+        "tax_income_avg": 25
+      },
+      "population": {
+        "total_millions": 4.5,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 0.4,
+        "minorities": {
+          "mestizo": 65,
+          "other": 35
+        },
+        "happiness": 62,
+        "stability": 65
+      },
+      "military": {
+        "active_soldiers": 0,
+        "reserves": 20000,
+        "aircraft": 0,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 80,
+        "naval_ships": 20,
+        "military_budget_bn": 0.8
+      },
+      "sectors": {
+        "industry": 16,
+        "agriculture": 2,
+        "services": 70,
+        "commerce": 14,
+        "tourism": 8
+      },
+      "relations": {
+        "USA": "amistoso",
+        "China": "amistoso",
+        "Colombia": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "liberal_democracy",
+        "aggression": 0.1,
+        "risk_tolerance": 0.35,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "canal",
+          "finance",
+          "logistics"
+        ]
+      }
+    },
+    "CostaRica": {
+      "name": "Costa Rica",
+      "name_en": "Costa Rica",
+      "region": "Central America",
+      "capital": "San Jose",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.07,
+        "gdp_growth": 3.5,
+        "unemployment": 8,
+        "inflation": 1.5,
+        "gold_reserves_tonnes": 0,
+        "debt_to_gdp": 60,
+        "fiscal_balance": -3.5,
+        "tax_iva": 13,
+        "tax_corporate": 30,
+        "tax_income_avg": 25
+      },
+      "population": {
+        "total_millions": 5.2,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 0.4,
+        "minorities": {
+          "white_mestizo": 84,
+          "other": 16
+        },
+        "happiness": 70,
+        "stability": 80
+      },
+      "military": {
+        "active_soldiers": 0,
+        "reserves": 0,
+        "aircraft": 0,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 80,
+        "naval_ships": 6,
+        "military_budget_bn": 0.5
+      },
+      "sectors": {
+        "industry": 19,
+        "agriculture": 5,
+        "services": 68,
+        "commerce": 10,
+        "tourism": 12
+      },
+      "relations": {
+        "USA": "amistoso",
+        "China": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "social_democracy",
+        "aggression": 0.05,
+        "risk_tolerance": 0.25,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "no_army",
+          "eco",
+          "tech"
+        ]
+      }
+    },
+    "DominicanRepublic": {
+      "name": "Republica Dominicana",
+      "name_en": "Dominican Republic",
+      "region": "Caribbean",
+      "capital": "Santo Domingo",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.12,
+        "gdp_growth": 4.5,
+        "unemployment": 5.5,
+        "inflation": 3.5,
+        "gold_reserves_tonnes": 0.6,
+        "debt_to_gdp": 58,
+        "fiscal_balance": -3,
+        "tax_iva": 18,
+        "tax_corporate": 27,
+        "tax_income_avg": 25
+      },
+      "population": {
+        "total_millions": 11.3,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 0.6,
+        "minorities": {
+          "mixed": 73,
+          "white": 16,
+          "black": 11
+        },
+        "happiness": 60,
+        "stability": 62
+      },
+      "military": {
+        "active_soldiers": 56000,
+        "reserves": 84000,
+        "aircraft": 32,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 80,
+        "naval_ships": 6,
+        "military_budget_bn": 0.8
+      },
+      "sectors": {
+        "industry": 30,
+        "agriculture": 6,
+        "services": 56,
+        "commerce": 10,
+        "tourism": 16
+      },
+      "relations": {
+        "USA": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "liberal_democracy",
+        "aggression": 0.15,
+        "risk_tolerance": 0.35,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "tourism",
+          "remittances",
+          "haiti"
+        ]
+      }
+    },
+    "Guatemala": {
+      "name": "Guatemala",
+      "name_en": "Guatemala",
+      "region": "Central America",
+      "capital": "Guatemala City",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.1,
+        "gdp_growth": 3.5,
+        "unemployment": 2.5,
+        "inflation": 4,
+        "gold_reserves_tonnes": 7,
+        "debt_to_gdp": 30,
+        "fiscal_balance": -1.5,
+        "tax_iva": 12,
+        "tax_corporate": 25,
+        "tax_income_avg": 7
+      },
+      "population": {
+        "total_millions": 18,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 0.5,
+        "minorities": {
+          "mestizo": 56,
+          "maya": 42,
+          "other": 2
+        },
+        "happiness": 52,
+        "stability": 48
+      },
+      "military": {
+        "active_soldiers": 18000,
+        "reserves": 27000,
+        "aircraft": 32,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 80,
+        "naval_ships": 6,
+        "military_budget_bn": 0.3
+      },
+      "sectors": {
+        "industry": 22,
+        "agriculture": 10,
+        "services": 60,
+        "commerce": 10,
+        "tourism": 4
+      },
+      "relations": {
+        "USA": "amistoso",
+        "Mexico": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "liberal_democracy",
+        "aggression": 0.2,
+        "risk_tolerance": 0.3,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "migration",
+          "corruption",
+          "coffee"
+        ]
+      }
+    },
+    "Honduras": {
+      "name": "Honduras",
+      "name_en": "Honduras",
+      "region": "Central America",
+      "capital": "Tegucigalpa",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.035,
+        "gdp_growth": 3.2,
+        "unemployment": 8,
+        "inflation": 5,
+        "gold_reserves_tonnes": 0.7,
+        "debt_to_gdp": 50,
+        "fiscal_balance": -3.5,
+        "tax_iva": 15,
+        "tax_corporate": 25,
+        "tax_income_avg": 25
+      },
+      "population": {
+        "total_millions": 10.6,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 0.8,
+        "minorities": {
+          "mestizo": 90,
+          "other": 10
+        },
+        "happiness": 48,
+        "stability": 42
+      },
+      "military": {
+        "active_soldiers": 15000,
+        "reserves": 22500,
+        "aircraft": 32,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 80,
+        "naval_ships": 6,
+        "military_budget_bn": 0.4
+      },
+      "sectors": {
+        "industry": 26,
+        "agriculture": 12,
+        "services": 54,
+        "commerce": 8,
+        "tourism": 3
+      },
+      "relations": {
+        "USA": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "liberal_democracy",
+        "aggression": 0.2,
+        "risk_tolerance": 0.3,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "gangs",
+          "migration",
+          "usa"
+        ]
+      }
+    },
+    "ElSalvador": {
+      "name": "El Salvador",
+      "name_en": "El Salvador",
+      "region": "Central America",
+      "capital": "San Salvador",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.035,
+        "gdp_growth": 2.8,
+        "unemployment": 5.5,
+        "inflation": 1.5,
+        "gold_reserves_tonnes": 0,
+        "debt_to_gdp": 85,
+        "fiscal_balance": -4,
+        "tax_iva": 13,
+        "tax_corporate": 30,
+        "tax_income_avg": 30
+      },
+      "population": {
+        "total_millions": 6.3,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 0.3,
+        "minorities": {
+          "mestizo": 86,
+          "other": 14
+        },
+        "happiness": 58,
+        "stability": 55
+      },
+      "military": {
+        "active_soldiers": 25000,
+        "reserves": 37500,
+        "aircraft": 32,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 80,
+        "naval_ships": 6,
+        "military_budget_bn": 0.3
+      },
+      "sectors": {
+        "industry": 25,
+        "agriculture": 5,
+        "services": 62,
+        "commerce": 10,
+        "tourism": 5
+      },
+      "relations": {
+        "USA": "tenso",
+        "China": "amistoso",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "authoritarian",
+        "aggression": 0.35,
+        "risk_tolerance": 0.55,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "bitcoin",
+          "gangs",
+          "strongman"
+        ]
+      }
+    },
+    "Nicaragua": {
+      "name": "Nicaragua",
+      "name_en": "Nicaragua",
+      "region": "Central America",
+      "capital": "Managua",
+      "playable": true,
+      "economy": {
+        "gdp_trillion_usd": 0.017,
+        "gdp_growth": 3.5,
+        "unemployment": 5,
+        "inflation": 5.5,
+        "gold_reserves_tonnes": 0,
+        "debt_to_gdp": 45,
+        "fiscal_balance": -2,
+        "tax_iva": 15,
+        "tax_corporate": 30,
+        "tax_income_avg": 15
+      },
+      "population": {
+        "total_millions": 6.9,
+        "male_pct": 49.5,
+        "female_pct": 50.5,
+        "unemployed_millions": 0.3,
+        "minorities": {
+          "mestizo": 69,
+          "white": 17,
+          "other": 14
+        },
+        "happiness": 44,
+        "stability": 45
+      },
+      "military": {
+        "active_soldiers": 12000,
+        "reserves": 18000,
+        "aircraft": 32,
+        "submarines": 0,
+        "nuclear_warheads": 0,
+        "tanks": 80,
+        "naval_ships": 6,
+        "military_budget_bn": 0.1
+      },
+      "sectors": {
+        "industry": 24,
+        "agriculture": 15,
+        "services": 54,
+        "commerce": 7,
+        "tourism": 4
+      },
+      "relations": {
+        "USA": "hostil",
+        "Russia": "amistoso",
+        "Cuba": "aliado",
+        "Venezuela": "aliado",
+        "default": "neutral"
+      },
+      "traits": {
+        "ideology": "authoritarian",
+        "aggression": 0.3,
+        "risk_tolerance": 0.25,
+        "nuclear_doctrine": "none",
+        "priorities": [
+          "canal_dream",
+          "russia",
+          "family"
+        ]
       }
     }
   },
@@ -1560,7 +5107,10 @@
     "gold_price": 2650,
     "usd_strength": 100,
     "global_tension": 45,
-    "active_conflicts": ["Ukraine-Russia", "Israel-Hamas residual"],
+    "active_conflicts": [
+      "Ukraine-Russia",
+      "Israel-Hamas residual"
+    ],
     "world_events_queue": []
   }
 }

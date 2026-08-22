@@ -8,6 +8,7 @@ import {
 } from './engine';
 import { oilShock } from './routes';
 import { totalTrade, tradeGrowthEffect, type TradeContext } from './trade';
+import { CAPITAL_PASSIVE_BASE } from './electoral';
 
 /**
  * Simulacion determinista del mundo: todo lo que pasa en un turno SIN azar.
@@ -37,6 +38,8 @@ export interface SimState {
   active: ActiveEvent[];
   /** tasas impositivas iniciales de cada pais: la referencia del efecto fiscal */
   taxBase: Record<string, TaxRates>;
+  /** hasta este turno el pasivo de capital va doble (100 dias / luna de miel) */
+  honeymoonUntil?: number;
 }
 
 export const cloneSim = (s: SimState): SimState => JSON.parse(JSON.stringify(s)) as SimState;
@@ -77,9 +80,12 @@ export function updateCohesion(blocs: Bloc[], relations: Record<string, number>)
   }
 }
 
-/** Capital politico que se recupera al cerrar el mes. */
-export const capitalRegen = (capital: number, happiness: number) =>
-  clamp(capital + 6 + (happiness - 60) / 10, 0, 100);
+/** Capital politico que se recupera al cerrar el mes.
+ *  Base 4. En luna de miel (100 dias = 4 meses post eleccion) se duplica. */
+export const capitalRegen = (capital: number, happiness: number, honeymoon = false) => {
+  const passive = CAPITAL_PASSIVE_BASE + (happiness - 60) / 10;
+  return clamp(capital + passive * (honeymoon ? 2 : 1), 0, 100);
+};
 
 export interface TickResult {
   state: SimState;
@@ -123,7 +129,11 @@ export function deterministicTick(s: SimState): TickResult {
 
   updateCohesion(s.blocs, s.relations);
 
-  s.capital = capitalRegen(s.capital, s.countries[s.playerCode].population.happiness);
+  s.capital = capitalRegen(
+    s.capital,
+    s.countries[s.playerCode].population.happiness,
+    (s.honeymoonUntil ?? 0) >= s.turn
+  );
 
   return { state: s, oilShockApplied: shock };
 }
