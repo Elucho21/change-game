@@ -16,7 +16,8 @@ Tres capas, en este orden:
 DATOS        engine/countries_mvp.json, lib/blocs.ts, lib/events/*, lib/decisions.ts,
    ↓         lib/routes.ts, lib/points.ts
              (contenido puro: números, textos, listas. Sin lógica.)
-MOTOR        lib/engine.ts, lib/trade.ts, lib/simulation.ts, lib/store.ts, lib/persistence.ts
+MOTOR        lib/engine.ts, lib/trade.ts, lib/simulation.ts, lib/politics.ts,
+   ↓         lib/store.ts, lib/persistence.ts
    ↓         (reglas del juego: funciones puras + un único store. Sin JSX.)
 INTERFAZ     components/*.tsx, app/*
              (dibuja lo que el motor calculó. Sin reglas del juego.)
@@ -92,7 +93,8 @@ Cada tarea vive en una zona. **Dos agentes no trabajan en la misma zona al mismo
 | **Contenido: bloques** | `lib/blocs.ts` | Bajo | ídem |
 | **Contenido: rutas** | `lib/routes.ts` | Bajo | ídem |
 | **Datos de países** | `engine/countries_mvp.json` + `scripts/build-data.mjs` | Medio | ampliar el mapa |
-| **Motor** | `lib/engine.ts`, `lib/trade.ts`, `lib/simulation.ts`, `lib/store.ts`, `lib/persistence.ts` | **Alto** | **una persona por vez** |
+| **Motor** | `lib/engine.ts`, `lib/trade.ts`, `lib/simulation.ts`, `lib/politics.ts`, `lib/store.ts`, `lib/persistence.ts` | **Alto** | **una persona por vez** |
+| **Tests** | `tests/*.test.ts` | Bajo | sumar casos al agregar contenido |
 | **Datos de puntos** | `lib/points.ts` (arrays `PORTS` y `AIRPORTS`) | Bajo | cargar puertos y aeropuertos |
 | **Interfaz** | `components/*.tsx`, `app/globals.css` | Medio | un componente por persona |
 | **Docs** | `docs/*`, `README.md` | Bajo | siempre |
@@ -182,7 +184,9 @@ Los porcentajes del juego se guardan con 2 decimales como máximo (`round()` en 
 
 ### 3.7 Sin dependencias nuevas sin motivo
 
-El proyecto tiene 6 dependencias: `next`, `react`, `react-dom`, `react-globe.gl`, `three`, `zustand`. Cada paquete nuevo es peso de build, superficie de bugs y una decisión que el otro agente no tomó. Si hace falta una función de utilidad de 20 líneas, se escribe.
+El proyecto tiene 6 dependencias de producción: `next`, `react`, `react-dom`, `react-globe.gl`, `three`, `zustand`, y una sola de desarrollo además de TypeScript: `vitest`. Cada paquete nuevo es peso de build, superficie de bugs y una decisión que el otro agente no tomó. Si hace falta una función de utilidad de 20 líneas, se escribe.
+
+`vitest` entró con motivo: sin runner de tests no hay forma de detectar que un cambio de contenido rompió el balance. Se probó primero `node --test` nativo con `--experimental-strip-types`, que no sirve acá porque Node ESM exige extensión explícita en cada import y eso obligaría a reescribir todos los imports del proyecto.
 
 **`three` va alineada con la que pide `globe.gl`.** Si conviven dos versiones, three.js renderiza objetos creados por la otra copia y el globo se cae con `determinantAffine is not a function`. `package.json` fuerza una sola copia:
 
@@ -254,11 +258,12 @@ En `lib/blocs.ts`. Cada bloque necesita `rules: string[]` — dos o tres frases 
 
 ```bash
 npm run data        # solo si tocaste datos de países
+npm test            # tests del motor
 npx tsc --noEmit    # tipos
 npm run build       # que compile de verdad
 ```
 
-**Los tres tienen que pasar.** Un commit que no compila le hace perder una hora al otro agente, que va a asumir que el problema lo causó él.
+**Los cuatro tienen que pasar.** Un commit que no compila le hace perder una hora al otro agente, que va a asumir que el problema lo causó él.
 
 Además, si tocaste el motor o la interfaz, **probalo en el navegador**. El store está expuesto en `window.__game` justamente para eso:
 
@@ -309,6 +314,19 @@ find node_modules -maxdepth 4 -type d -name three
 
 ---
 
+## 5.1 Tests
+
+```bash
+npm test          # una corrida
+npm run test:watch
+```
+
+Están en `tests/engine.test.ts` y cubren lo que se rompe en silencio: la calibración del comercio, que el preview coincida con el turno real, que los eventos con duración se apaguen solos, que la economía no explote a 60 turnos, que la oposición converja, y que el contenido sea consistente (ids únicos, ninguna decisión gratis, bloques sin miembros inexistentes).
+
+**Si agregás contenido, sumá el caso.** Un evento nuevo con `when` mal escrito no rompe nada visible hasta que alguien juega media hora.
+
+Los rangos de los tests son anchos a propósito: cuidan el orden de magnitud y las relaciones entre valores, no números exactos que cambiarían con cualquier ajuste de balance.
+
 ## 5.2 Guardado de partida
 
 La partida se guarda sola en `localStorage` al cerrar cada acción que cambia el mundo (decisión, evento resuelto, cambio de bloque, fin de turno) y se retoma sola al abrir la página.
@@ -317,6 +335,7 @@ La partida se guarda sola en `localStorage` al cerrar cada acción que cambia el
 - **Si cambiás la forma del estado persistido, subí `SAVE_VERSION` y agregá la migración en `migrate()`.** Un save de versión desconocida se descarta en silencio: perder una partida molesta, cargar un estado corrupto es peor.
 - Agregar un campo nuevo al estado no obliga a subir la versión si tiene un valor por defecto sensato: `loadSaved()` completa lo que falte con `initial()`. Eso es lo que permite que un save viejo siga andando cuando aparecen capas nuevas.
 - El save guarda solo datos, nunca funciones (`snapshot()` en `lib/store.ts`). Pesa ~38 KB por partida.
+- Campos agregados después (`taxBase`, `politics`, `active`) son opcionales en `PersistedState` y se reconstruyen al cargar: por eso un save viejo sigue funcionando sin subir la versión.
 
 Para probar a mano:
 

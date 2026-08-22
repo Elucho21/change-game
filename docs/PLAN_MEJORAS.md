@@ -41,9 +41,10 @@ Todo sobre los mismos datos: `engine/countries_mvp.json` sigue siendo la fuente 
 
 - [x] **Comercio bilateral real** — hecho el 22/08/2026 (`lib/trade.ts`). Modelo de gravedad calibrado; una sanción ahora duele en proporción a lo que comerciabas.
 - [x] **Rutas marítimas y chokepoints** — hecho el 22/08/2026 (`lib/routes.ts`). Seis rutas reales, cinco pasos críticos y cuatro eventos que los cierran.
+- [x] **Impuestos como variable jugable** — hecho el 22/08/2026. IVA, empresas e ingresos son palancas reales, medidas contra la estructura inicial de cada país.
 - [ ] **Aranceles como variable jugable**: hoy el arancel externo común es un número del bloque; falta que el jugador fije aranceles por país y por sector.
-- [ ] **Sectores productivos vivos**: `sectors` existe en el JSON pero todavía no reacciona. Que una sequía golpee agricultura y no servicios.
-- [ ] **Ciclo electoral**: mandato con fecha de vencimiento, resultado calculado desde felicidad + economía, y oposición con fuerza parlamentaria propia.
+- [x] **Sectores productivos vivos** — hecho el 22/08/2026. `sectorEffects` en los eventos: el mismo shock pega distinto según la estructura productiva de cada país.
+- [x] **Ciclo electoral** — hecho el 22/08/2026 (`lib/politics.ts`). Mandato de 4 años, reelección, y cuando se agotan los mandatos elegís sucesor y el partido sigue. La oposición encarece cada decisión.
 - [ ] **Guerra limitada**: resolución de combates con los datos militares que ya están cargados (soldados, aviones, submarinos, ojivas).
 
 ### Fase 2 — Más interacción
@@ -52,7 +53,7 @@ Todo sobre los mismos datos: `engine/countries_mvp.json` sigue siendo la fuente 
 
 - [ ] **Tratados multilaterales negociados**: proponer un bloque nuevo e invitar países; que acepten o no según intereses.
 - [ ] **Espionaje e inteligencia**: información parcial sobre países hostiles; hoy ves todo de todos.
-- [ ] **Panel de oposición interna**: partidos, gobernadores y sindicatos como actores con demandas propias, no solo eventos sueltos.
+- [~] **Panel de oposición interna**: la oposición ya existe como fuerza que crece, encarece decisiones y define elecciones. Falta abrirla en actores separados (gobernadores, sindicatos, partidos) con demandas propias.
 - [ ] **Cadena de consecuencias**: eventos que desbloquean otros eventos (un piquete reprimido habilita un juicio político).
 - [ ] **Timeline navegable**: click en un turno pasado para ver el estado del mundo en ese momento.
 
@@ -75,4 +76,5 @@ Todo sobre los mismos datos: `engine/countries_mvp.json` sigue siendo la fuente 
 - Los datos económicos son aproximaciones de 2025 pensadas para que el juego sea jugable y esté balanceado, no una base estadística.
 - Las relaciones se derivan de las etiquetas del JSON (`amistoso` = +55, `neutral` = 0, `tenso` = −40, `hostil` = −75) y se simetrizan promediando lo que cada país declara del otro.
 - La IA local es heurística (agresividad, relación, membresía de bloque). El realismo fino depende de Grok.
-- No hay tests automatizados todavía; la verificación fue manual sobre el navegador.
+- Tests del motor en `tests/engine.test.ts` (19 casos). Falta cobertura de la UI.
+- El balance de los países con inflación muy alta (Argentina, Venezuela) sigue siendo duro: se estabiliza pero ganar la elección exige desinflacionar de verdad. Requiere jugarlo para afinarlo.

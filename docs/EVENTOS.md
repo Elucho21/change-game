@@ -107,4 +107,17 @@ Para que un evento cierre un paso, alcanza con agregarle `disrupts: ['ormuz']`. 
 
 **Cerrar una ruta marítima**: agregá `disrupts: ['ormuz' | 'malaca' | 'suez' | 'panama' | 'gibraltar']` al evento.
 
+**Que el evento duela durante meses** (no solo el primer día): agregá `ongoing` y, si es mundial, `worldOngoing`. Se aplican **cada turno** durante `duration` turnos.
+
+```ts
+duration: 4,
+effects: { global_tension: 4 },              // el golpe inicial
+worldOngoing: { gdp_growth: -0.25 },         // lo que duele todos los meses, a todos
+ongoing: { happiness: -1 }                    // lo que duele todos los meses, a vos
+```
+
+Sin `ongoing`, un evento de `duration: 4` se siente igual que uno de `duration: 1`. Los tres eventos que ya lo usan (recesión global, pandemia, sequía) son la referencia.
+
+**Golpear un sector concreto**: `sectorEffects: { agriculture: -25 }` (caída del sector en %). El impacto sobre el crecimiento es proporcional al peso del sector en cada país: la misma sequía le cuesta 0.8 de crecimiento a Argentina (agricultura 8% del PBI) y 0.1 a Japón (1%). Sectores disponibles: `industry`, `agriculture`, `services`, `commerce`, `tourism`.
+
 **Métricas que acepta `effects`**: `happiness`, `stability`, `gdp_growth`, `inflation`, `unemployment`, `fiscal_balance`, `debt_to_gdp`, `military_budget_bn`, `gold_reserves_tonnes`, `capital`, `global_tension`, `oil_price`.

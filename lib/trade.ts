@@ -10,9 +10,13 @@ import { disruptionFactor } from './routes';
  * multiplica el flujo), la relacion diplomatica, las sanciones y el estado de
  * las rutas maritimas.
  *
- * La constante 112 esta calibrada para que los pares conocidos den valores
- * creibles en miles de millones de USD al ano:
+ * La constante 112 esta calibrada sobre la GRAVEDAD BASE, antes de los
+ * multiplicadores, en miles de millones de USD al ano:
  *   China-EE.UU. ~ 580 | EE.UU.-Mexico ~ 350 | Brasil-China ~ 130
+ *
+ * El volumen final es mayor cuando hay bloque compartido o buena relacion:
+ * EE.UU.-Mexico termina cerca de 560 porque comparten el T-MEC, que es lo que
+ * se busca. Los tests cuidan el orden de magnitud, no el numero exacto.
  */
 
 const K = 112;

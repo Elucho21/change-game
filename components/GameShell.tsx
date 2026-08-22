@@ -8,13 +8,16 @@ import CountryPanel from './CountryPanel';
 import DecisionsPanel from './DecisionsPanel';
 import BlocsPanel from './BlocsPanel';
 import EventCatalog from './EventCatalog';
+import GovernmentPanel from './GovernmentPanel';
+import ElectionModal from './ElectionModal';
 import Feed from './Feed';
 import GrokBridge from './GrokBridge';
 
-type Tab = 'pais' | 'decisiones' | 'bloques' | 'eventos';
+type Tab = 'pais' | 'gobierno' | 'decisiones' | 'bloques' | 'eventos';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'pais', label: '📊 Pais' },
+  { id: 'gobierno', label: '🏛️ Gobierno' },
   { id: 'decisiones', label: '🎯 Decisiones' },
   { id: 'bloques', label: '🧩 Bloques' },
   { id: 'eventos', label: '📚 Eventos' }
@@ -40,6 +43,7 @@ export default function GameShell() {
             ))}
           </div>
           {tab === 'pais' && <CountryPanel />}
+          {tab === 'gobierno' && <GovernmentPanel />}
           {tab === 'decisiones' && <DecisionsPanel />}
           {tab === 'bloques' && <BlocsPanel />}
           {tab === 'eventos' && <EventCatalog />}
@@ -53,6 +57,8 @@ export default function GameShell() {
       </div>
 
       {grok && <GrokBridge onClose={() => setGrok(false)} />}
+
+      <ElectionModal />
 
       {gameOver && (
         <div className="overlay">

@@ -1,6 +1,7 @@
 'use client';
 
 import { dateLabel, useGame } from '@/lib/store';
+import { monthsToElection } from '@/lib/politics';
 
 function Stat({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
@@ -12,7 +13,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: str
 }
 
 export default function TopBar({ onGrok }: { onGrok: () => void }) {
-  const { countries, playerCode, turn, capital, world, pending } = useGame();
+  const { countries, playerCode, turn, capital, world, pending, politics, active } = useGame();
   const endTurn = useGame((s) => s.endTurn);
   const newGame = useGame((s) => s.newGame);
   const p = countries[playerCode];
@@ -39,7 +40,27 @@ export default function TopBar({ onGrok }: { onGrok: () => void }) {
         <Stat label="Deuda/PBI" value={`${e.debt_to_gdp}%`} tone={e.debt_to_gdp > 90 ? 'bad' : ''} />
         <Stat label="Tension global" value={`${world.global_tension}`} tone={world.global_tension > 65 ? 'bad' : ''} />
         <Stat label="Petroleo" value={`$${world.oil_price}`} />
+        <Stat
+          label="Elecciones"
+          value={`${monthsToElection(politics, turn)} m`}
+          tone={monthsToElection(politics, turn) <= 6 ? 'warn' : ''}
+        />
+        <Stat
+          label="Oposicion"
+          value={`${politics.opposition}`}
+          tone={politics.opposition > 60 ? 'bad' : politics.opposition < 35 ? 'good' : ''}
+        />
       </div>
+
+      {active.length > 0 && (
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          {active.map((a) => (
+            <span className="pill warn" key={a.key} title={a.event.description}>
+              {a.event.emoji} {a.event.title} · {a.turnsLeft}m
+            </span>
+          ))}
+        </div>
+      )}
 
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <button onClick={onGrok} title="Genera el prompt del turno para pegar en Grok">🤖 Grok</button>

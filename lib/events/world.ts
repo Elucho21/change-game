@@ -4,6 +4,12 @@ import type { GameEvent } from '../types';
  * Eventos MUNDIALES: le pasan al planeta, no a vos.
  * `worldEffects` se aplica a TODOS los paises; `effects` solo al jugador.
  * Muchos mueven variables globales (precio del petroleo, tension global).
+ *
+ * Efectos que duran: `worldOngoing` / `ongoing` se repiten CADA TURNO durante
+ * `duration` turnos. `sectorEffects` golpea sectores concretos y pega distinto
+ * en cada pais segun su estructura productiva.
+ * Los tres eventos de abajo con estos campos son la referencia; el resto los
+ * carga Grok (docs/PEDIDOS_A_GROK.md).
  */
 export const WORLD_EVENTS: GameEvent[] = [
   {
@@ -30,6 +36,10 @@ export const WORLD_EVENTS: GameEvent[] = [
     description:
       'Las principales economias entran en contraccion al mismo tiempo. Cae el comercio mundial y se secan los mercados de credito.',
     worldEffects: { gdp_growth: -0.9, unemployment: 0.5, fiscal_balance: -0.4 },
+    // la recesion no es un golpe y listo: cobra todos los meses que dura
+    worldOngoing: { gdp_growth: -0.25, unemployment: 0.15 },
+    ongoing: { happiness: -1 },
+    sectorEffects: { industry: -12, commerce: -8 },
     effects: { global_tension: 4 }
   },
   {
@@ -43,6 +53,9 @@ export const WORLD_EVENTS: GameEvent[] = [
     description:
       'Un nuevo virus respiratorio se expande desde Asia. Los mercados descuentan restricciones de movilidad.',
     worldEffects: { gdp_growth: -0.5, happiness: -3, fiscal_balance: -0.5 },
+    worldOngoing: { happiness: -1.2, fiscal_balance: -0.2 },
+    ongoing: { stability: -0.8 },
+    sectorEffects: { tourism: -35, services: -10 },
     effects: { global_tension: 3 },
     choices: [
       {

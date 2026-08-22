@@ -1,10 +1,10 @@
 import type {
-  Bloc, Country, Decision, GlobalState, Projection, ProjectionKey,
+  ActiveEvent, Bloc, Country, Decision, GlobalState, Projection, ProjectionKey,
   ProjectionMetric, ProjectionWarning
 } from './types';
 import {
   adjustRelation, advanceMonth, applyDelta, clamp, eligibleEvents, getRelation,
-  naturalDrift, relLabel, resolveRelationTargets
+  naturalDrift, relLabel, resolveRelationTargets, type TaxRates
 } from './engine';
 import { oilShock } from './routes';
 import { totalTrade, tradeGrowthEffect, type TradeContext } from './trade';
@@ -33,6 +33,10 @@ export interface SimState {
   sanctions: string[];
   disruptions: Record<string, number>;
   tradeBase: Record<string, number>;
+  /** eventos en curso: sus efectos `ongoing` se aplican en cada tick */
+  active: ActiveEvent[];
+  /** tasas impositivas iniciales de cada pais: la referencia del efecto fiscal */
+  taxBase: Record<string, TaxRates>;
 }
 
 export const cloneSim = (s: SimState): SimState => JSON.parse(JSON.stringify(s)) as SimState;
@@ -91,7 +95,22 @@ export function deterministicTick(s: SimState): TickResult {
   advanceMonth(s.world);
   s.turn += 1;
 
-  naturalDrift(s.countries, s.blocs, s.world, tradeEffects(s));
+  // 1. las crisis en curso siguen pesando: una recesion de 4 meses cobra
+  //    todos los meses, no solo el primero
+  const stillActive: ActiveEvent[] = [];
+  for (const a of s.active) {
+    const left = a.turnsLeft ?? 0;
+    if (left <= 0) continue;
+    if (a.event.worldOngoing) {
+      for (const c of Object.values(s.countries)) applyDelta(c, a.event.worldOngoing);
+    }
+    if (a.event.ongoing) applyDelta(s.countries[s.playerCode], a.event.ongoing, s.world);
+    const next = { ...a, turnsLeft: left - 1 };
+    if (next.turnsLeft > 0) stillActive.push(next);
+  }
+  s.active = stillActive;
+
+  naturalDrift(s.countries, s.blocs, s.world, tradeEffects(s), s.taxBase);
 
   // rutas cerradas: el barril sube mientras dure el bloqueo
   const shock = oilShock(s.disruptions, s.turn);

@@ -5,14 +5,20 @@ import data from './data/countries.gen.json';
 import { BLOCS } from './blocs';
 import { DECISIONS } from './decisions';
 import {
-  ARC_COLORS, adjustRelation, aiReactions, applyDelta, blocEffects, buildGrokPrompt,
-  canJoin, checkGameOver, clamp, computeArcs, crisisEvents, dateLabel, getRelation,
-  previewDelta, relLabel, resolveRelationTargets, rollEvents
+  ARC_COLORS, adjustRelation, aiReactions, applyDelta, applySectorShock, blocEffects,
+  buildGrokPrompt, canJoin, checkGameOver, clamp, computeArcs, crisisEvents, damagedSectors,
+  dateLabel, eligibleEvents, getRelation, previewDelta, relLabel, resolveRelationTargets,
+  ratesOf, rollEvents, taxEffects, type TaxRates
 } from './engine';
 import type { Reaction } from './engine';
 import { CHOKEPOINTS } from './routes';
 import { tradeBaseline } from './trade';
 import { cloneSim, deterministicTick, projectDecision, type SimState } from './simulation';
+import {
+  defaultPolitics, driftOpposition, isElectionDue, legacy, needsSuccessor,
+  oppositionCostFactor, poll, runElection, successors,
+  type Candidate, type ElectionResult, type Politics
+} from './politics';
 import {
   clearGame, loadGame, saveGame, savedSummary,
   type PersistedState, type SavedGame
@@ -72,6 +78,16 @@ interface GameStore {
   disruptions: Record<string, number>;
   /** comercio total de cada pais al empezar la partida, para medir el impacto */
   tradeBase: Record<string, number>;
+  /** tasas impositivas iniciales: el efecto fiscal se mide contra estas */
+  taxBase: Record<string, TaxRates>;
+  /** mandato, partido y oposicion */
+  politics: Politics;
+  /** PBI al asumir, para el balance de gestion del final */
+  startingGdp: number;
+  /** eleccion resuelta esperando que el jugador la lea */
+  election: ElectionResult | null;
+  /** candidatos a sucederte: si esta lleno, la partida espera tu eleccion */
+  succession: Candidate[];
   gameOver: { title: string; body: string } | null;
 
   start: (code: string) => void;
@@ -87,6 +103,14 @@ interface GameStore {
   activeCrises: () => ChokepointCrisis[];
   /** que pasaria si tomo esta decision, a 3 turnos vista */
   previewDecision: (id: string, target?: string) => Projection | null;
+  /** mueve una alicuota impositiva (IVA, corporativo o ingresos) */
+  setTaxRate: (kind: keyof TaxRates, delta: number) => void;
+  /** intencion de voto proyectada de hoy */
+  currentPoll: () => number;
+  /** elige quien te sucede cuando se te agotan los mandatos */
+  chooseSuccessor: (id: string) => void;
+  /** cierra el cartel del resultado electoral */
+  dismissElection: () => void;
   reset: () => void;
   select: (code: string | null) => void;
   setMapMode: (m: MapMode) => void;
@@ -126,6 +150,15 @@ const initial = () => ({
   savedGame: null as SavedGame['summary'] | null,
   disruptions: {} as Record<string, number>,
   tradeBase: {} as Record<string, number>,
+  taxBase: {} as Record<string, TaxRates>,
+  politics: {
+    partyName: '', leaderName: '', termStart: 1, termLength: 48,
+    consecutiveTerms: 1, maxConsecutive: 2, opposition: 40,
+    electionsWon: 0, powerSince: 1
+  } as Politics,
+  startingGdp: 0,
+  election: null as ElectionResult | null,
+  succession: [] as Candidate[],
   gameOver: null as { title: string; body: string } | null
 });
 
@@ -142,6 +175,7 @@ function snapshot(st: GameStore): PersistedState {
     sanctions: st.sanctions,
     feed: st.feed.slice(0, 60),
     pending: st.pending,
+    active: st.active,
     recentEventIds: st.recentEventIds,
     lastActions: st.lastActions,
     history: st.history,
@@ -150,7 +184,73 @@ function snapshot(st: GameStore): PersistedState {
     layers: st.layers,
     disruptions: st.disruptions,
     tradeBase: st.tradeBase,
+    taxBase: st.taxBase,
+    politics: st.politics,
+    startingGdp: st.startingGdp,
     gameOver: st.gameOver
+  };
+}
+
+/**
+ * Aplica el resultado de una eleccion sobre el estado.
+ * Ganar abre un mandato nuevo; perder termina la partida con el balance de
+ * gestion. Se usa tanto cuando te presentas vos como cuando compite tu sucesor.
+ */
+function applyElection(st: GameStore, result: ElectionResult, candidate?: Candidate): Partial<GameStore> {
+  const country = st.countries[st.playerCode];
+  const feed: FeedItem[] = [
+    {
+      turn: st.turn,
+      date: dateLabel(st.world),
+      kind: 'sistema',
+      emoji: result.won ? '🗳️' : '🏛️',
+      title: result.headline,
+      body: `${result.detail} Participacion: ${result.turnout}%.`,
+      tone: result.won ? 'bueno' : 'malo'
+    }
+  ];
+
+  if (!result.won) {
+    const balance = legacy(st.politics, st.turn, country, st.startingGdp);
+    return {
+      election: result,
+      feed: [...feed, ...st.feed],
+      gameOver: {
+        title: 'Tu partido pierde el gobierno',
+        body: `${balance.years} anios en el poder y ${balance.elections} elecciones ganadas. `
+          + `El PBI ${balance.gdpChange >= 0 ? 'crecio' : 'cayo'} ${Math.abs(balance.gdpChange)}%, `
+          + `la inflacion quedo en ${balance.inflation}% y la felicidad en ${balance.happiness}. `
+          + `Ahora gobierna la oposicion.`
+      }
+    };
+  }
+
+  const politics: Politics = {
+    ...st.politics,
+    termStart: st.turn,
+    consecutiveTerms: st.politics.consecutiveTerms + 1,
+    electionsWon: st.politics.electionsWon + 1,
+    // ganar una eleccion desinfla a la oposicion, al menos por un tiempo
+    opposition: clamp(st.politics.opposition - 12, 0, 100)
+  };
+
+  feed.unshift({
+    turn: st.turn,
+    date: dateLabel(st.world),
+    kind: 'sistema',
+    emoji: '🎉',
+    title: candidate ? `${candidate.name} asume por ${politics.partyName}` : 'Arranca un nuevo mandato',
+    body: candidate
+      ? `${candidate.description} Mandato numero ${politics.electionsWon + 1} del partido.`
+      : `Cuatro anios mas. La oposicion queda en ${politics.opposition}.`,
+    tone: 'bueno'
+  });
+
+  return {
+    election: result,
+    politics,
+    capital: clamp(st.capital + 20, 0, 100),
+    feed: [...feed, ...st.feed]
   };
 }
 
@@ -180,7 +280,9 @@ export const useGame = create<GameStore>((set, get) => {
     capital: st.capital,
     sanctions: st.sanctions,
     disruptions: st.disruptions,
-    tradeBase: st.tradeBase
+    tradeBase: st.tradeBase,
+    active: st.active,
+    taxBase: st.taxBase
   });
 
   return {
@@ -198,12 +300,18 @@ export const useGame = create<GameStore>((set, get) => {
       disruptions: {},
       turn: 1
     });
+    const taxBase = Object.fromEntries(
+      Object.values(s.countries).map((c) => [c.code, ratesOf(c)])
+    );
     set({
       ...s,
       started: true,
       playerCode: code,
       selected: code,
       tradeBase: baseline,
+      taxBase,
+      politics: defaultPolitics(player, 1),
+      startingGdp: player.economy.gdp_trillion_usd,
       feed: [
         {
           turn: 1,
@@ -211,7 +319,7 @@ export const useGame = create<GameStore>((set, get) => {
           kind: 'sistema',
           emoji: player.flag,
           title: `Asumis el gobierno de ${player.name}`,
-          body: `Inflacion ${player.economy.inflation}% - desempleo ${player.economy.unemployment}% - deuda ${player.economy.debt_to_gdp}% del PBI. Tenes ${s.capital} de capital politico.`,
+          body: `Inflacion ${player.economy.inflation}% - desempleo ${player.economy.unemployment}% - deuda ${player.economy.debt_to_gdp}% del PBI. Tenes ${s.capital} de capital politico y cuatro anios de mandato por delante.`,
           tone: 'neutral'
         }
       ],
@@ -261,6 +369,7 @@ export const useGame = create<GameStore>((set, get) => {
       sanctions: st.sanctions,
       feed: st.feed,
       pending: st.pending,
+      active: st.active ?? [],
       recentEventIds: st.recentEventIds,
       lastActions: st.lastActions,
       history: st.history,
@@ -270,6 +379,14 @@ export const useGame = create<GameStore>((set, get) => {
       layers: { ...initial().layers, ...st.layers },
       disruptions: st.disruptions,
       tradeBase: st.tradeBase,
+      // un save v1 no traia taxBase: se reconstruye con las tasas actuales,
+      // que es exactamente el comportamiento de "todavia no tocaste nada"
+      taxBase: st.taxBase ?? Object.fromEntries(
+        Object.values(st.countries).map((c) => [c.code, ratesOf(c)])
+      ),
+      // saves viejos sin ciclo electoral: se les crea el mandato desde cero
+      politics: st.politics ?? defaultPolitics(st.countries[st.playerCode], st.turn),
+      startingGdp: st.startingGdp ?? st.countries[st.playerCode].economy.gdp_trillion_usd,
       gameOver: st.gameOver
     });
     return true;
@@ -341,6 +458,48 @@ export const useGame = create<GameStore>((set, get) => {
     if (dec.needsTarget && !target) return null;
     return projectDecision(cloneSim(simOf(st)), dec, target, 3);
   },
+
+  /**
+   * Sube o baja una alicuota. El costo politico crece con el tamano del
+   * cambio: retocar dos puntos es un tramite, subir diez es una reforma.
+   */
+  setTaxRate: (kind, delta) => {
+    const st = get();
+    if (!st.started || st.gameOver || !delta) return;
+
+    const cost = Math.round(2 + Math.abs(delta) * 1.5);
+    if (st.capital < cost) return;
+
+    const countries = fresh(st.countries);
+    const e = countries[st.playerCode].economy;
+    const field = kind === 'iva' ? 'tax_iva' : kind === 'corporate' ? 'tax_corporate' : 'tax_income_avg';
+    const before = e[field];
+    const after = clamp(Math.round((before + delta) * 10) / 10, 0, 60);
+    if (after === before) return;
+    e[field] = after;
+
+    const label = kind === 'iva' ? 'IVA' : kind === 'corporate' ? 'Impuesto a las empresas' : 'Impuesto a los ingresos';
+    const fx = taxEffects(countries[st.playerCode], st.taxBase[st.playerCode]);
+
+    set({
+      countries,
+      capital: clamp(st.capital - cost, 0, 100),
+      lastActions: [...st.lastActions, `${label}: ${before}% -> ${after}%`],
+      feed: [
+        {
+          turn: st.turn,
+          date: dateLabel(st.world),
+          kind: 'decision',
+          emoji: after > before ? '📈' : '📉',
+          title: `${label} ${after > before ? 'sube' : 'baja'} a ${after}%`,
+          body: `Contra la estructura con la que arrancaste: recaudacion ${fx.fiscal >= 0 ? '+' : ''}${fx.fiscal} del PBI, crecimiento ${fx.growth >= 0 ? '+' : ''}${fx.growth}, humor social ${fx.happiness >= 0 ? '+' : ''}${fx.happiness} por turno.`,
+          tone: 'neutral'
+        },
+        ...st.feed
+      ]
+    });
+    persist();
+  },
   setMapMode: (m) => set({ mapMode: m }),
 
   // ----------------------------------------------------------
@@ -349,7 +508,9 @@ export const useGame = create<GameStore>((set, get) => {
     if (st.gameOver) return;
     const dec = DECISIONS.find((d) => d.id === id);
     if (!dec) return;
-    if (st.capital < dec.cost.capital) return;
+    // con una oposicion fuerte, gobernar sale mas caro
+    const cost = Math.round(dec.cost.capital * oppositionCostFactor(st.politics.opposition));
+    if (st.capital < cost) return;
     if (dec.needsTarget && !target) return;
 
     const countries = fresh(st.countries);
@@ -379,7 +540,7 @@ export const useGame = create<GameStore>((set, get) => {
       relations,
       world,
       sanctions,
-      capital: clamp(st.capital - dec.cost.capital + (dec.effects.capital ?? 0), 0, 100),
+      capital: clamp(st.capital - cost + (dec.effects.capital ?? 0), 0, 100),
       lastActions: [...st.lastActions, title],
       feed: [
         {
@@ -396,6 +557,46 @@ export const useGame = create<GameStore>((set, get) => {
     });
     persist();
   },
+
+  // ---------------------------------------------------------- politica
+  currentPoll: () => {
+    const st = get();
+    if (!st.started) return 0;
+    return poll(st.countries[st.playerCode], st.politics, st.capital);
+  },
+
+  /**
+   * Elegis quien encabeza la boleta cuando se te agotaron los mandatos.
+   * Su perfil se aplica al pais y modifica el resultado de la eleccion que
+   * se resuelve a continuacion.
+   */
+  chooseSuccessor: (id) => {
+    const st = get();
+    const candidate = st.succession.find((c) => c.id === id);
+    if (!candidate) return;
+
+    const countries = fresh(st.countries);
+    const world = fresh(st.world);
+    applyDelta(countries[st.playerCode], candidate.modifiers, world);
+    const capital = clamp(st.capital + (candidate.modifiers.capital ?? 0), 0, 100);
+
+    const politics: Politics = {
+      ...st.politics,
+      leaderName: `${candidate.name} (${candidate.title})`,
+      consecutiveTerms: 0   // arranca de cero: la eleccion de abajo lo pone en 1
+    };
+
+    const result = runElection(countries[st.playerCode], politics, capital, candidate);
+    const after = applyElection(
+      { ...st, countries, world, capital, politics } as GameStore, result, candidate
+    );
+    // `after` solo trae lo electoral: los efectos del candidato sobre el pais
+    // viajan en `countries` y `world`, y hay que setearlos igual
+    set({ countries, world, ...after, succession: [] });
+    persist();
+  },
+
+  dismissElection: () => set({ election: null }),
 
   // ----------------------------------------------------------
   resolveEvent: (key, choiceId) => {
@@ -494,9 +695,12 @@ export const useGame = create<GameStore>((set, get) => {
       capital: st.capital,
       sanctions: st.sanctions,
       disruptions,
-      tradeBase: st.tradeBase
+      tradeBase: st.tradeBase,
+      active: st.active,
+      taxBase: st.taxBase
     });
     const turn = tick.state.turn;
+    const active = tick.state.active;
 
     if (tick.oilShockApplied > 0) {
       feed.push({
@@ -519,6 +723,20 @@ export const useGame = create<GameStore>((set, get) => {
       for (const cp of ev.disrupts ?? []) disruptions[cp] = turn + ev.duration;
       if (ev.worldEffects) {
         for (const c of Object.values(countries)) applyDelta(c, ev.worldEffects, undefined);
+      }
+
+      // golpe sectorial: el mismo evento pega distinto segun la estructura
+      // productiva de cada pais
+      if (ev.sectorEffects) {
+        for (const c of Object.values(countries)) {
+          const growthDelta = applySectorShock(c, ev.sectorEffects);
+          if (growthDelta) applyDelta(c, { gdp_growth: growthDelta }, undefined);
+        }
+      }
+
+      // eventos que duran: quedan activos y cobran todos los meses
+      if ((ev.ongoing || ev.worldOngoing) && ev.duration > 1) {
+        active.push({ key, event: ev, turn, target: st.playerCode, resolved: false, turnsLeft: ev.duration });
       }
       if (ev.choices?.length) {
         pending.push({ key, event: ev, turn, target: st.playerCode, resolved: false });
@@ -564,9 +782,56 @@ export const useGame = create<GameStore>((set, get) => {
     }
 
     // 7. el capital politico ya lo recupero el tick determinista
-    const capital = tick.state.capital;
+    let capital = tick.state.capital;
 
     const p2 = countries[st.playerCode];
+
+    // 8. la oposicion se mueve todos los meses segun como te vaya
+    let politics: Politics = { ...st.politics, opposition: driftOpposition(st.politics, p2) };
+    let election: ElectionResult | null = null;
+    let succession: Candidate[] = [];
+
+    // 9. se termino el mandato: hay elecciones
+    if (isElectionDue(politics, turn)) {
+      if (needsSuccessor(politics)) {
+        // no podes presentarte otra vez: elegis sucesor y la partida espera
+        succession = successors();
+        feed.push({
+          turn, date: dateLabel(world), kind: 'sistema', emoji: '🗳️',
+          title: 'Se termina tu ultimo mandato',
+          body: `No podes presentarte de nuevo. Elegi quien encabeza la boleta de ${politics.partyName}.`,
+          tone: 'neutral'
+        });
+      } else {
+        const result = runElection(p2, politics, capital);
+        const after = applyElection(
+          { ...st, turn, world, countries, capital, politics } as GameStore, result
+        );
+        election = after.election ?? null;
+        if (after.politics) politics = after.politics;
+        if (after.capital !== undefined) capital = after.capital;
+        if (after.feed) feed.push(...after.feed.slice(0, 2).reverse());
+        if (after.gameOver) {
+          feed.push({
+            turn, date: dateLabel(world), kind: 'sistema', emoji: '🏁',
+            title: after.gameOver.title, body: after.gameOver.body, tone: 'malo'
+          });
+        }
+        if (after.gameOver) {
+          set({
+            turn, world, countries, relations, blocs, disruptions, active, capital,
+            politics, election, succession: [],
+            reactions, lastActions: [],
+            pending: [...pending],
+            recentEventIds: [...rolled.map((e) => e.id), ...st.recentEventIds].slice(0, 8),
+            feed: [...feed.reverse(), ...st.feed].slice(0, 200),
+            gameOver: after.gameOver
+          });
+          persist();
+          return;
+        }
+      }
+    }
     const gameOver = checkGameOver(p2, turn);
     if (gameOver) {
       feed.push({
@@ -582,7 +847,11 @@ export const useGame = create<GameStore>((set, get) => {
       relations,
       blocs,
       disruptions,
+      active,
       capital,
+      politics,
+      election,
+      succession,
       reactions,
       lastActions: [],
       pending: [...pending],
@@ -760,9 +1029,16 @@ export const useGame = create<GameStore>((set, get) => {
   };
 });
 
-// util de debug: en el navegador, window.__game.getState() muestra el estado completo
+// utiles de debug (ver docs/REGLAS_DE_CODIGO.md):
+//   window.__game   -> estado completo del juego
+//   window.__engine -> funciones puras del motor, para probar formulas y eventos
 if (typeof window !== 'undefined') {
-  (window as unknown as { __game: typeof useGame }).__game = useGame;
+  const w = window as unknown as { __game: typeof useGame; __engine: Record<string, unknown> };
+  w.__game = useGame;
+  w.__engine = {
+    applySectorShock, taxEffects, damagedSectors, projectDecision, deterministicTick,
+    eligibleEvents, getRelation, blocEffects, canJoin
+  };
 }
 
 // re-exports para los componentes

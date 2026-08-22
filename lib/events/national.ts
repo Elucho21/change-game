@@ -285,7 +285,10 @@ export const NATIONAL_EVENTS: GameEvent[] = [
     description:
       'La falta de lluvias castiga la cosecha. Caen las exportaciones y la recaudacion por retenciones.',
     when: (c) => (c.player.sectors?.agriculture ?? 0) >= 5,
-    effects: { gdp_growth: -0.7, fiscal_balance: -0.5, happiness: -2, inflation: 0.6 }
+    // el golpe va por sector: castiga a los paises agricolas y no a los demas
+    sectorEffects: { agriculture: -25 },
+    ongoing: { fiscal_balance: -0.15, inflation: 0.2 },
+    effects: { happiness: -2 }
   },
   {
     id: 'boom_commodities',

@@ -63,6 +63,13 @@ export interface Country {
   military: Military;
   sectors: Record<string, number>;
   traits: Traits;
+  /**
+   * Salud de cada sector, 0-100. No viene del JSON: aparece cuando un evento
+   * golpea un sector y se recupera sola unos puntos por turno.
+   */
+  sectorHealth?: Record<string, number>;
+  /** inflacion del mes anterior: sirve para saber si sube o baja */
+  prevInflation?: number;
 }
 
 export interface GlobalState {
@@ -147,6 +154,22 @@ export interface GameEvent {
   choices?: EventChoice[];
   /** ids de Chokepoint que este evento cierra durante `duration` turnos */
   disrupts?: string[];
+  /**
+   * Efecto que se repite CADA TURNO mientras el evento sigue activo, durante
+   * `duration` turnos. Es lo que separa una recesion de cuatro meses de un
+   * apagon de un dia: `effects` es el golpe inicial, `ongoing` es el que duele
+   * todos los meses hasta que pasa. Aplica al pais del jugador.
+   */
+  ongoing?: Delta;
+  /** igual que `ongoing` pero sobre todos los paises (solo scope mundial) */
+  worldOngoing?: Delta;
+  /**
+   * Golpe sobre sectores productivos, en % de caida del sector.
+   * `{ agriculture: -20 }` = la agricultura cae 20%. El impacto sobre el
+   * crecimiento del pais es proporcional al peso de ese sector en su economia,
+   * asi una sequia castiga a Argentina (agricultura 8%) y no a Japon (1%).
+   */
+  sectorEffects?: Record<string, number>;
 }
 
 export interface EventContext {
@@ -166,6 +189,8 @@ export interface ActiveEvent {
   resolved: boolean;
   chosen?: string;
   outcome?: string;
+  /** turnos que le quedan al efecto `ongoing`; se descuenta en cada tick */
+  turnsLeft?: number;
 }
 
 export interface Decision {

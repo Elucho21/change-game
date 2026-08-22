@@ -46,7 +46,12 @@ export const REL_COLORS: Record<RelationLabel, string> = {
 };
 
 export const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
-const round = (v: number, d = 2) => Math.round(v * 10 ** d) / 10 ** d;
+const round = (v: number, d = 2) => {
+  const r = Math.round(v * 10 ** d) / 10 ** d;
+  // Math.round(-0.001) da -0, que se muestra como "-0" en pantalla y rompe
+  // cualquier comparacion directa contra 0
+  return r === 0 ? 0 : r;
+};
 
 // ============================================================
 // BLOQUES
@@ -140,6 +145,124 @@ export function previewDelta(delta: Delta) {
 }
 
 // ============================================================
+// SECTORES PRODUCTIVOS
+// ============================================================
+
+/**
+ * Cuanto pesa un golpe sectorial sobre el crecimiento del pais.
+ * K=40 esta calibrado para que una sequia que tumba 20% la agricultura le
+ * cueste ~0.64 de crecimiento a Argentina (agricultura 8% del PBI) y apenas
+ * 0.08 a Japon (1%). El mismo evento, consecuencias distintas segun la
+ * estructura productiva de cada uno.
+ */
+const SECTOR_K = 40;
+
+export const DEFAULT_SECTOR_HEALTH = 100;
+
+/** Salud de los sectores de un pais, creandola si es la primera vez. */
+export function sectorHealthOf(country: Country): Record<string, number> {
+  if (!country.sectorHealth) {
+    country.sectorHealth = Object.fromEntries(
+      Object.keys(country.sectors).map((k) => [k, DEFAULT_SECTOR_HEALTH])
+    );
+  }
+  return country.sectorHealth;
+}
+
+/**
+ * Aplica un golpe sectorial y devuelve cuanto mueve el crecimiento del pais.
+ * `effects` viene en % de caida del sector: { agriculture: -20 }.
+ */
+export function applySectorShock(country: Country, effects: Record<string, number>): number {
+  const health = sectorHealthOf(country);
+  let growthDelta = 0;
+  for (const [sector, pct] of Object.entries(effects)) {
+    const weight = country.sectors[sector] ?? 0;
+    if (!weight) continue;
+    health[sector] = clamp(round((health[sector] ?? DEFAULT_SECTOR_HEALTH) + pct, 1), 0, 100);
+    growthDelta += (pct / 100) * (weight / 100) * SECTOR_K;
+  }
+  return round(growthDelta);
+}
+
+/** Los sectores golpeados se recuperan de a poco. */
+export function recoverSectors(country: Country, rate = 3) {
+  if (!country.sectorHealth) return;
+  for (const k of Object.keys(country.sectorHealth)) {
+    const v = country.sectorHealth[k];
+    if (v < DEFAULT_SECTOR_HEALTH) {
+      country.sectorHealth[k] = clamp(round(v + rate, 1), 0, DEFAULT_SECTOR_HEALTH);
+    }
+  }
+}
+
+/** Sectores que hoy estan por debajo de lo normal (para mostrarlos en la UI). */
+export function damagedSectors(country: Country) {
+  if (!country.sectorHealth) return [];
+  return Object.entries(country.sectorHealth)
+    .filter(([, v]) => v < DEFAULT_SECTOR_HEALTH - 0.5)
+    .map(([sector, health]) => ({ sector, health, weight: country.sectors[sector] ?? 0 }))
+    .sort((a, b) => a.health - b.health);
+}
+
+// ============================================================
+// IMPUESTOS
+// ============================================================
+
+/**
+ * Efecto de la estructura impositiva sobre la economia, por turno.
+ *
+ * Las tasas del JSON (IVA, corporativo, ingresos) hasta ahora solo se
+ * mostraban. Aca definen recaudacion y costos reales:
+ *  - IVA: la mas facil de recaudar y la mas regresiva (pega en precios y humor)
+ *  - Corporativo: financia, pero espanta inversion y crecimiento
+ *  - Ingresos: recauda sin inflacionar, castiga el humor de la clase media
+ *
+ * MUY IMPORTANTE: el efecto se mide contra las tasas CON LAS QUE ARRANCO ese
+ * pais, no contra una media mundial. El balance fiscal del JSON ya refleja la
+ * estructura impositiva de cada uno; si comparasemos contra una media, Estados
+ * Unidos (sin IVA federal) arrastraria un rojo permanente sin que el jugador
+ * toque nada, y los 24 paises quedarian descalibrados. Aca, si no movés los
+ * impuestos, el efecto es cero: es una palanca del jugador, no un impuesto
+ * escondido.
+ */
+export interface TaxRates {
+  iva: number;
+  corporate: number;
+  income: number;
+}
+
+export const ratesOf = (country: Country): TaxRates => ({
+  iva: country.economy.tax_iva,
+  corporate: country.economy.tax_corporate,
+  income: country.economy.tax_income_avg
+});
+
+export interface TaxEffects {
+  fiscal: number;      // puntos del PBI de recaudacion extra o faltante
+  inflation: number;
+  growth: number;
+  happiness: number;
+}
+
+export const NO_TAX_EFFECTS: TaxEffects = { fiscal: 0, inflation: 0, growth: 0, happiness: 0 };
+
+export function taxEffects(country: Country, baseline?: TaxRates): TaxEffects {
+  if (!baseline) return NO_TAX_EFFECTS;
+  const e = country.economy;
+  const dIva = e.tax_iva - baseline.iva;
+  const dCorp = e.tax_corporate - baseline.corporate;
+  const dInc = e.tax_income_avg - baseline.income;
+
+  return {
+    fiscal: round(dIva * 0.09 + dCorp * 0.05 + dInc * 0.06),
+    inflation: round(dIva * 0.05),
+    growth: round(-(dCorp * 0.03) - dIva * 0.012 - dInc * 0.01),
+    happiness: round(-(dIva * 0.10) - dInc * 0.08 - dCorp * 0.02)
+  };
+}
+
+// ============================================================
 // RESOLUCION DE RELACIONES DE UNA DECISION / EVENTO
 // ============================================================
 
@@ -176,16 +299,20 @@ export function naturalDrift(
   blocs: Bloc[],
   world: GlobalState,
   /** efecto del comercio bilateral por pais, de lib/trade.ts (opcional) */
-  tradeEffect: Record<string, number> = {}
+  tradeEffect: Record<string, number> = {},
+  /** tasas impositivas con las que arranco cada pais (opcional) */
+  taxBase: Record<string, TaxRates> = {}
 ) {
   for (const c of Object.values(countries)) {
     const e = c.economy;
     const p = c.population;
     const fx = blocEffects(blocs, c.code);
 
-    // el comercio intrabloque y los flujos bilaterales empujan el crecimiento
+    // el comercio intrabloque, los flujos bilaterales y la presion impositiva
+    // definen hacia donde tiende el crecimiento
+    const tax = taxEffects(c, taxBase[c.code]);
     const target =
-      2 + fx.tradeBonus + (tradeEffect[c.code] ?? 0)
+      2 + fx.tradeBonus + (tradeEffect[c.code] ?? 0) + tax.growth
       - (e.inflation > 30 ? 1.5 : 0)
       - (world.global_tension > 70 ? 0.5 : 0);
     e.gdp_growth = round(e.gdp_growth * 0.85 + target * 0.15);
@@ -200,19 +327,42 @@ export function naturalDrift(
     // desempleo sigue al ciclo
     e.unemployment = round(clamp(e.unemployment - (e.gdp_growth - 2) * 0.05, 0.5, 60));
 
-    // deficit sostenido acumula deuda
-    if (e.fiscal_balance < 0) e.debt_to_gdp = round(e.debt_to_gdp + Math.abs(e.fiscal_balance) * 0.08);
-    else e.debt_to_gdp = round(Math.max(0, e.debt_to_gdp - e.fiscal_balance * 0.05));
+    // la estructura impositiva empuja la recaudacion y los precios
+    if (tax.inflation) e.inflation = round(Math.max(-2, e.inflation + tax.inflation));
 
-    // presiones sobre humor social
-    let mood = 0;
-    if (e.inflation > 25) mood -= 2;
-    else if (e.inflation > 10) mood -= 0.8;
+    // deficit sostenido acumula deuda; la recaudacion extra lo amortigua
+    const effectiveBalance = e.fiscal_balance + tax.fiscal;
+    if (effectiveBalance < 0) e.debt_to_gdp = round(e.debt_to_gdp + Math.abs(effectiveBalance) * 0.08);
+    else e.debt_to_gdp = round(Math.max(0, e.debt_to_gdp - effectiveBalance * 0.05));
+
+    // los sectores golpeados se recuperan solos
+    recoverSectors(c);
+
+    // Presiones sobre el humor social.
+    //
+    // El castigo por inflacion es logaritmico y esta acotado, y ademas cuenta
+    // la TENDENCIA: la gente no reacciona al nivel de precios sino a si la
+    // cosa mejora o empeora. Con el castigo plano anterior (-2 fijo con
+    // inflacion > 25) la felicidad tendia matematicamente a cero y paises como
+    // Argentina, que arrancan con 140%, eran imposibles de gobernar: no habia
+    // ningun equilibrio estable por encima de 0.
+    const prev = c.prevInflation ?? e.inflation;
+    const trend = prev - e.inflation;          // positivo = la inflacion esta bajando
+
+    let mood = tax.happiness;
+    if (e.inflation > 10) {
+      mood -= Math.min(2, Math.log10(Math.max(e.inflation, 10) / 10) * 1.1);
+    }
+    if (trend > 0.5) mood += Math.min(1.2, trend * 0.15);      // desinflacionar se nota y se premia
+    else if (trend < -0.5) mood -= Math.min(1.2, -trend * 0.2); // que se dispare, tambien
+
     if (e.unemployment > 12) mood -= 1.5;
     else if (e.unemployment < 5) mood += 0.5;
     if (e.gdp_growth > 3) mood += 1;
     else if (e.gdp_growth < 0) mood -= 1.2;
     if (e.debt_to_gdp > 110) mood -= 0.5;
+
+    c.prevInflation = e.inflation;
 
     p.happiness = round(clamp(p.happiness * 0.97 + 60 * 0.03 + mood, 0, 100), 1);
     p.stability = round(clamp(p.stability * 0.97 + p.happiness * 0.03 + (mood > 0 ? 0.3 : -0.4), 0, 100), 1);

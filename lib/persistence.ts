@@ -1,6 +1,8 @@
 import type {
   ActiveEvent, Bloc, Country, FeedItem, GlobalState, Layers, MapMode
 } from './types';
+import type { TaxRates } from './engine';
+import type { Politics } from './politics';
 
 /**
  * Guardado de partida en localStorage.
@@ -27,6 +29,7 @@ export interface PersistedState {
   sanctions: string[];
   feed: FeedItem[];
   pending: ActiveEvent[];
+  active: ActiveEvent[];
   recentEventIds: string[];
   lastActions: string[];
   history: {
@@ -38,6 +41,10 @@ export interface PersistedState {
   layers: Layers;
   disruptions: Record<string, number>;
   tradeBase: Record<string, number>;
+  /** opcionales: los saves v1 no los traian */
+  taxBase?: Record<string, TaxRates>;
+  politics?: Politics;
+  startingGdp?: number;
   gameOver: { title: string; body: string } | null;
 }
 
