@@ -13,7 +13,7 @@ import { monthsToElection } from '@/lib/politics';
 type MetricKey = keyof Omit<HistoryPoint, 'turn'>;
 
 /** Metricas donde subir es malo, para pintar la linea del color correcto. */
-const BAD_UP: MetricKey[] = ['inflation', 'unemployment', 'debt', 'opposition', 'tension', 'oil'];
+const BAD_UP: MetricKey[] = ['inflation', 'unemployment', 'debt', 'opposition', 'tension', 'oil', 'fx'];
 
 function Sparkline({ points, metric }: { points: HistoryPoint[]; metric: MetricKey }) {
   const pts = points.slice(-24);
@@ -123,6 +123,13 @@ export default function TopBar({ onGrok }: { onGrok: () => void }) {
           tone={e.fiscal_balance < -3 ? 'bad' : e.fiscal_balance > 0 ? 'good' : 'warn'} />
         <Stat label="Deuda/PBI" value={`${e.debt_to_gdp}%`} metric="debt" history={history}
           tone={e.debt_to_gdp > 90 ? 'bad' : ''} />
+        <Stat
+          label="Tipo de cambio"
+          value={`${p.fx ?? 100}`}
+          metric="fx"
+          history={history}
+          tone={(p.fx ?? 100) > 130 ? 'bad' : (p.fx ?? 100) > 110 ? 'warn' : ''}
+        />
         <Stat label="Tension global" value={`${world.global_tension}`} metric="tension" history={history}
           tone={world.global_tension > 65 ? 'bad' : ''} />
         <Stat label="Petroleo" value={`$${world.oil_price}`} metric="oil" history={history} />

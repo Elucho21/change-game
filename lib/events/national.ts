@@ -209,7 +209,10 @@ export const NATIONAL_EVENTS: GameEvent[] = [
     duration: 2,
     description:
       'El tipo de cambio se dispara, las reservas caen y los importadores frenan operaciones. El mercado testea al Banco Central.',
-    when: (c) => c.player.economy.inflation > 20 || c.player.economy.fiscal_balance < -3.5,
+    when: (c) =>
+      c.player.economy.inflation > 20
+      || c.player.economy.fiscal_balance < -3.5
+      || (c.fx ?? 100) >= 115,
     choices: [
       {
         id: 'tasa',
@@ -239,6 +242,40 @@ export const NATIONAL_EVENTS: GameEvent[] = [
     ]
   },
   {
+    id: 'fmi_watch',
+    scope: 'nacional',
+    title: 'El FMI pone al pais bajo observacion',
+    emoji: '🔎',
+    tags: ['economia', 'deuda', 'fmi'],
+    weight: 7,
+    duration: 1,
+    description:
+      'El staff del Fondo publica un reporte. Todavia no hay mision, pero los mercados ya lo leen como una senal.',
+    when: (c) => c.imf?.stage === 'watch',
+    choices: [
+      {
+        id: 'anticipar',
+        label: 'Anticipar un ajuste para salir del radar',
+        detail: 'Corta el riesgo. Cuesta humor y actividad.',
+        cost: { capital: 10 },
+        effects: { fiscal_balance: 0.8, happiness: -4, gdp_growth: -0.3 }
+      },
+      {
+        id: 'dialogo_tecnico',
+        label: 'Recibir a los tecnicos y ganar tiempo',
+        detail: 'Senal de cooperacion, sin compromiso fiscal duro.',
+        cost: { capital: 6 },
+        effects: { stability: 1, inflation: 0.2 }
+      },
+      {
+        id: 'ignorar_reporte',
+        label: 'Ignorar el reporte y seguir el rumbo',
+        detail: 'Soberania retorica. El mercado cobra un recargo.',
+        effects: { happiness: 2, inflation: 0.5, fiscal_balance: -0.2 }
+      }
+    ]
+  },
+  {
     id: 'fmi',
     scope: 'nacional',
     title: 'Vencimiento con el FMI',
@@ -248,7 +285,7 @@ export const NATIONAL_EVENTS: GameEvent[] = [
     duration: 2,
     description:
       'Se acerca un vencimiento grande con el Fondo. La mision tecnica pide metas fiscales mas duras para liberar el desembolso.',
-    when: (c) => c.player.economy.debt_to_gdp > 60,
+    when: (c) => c.imf ? c.imf.weight >= 5 : c.player.economy.debt_to_gdp > 60,
     choices: [
       {
         id: 'acordar',

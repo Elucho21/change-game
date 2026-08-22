@@ -37,6 +37,8 @@ import {
   clearGame, loadGame, saveGame, savedSummary,
   type PersistedState, type SavedGame
 } from './persistence';
+import { defaultImf, imfLabel, type ImfState } from './imf';
+import { applyFx, DEVALUE_JUMP, FX_START } from './fx';
 import type {
   ActiveEvent, Bloc, ChokepointCrisis, Country, Decision, Delta, FeedItem, GameEvent,
   GlobalState, Layers, MapMode, Projection
@@ -76,6 +78,8 @@ export interface HistoryPoint {
   opposition: number;
   tension: number;
   oil: number;
+  /** indice de tipo de cambio. 100 = arranque. Saves viejos no lo traen. */
+  fx?: number;
 }
 
 interface GameStore {
@@ -121,6 +125,8 @@ interface GameStore {
   cabinet: Cabinet;
   /** turno de la ultima factura del socio de coalicion */
   lastCoalitionDemand: number;
+  /** arco FMI del jugador */
+  imf: ImfState;
   /** eleccion resuelta esperando que el jugador la lea */
   election: ElectionResult | null;
   /** candidatos a sucederte: si esta lleno, la partida espera tu eleccion */
@@ -212,6 +218,7 @@ const initial = () => ({
   cooldowns: {} as Record<string, number>,
   cabinet: {} as Cabinet,
   lastCoalitionDemand: 0,
+  imf: defaultImf(),
   election: null as ElectionResult | null,
   succession: [] as Candidate[],
   gameOver: null as { title: string; body: string } | null
@@ -246,6 +253,7 @@ function snapshot(st: GameStore): PersistedState {
     cooldowns: st.cooldowns,
     cabinet: st.cabinet,
     lastCoalitionDemand: st.lastCoalitionDemand,
+    imf: st.imf,
     gameOver: st.gameOver
   };
 }
@@ -338,6 +346,10 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
 
       if (dec.id === 'sancionar' && order.target && !run.sanctions.includes(order.target)) {
         run.sanctions.push(order.target);
+      }
+      if (dec.id === 'devaluar') {
+        const c = run.countries[st.playerCode];
+        c.fx = applyFx(c.fx ?? FX_START, DEVALUE_JUMP);
       }
       run.capital = clamp(run.capital + (dec.effects.capital ?? 0), 0, 100);
       log(dec.emoji, order.label, dec.detail);
@@ -629,7 +641,8 @@ export const useGame = create<GameStore>((set, get) => {
     active: st.active,
     taxBase: st.taxBase,
     politics: st.politics,
-    honeymoonUntil: st.politics.honeymoonUntil
+    honeymoonUntil: st.politics.honeymoonUntil,
+    imf: st.imf
   });
 
   return {
@@ -638,6 +651,7 @@ export const useGame = create<GameStore>((set, get) => {
   start: (code) => {
     const s = initial();
     const player = s.countries[code];
+    player.fx = FX_START;
     const baseline = tradeBaseline({
       countries: s.countries,
       relations: s.relations,
@@ -659,6 +673,7 @@ export const useGame = create<GameStore>((set, get) => {
       taxBase,
       politics: defaultPolitics(player, 1),
       startingGdp: player.economy.gdp_trillion_usd,
+      imf: defaultImf(),
       feed: [
         {
           turn: 1,
@@ -684,7 +699,8 @@ export const useGame = create<GameStore>((set, get) => {
           capital: s.capital,
           opposition: defaultPolitics(player, 1).opposition,
           tension: s.world.global_tension,
-          oil: s.world.oil_price
+          oil: s.world.oil_price,
+          fx: FX_START
         }
       ]
     });
@@ -717,7 +733,12 @@ export const useGame = create<GameStore>((set, get) => {
       turn: st.turn,
       capital: st.capital,
       world: st.world,
-      countries: st.countries,
+      countries: (() => {
+        const c = st.countries;
+        const p = c[st.playerCode];
+        if (p && p.fx === undefined) p.fx = FX_START;
+        return c;
+      })(),
       relations: st.relations,
       blocs: st.blocs,
       sanctions: st.sanctions,
@@ -729,7 +750,7 @@ export const useGame = create<GameStore>((set, get) => {
       // un save viejo no trae los indicadores que se agregaron despues:
       // se completan con cero para que el grafico no rompa
       history: st.history.map((h) => ({
-        unemployment: 0, fiscal: 0, debt: 0, capital: 0, opposition: 0, tension: 0, oil: 0,
+        unemployment: 0, fiscal: 0, debt: 0, capital: 0, opposition: 0, tension: 0, oil: 0, fx: FX_START,
         ...h
       })),
       selected: st.selected ?? st.playerCode,
@@ -757,6 +778,7 @@ export const useGame = create<GameStore>((set, get) => {
       cooldowns: st.cooldowns ?? {},
       cabinet: st.cabinet ?? {},
       lastCoalitionDemand: st.lastCoalitionDemand ?? 0,
+      imf: st.imf ?? defaultImf(),
       gameOver: st.gameOver
     });
     return true;
@@ -1032,10 +1054,12 @@ export const useGame = create<GameStore>((set, get) => {
       tradeBase: st.tradeBase,
       active: st.active,
       taxBase: st.taxBase,
-      cabinet: run.cabinet
+      cabinet: run.cabinet,
+      imf: st.imf
     });
     const turn = tick.state.turn;
     const active = tick.state.active;
+    const imf = tick.state.imf ?? st.imf;
 
     if (tick.oilShockApplied > 0) {
       feed.push({
@@ -1043,6 +1067,20 @@ export const useGame = create<GameStore>((set, get) => {
         title: 'Rutas maritimas interrumpidas',
         body: `El bloqueo sigue activo: el barril sube a ${world.oil_price} USD y el flete de larga distancia se encarece.`,
         tone: 'malo'
+      });
+    }
+
+    if (imf.stage !== st.imf.stage) {
+      const tone: FeedItem['tone'] =
+        imf.stage === 'exit' || imf.stage === 'none' ? 'bueno'
+          : imf.stage === 'program' ? 'malo' : 'neutral';
+      feed.push({
+        turn, date: dateLabel(world), kind: 'sistema', emoji: '🏦',
+        title: imfLabel(imf.stage),
+        body: imf.stage === 'exit'
+          ? 'El pais sale del radar del Fondo. El mercado lo lee como alivio, no como perdón.'
+          : `Peso ${imf.weight}/18. La deuda y el deficit definen si esto escala.`,
+        tone
       });
     }
 
@@ -1267,6 +1305,7 @@ export const useGame = create<GameStore>((set, get) => {
       cooldowns: run.cooldowns,
       cabinet: run.cabinet,
       lastCoalitionDemand,
+      imf,
       reactions,
       lastActions: [],
       pending: [...pending],
@@ -1287,7 +1326,8 @@ export const useGame = create<GameStore>((set, get) => {
           capital,
           opposition: politics.opposition,
           tension: world.global_tension,
-          oil: world.oil_price
+          oil: world.oil_price,
+          fx: p2.fx ?? FX_START
         }
       ].slice(-60),
       gameOver

@@ -13,6 +13,8 @@ import { topPartnerOf, totalTrade, tradeMatrix, type TradeContext } from './trad
 import type { Politics } from './politics';
 import { cabinetPassive, coalitionPartners as coalitionPartnersOf, type Cabinet } from './cabinet';
 import { CAPITAL_PASSIVE_BASE } from './electoral';
+import { defaultImf, tickImf, type ImfState } from './imf';
+import { applyFx, FX_START, fxInflationPassthrough, fxPressure, DEVALUE_JUMP } from './fx';
 
 /**
  * Simulacion determinista del mundo: todo lo que pasa en un turno SIN azar.
@@ -48,6 +50,8 @@ export interface SimState {
   cabinet?: Cabinet;
   /** hasta este turno el pasivo de capital va doble (100 dias / luna de miel) */
   honeymoonUntil?: number;
+  /** arco FMI del jugador. Si falta, el tick lo crea. */
+  imf?: ImfState;
 }
 
 export const cloneSim = (s: SimState): SimState => JSON.parse(JSON.stringify(s)) as SimState;
@@ -58,7 +62,12 @@ export const cloneSim = (s: SimState): SimState => JSON.parse(JSON.stringify(s))
  */
 export function eventExtraOf(s: SimState) {
   const player = s.countries[s.playerCode];
-  if (!s.politics) return undefined;
+  const imf = s.imf;
+  const fx = player?.fx ?? FX_START;
+
+  if (!s.politics) {
+    return { imf, fx };
+  }
 
   const sys = systemOf(s.playerCode);
   const sinceStart = s.turn - s.politics.termStart;
@@ -88,7 +97,9 @@ export function eventExtraOf(s: SimState) {
       total: Math.round(total),
       changeVsStart: base ? Math.round((total / base - 1) * 1000) / 10 : 0,
       topPartner: topPartnerOf(s.playerCode, ctx)
-    }
+    },
+    imf,
+    fx
   };
 }
 
@@ -182,7 +193,32 @@ export function deterministicTick(s: SimState): TickResult {
     if (capitalPerTurn) s.capital = clamp(s.capital + capitalPerTurn, 0, 100);
   }
 
+  const playerBefore = s.countries[s.playerCode];
+  const prevDebt = playerBefore.economy.debt_to_gdp;
+  const prevGold = playerBefore.economy.gold_reserves_tonnes;
+
   naturalDrift(s.countries, s.blocs, s.world, tradeEffects(s), s.taxBase);
+
+  // FMI + tipo de cambio del jugador. Despues del drift para que vean
+  // el mes economico, no el estado con el que se abrio el turno.
+  const player = s.countries[s.playerCode];
+  s.imf = tickImf(s.imf ?? defaultImf(), {
+    debt: player.economy.debt_to_gdp,
+    prevDebt,
+    fiscal: player.economy.fiscal_balance,
+    turn: s.turn
+  });
+  const pressure = fxPressure({
+    inflation: player.economy.inflation,
+    fiscal: player.economy.fiscal_balance,
+    debt: player.economy.debt_to_gdp,
+    imfStage: s.imf.stage,
+    monthsRising: s.imf.monthsRising,
+    deltaReserves: player.economy.gold_reserves_tonnes - prevGold
+  });
+  player.fx = applyFx(player.fx ?? FX_START, pressure);
+  const importedInflation = fxInflationPassthrough(pressure);
+  if (importedInflation) applyDelta(player, { inflation: importedInflation }, s.world);
 
   // rutas cerradas: el barril sube mientras dure el bloqueo
   const shock = oilShock(s.disruptions, s.turn);
@@ -217,6 +253,10 @@ export function applyDecisionTo(s: SimState, dec: Decision, target?: string): Si
 
   if (dec.cost.fiscal) applyDelta(s.countries[s.playerCode], { fiscal_balance: -dec.cost.fiscal }, s.world);
   if (dec.id === 'sancionar' && target && !s.sanctions.includes(target)) s.sanctions.push(target);
+  if (dec.id === 'devaluar') {
+    const c = s.countries[s.playerCode];
+    c.fx = applyFx(c.fx ?? FX_START, DEVALUE_JUMP);
+  }
 
   s.capital = clamp(s.capital - dec.cost.capital + (dec.effects.capital ?? 0), 0, 100);
   return s;

@@ -72,6 +72,11 @@ export interface Country {
   prevInflation?: number;
   /** ultimo efecto fiscal por impuestos ya asentado en fiscal_balance (ver taxEffects en engine.ts) */
   taxFiscalApplied?: number;
+  /**
+   * Indice de tipo de cambio. 100 = arranque de partida.
+   * Sube = depreciacion; baja = apreciacion. Solo lo llena el pais del jugador.
+   */
+  fx?: number;
 }
 
 export interface GlobalState {
@@ -222,6 +227,21 @@ export interface EventContext {
     /** codigo del principal socio comercial */
     topPartner: string;
   };
+  /**
+   * FMI del jugador. Opcional para no romper eventos que no lo miran.
+   *   when: (c) => (c.imf?.weight ?? 0) >= 5
+   *   when: (c) => c.imf?.stage === 'watch'
+   */
+  imf?: {
+    stage: 'none' | 'watch' | 'mission' | 'program' | 'exit';
+    weight: number;
+    monthsRising: number;
+  };
+  /**
+   * Indice de tipo de cambio del jugador. 100 = arranque. Sube = depreciacion.
+   *   when: (c) => (c.fx ?? 100) > 120
+   */
+  fx?: number;
 }
 
 export interface ActiveEvent {
