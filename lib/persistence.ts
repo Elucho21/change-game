@@ -46,6 +46,14 @@ export interface PersistedState {
   layers: Layers;
   disruptions: Record<string, number>;
   tradeBase: Record<string, number>;
+  imf?: {
+    stage: 'none' | 'watch' | 'mission' | 'program' | 'exit';
+    monthsRising: number;
+    monthsPrimarySurplus: number;
+    conditionStreak: number;
+    weight: number;
+    exitUntil: number;
+  };
   /** opcionales: los saves v1 no los traian */
   taxBase?: Record<string, TaxRates>;
   politics?: Politics;
