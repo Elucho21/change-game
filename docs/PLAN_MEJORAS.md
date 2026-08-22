@@ -48,6 +48,8 @@ Todo sobre los mismos datos: `engine/countries_mvp.json` sigue siendo la fuente 
 
 ### Fase 2 — Más interacción
 
+- [x] **Preview de consecuencias de 2º y 3er orden** — hecho el 22/08/2026 (`lib/simulation.ts`). Proyecta 3 meses con las mismas reglas del turno real y avisa qué eventos habilita cada decisión.
+
 - [ ] **Tratados multilaterales negociados**: proponer un bloque nuevo e invitar países; que acepten o no según intereses.
 - [ ] **Espionaje e inteligencia**: información parcial sobre países hostiles; hoy ves todo de todos.
 - [ ] **Panel de oposición interna**: partidos, gobernadores y sindicatos como actores con demandas propias, no solo eventos sueltos.
@@ -56,7 +58,7 @@ Todo sobre los mismos datos: `engine/countries_mvp.json` sigue siendo la fuente 
 
 ### Fase 3 — Presentación
 
-- [ ] **Guardado de partidas** (localStorage primero, cuenta después).
+- [x] **Guardado de partidas** — hecho el 22/08/2026 (`lib/persistence.ts`). Automático en localStorage, con versión de save y migración preparada.
 - [ ] **Modo comparación**: dos países lado a lado.
 - [ ] **Animación de cambio de turno**: que se vea qué polígonos cambiaron de color.
 - [ ] **Sonido y música ambiente** de sala de situación.

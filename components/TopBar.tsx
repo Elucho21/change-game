@@ -14,7 +14,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: str
 export default function TopBar({ onGrok }: { onGrok: () => void }) {
   const { countries, playerCode, turn, capital, world, pending } = useGame();
   const endTurn = useGame((s) => s.endTurn);
-  const reset = useGame((s) => s.reset);
+  const newGame = useGame((s) => s.newGame);
   const p = countries[playerCode];
   const e = p.economy;
 
@@ -43,7 +43,14 @@ export default function TopBar({ onGrok }: { onGrok: () => void }) {
 
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <button onClick={onGrok} title="Genera el prompt del turno para pegar en Grok">🤖 Grok</button>
-        <button onClick={reset} title="Volver a elegir pais">↺</button>
+        <button
+          onClick={() => {
+            if (confirm('Se borra la partida guardada y volves a elegir pais. Seguro?')) newGame();
+          }}
+          title="Nueva partida (borra el guardado)"
+        >
+          ↺ Nueva
+        </button>
         <button className="btn-primary" onClick={endTurn}>
           {pending.length ? `Avanzar mes (${pending.length} sin resolver)` : 'Avanzar mes ▶'}
         </button>

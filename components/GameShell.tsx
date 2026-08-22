@@ -24,7 +24,7 @@ export default function GameShell() {
   const [tab, setTab] = useState<Tab>('pais');
   const [grok, setGrok] = useState(false);
   const gameOver = useGame((s) => s.gameOver);
-  const reset = useGame((s) => s.reset);
+  const newGame = useGame((s) => s.newGame);
 
   return (
     <div className="app">
@@ -59,7 +59,7 @@ export default function GameShell() {
           <div className="modal" style={{ maxWidth: 460, textAlign: 'center' }}>
             <h2>🏁 {gameOver.title}</h2>
             <p>{gameOver.body}</p>
-            <button className="btn-primary" onClick={reset}>Empezar de nuevo</button>
+            <button className="btn-primary" onClick={newGame}>Empezar de nuevo</button>
           </div>
         </div>
       )}

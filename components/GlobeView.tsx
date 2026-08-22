@@ -4,8 +4,10 @@ import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ARC_COLORS, ISO_TO_CODE, useGame } from '@/lib/store';
 import { computeArcs, getRelation, relLabel, REL_COLORS } from '@/lib/engine';
-import { MARITIME_ROUTES, CHOKEPOINTS, routeDisrupted, activeDisruptions } from '@/lib/routes';
+import { useShallow } from 'zustand/react/shallow';
+import { MARITIME_ROUTES, routeDisrupted, activeDisruptions } from '@/lib/routes';
 import { visibleFlows, type TradeContext } from '@/lib/trade';
+import { POINT_COLORS, visiblePoints } from '@/lib/points';
 import type { Country } from '@/lib/types';
 
 // react-globe.gl toca WebGL: solo puede cargarse en el cliente.
@@ -28,6 +30,8 @@ const MODES: { id: 'relaciones' | 'bloques' | 'estabilidad' | 'economia'; label:
   { id: 'economia', label: '💰 Economia' }
 ];
 
+const PORT_HINT = 'Los datos de puertos y aeropuertos todavia no estan cargados (ver docs/PEDIDOS_A_GROK.md)';
+
 const heat = (v: number) => {
   // 0 = rojo, 100 = verde
   const t = Math.max(0, Math.min(100, v)) / 100;
@@ -44,10 +48,27 @@ export default function GlobeView() {
   const [features, setFeatures] = useState<Feature[]>([]);
   const [hover, setHover] = useState<Feature | null>(null);
 
+  // Suscripcion selectiva: sin useShallow, `useGame()` devuelve el store entero
+  // y el globo se vuelve a renderizar (y a recalcular arcos, rutas y puntos)
+  // cada vez que cambia CUALQUIER cosa del estado, incluido el feed.
   const {
     countries, relations, blocs, playerCode, selected, mapMode, sanctions, pending,
     layers, disruptions, turn
-  } = useGame();
+  } = useGame(
+    useShallow((s) => ({
+      countries: s.countries,
+      relations: s.relations,
+      blocs: s.blocs,
+      playerCode: s.playerCode,
+      selected: s.selected,
+      mapMode: s.mapMode,
+      sanctions: s.sanctions,
+      pending: s.pending,
+      layers: s.layers,
+      disruptions: s.disruptions,
+      turn: s.turn
+    }))
+  );
   const select = useGame((s) => s.select);
   const toggleLayer = useGame((s) => s.toggleLayer);
 
@@ -120,10 +141,10 @@ export default function GlobeView() {
     [countries, relations, blocs, sanctions, playerCode, disruptions, turn]
   );
 
-  const arcs = useMemo(() => {
+  // Cada capa se memoiza por separado: prender o apagar el comercio no obliga
+  // a recalcular los arcos diplomaticos, y viceversa.
+  const diploArcs = useMemo(() => {
     const out: Record<string, unknown>[] = [];
-
-    // capa diplomatica: alianzas, aduanas, tension y sanciones
     if (layers.diplomacia) {
       for (const a of computeArcs(countries, relations, blocs, playerCode, sanctions)) {
         out.push({
@@ -142,7 +163,11 @@ export default function GlobeView() {
       }
     }
 
-    // capa comercial: grosor y color segun volumen, rojo si esta sancionado
+    return out;
+  }, [layers.diplomacia, countries, relations, blocs, playerCode, sanctions]);
+
+  const tradeArcs = useMemo(() => {
+    const out: Record<string, unknown>[] = [];
     if (layers.comercio) {
       for (const f of visibleFlows(tradeCtx)) {
         if (!countries[f.from] || !countries[f.to]) continue;
@@ -168,7 +193,9 @@ export default function GlobeView() {
     }
 
     return out;
-  }, [countries, relations, blocs, playerCode, sanctions, layers, tradeCtx]);
+  }, [layers.comercio, countries, tradeCtx]);
+
+  const arcs = useMemo(() => [...diploArcs, ...tradeArcs], [diploArcs, tradeArcs]);
 
   // rutas maritimas: se apagan visualmente cuando su chokepoint esta cerrado
   const paths = useMemo(() => {
@@ -188,18 +215,21 @@ export default function GlobeView() {
     });
   }, [layers.rutas, disruptions, turn]);
 
-  // chokepoints: puntos fijos, rojos cuando estan cerrados
-  const points = useMemo(() => {
-    if (!layers.rutas) return [];
-    const closed = new Set(activeDisruptions(disruptions, turn).map((c) => c.id));
-    return CHOKEPOINTS.map((c) => ({
-      lat: c.lat,
-      lng: c.lng,
-      color: closed.has(c.id) ? '#e5484d' : '#7f8ea8',
-      radius: closed.has(c.id) ? 0.55 : 0.32,
-      label: `<div style="padding:6px 9px;background:#0e1524ee;border:1px solid #1e293f;border-radius:8px;font-size:12px;color:#e6ecf7;max-width:220px"><b>${c.name}</b>${closed.has(c.id) ? ' <span style="color:#e5484d">CERRADO</span>' : ''}<div style="color:#8c99b3;margin-top:3px">${c.description}</div></div>`
-    }));
-  }, [layers.rutas, disruptions, turn]);
+  // puntos del mapa: chokepoints, capitales, puertos y aeropuertos (lib/points.ts)
+  const points = useMemo(
+    () =>
+      visiblePoints(layers, disruptions, turn).map((pt) => {
+        const closed = pt.kind === 'chokepoint' && pt.name.includes('CERRADO');
+        return {
+          lat: pt.lat,
+          lng: pt.lng,
+          color: closed ? '#e5484d' : POINT_COLORS[pt.kind],
+          radius: 0.22 + (pt.weight ?? 0.4) * 0.4,
+          label: `<div style="padding:6px 9px;background:#0e1524ee;border:1px solid #1e293f;border-radius:8px;font-size:12px;color:#e6ecf7;max-width:220px"><b>${pt.name}</b><div style="color:#8c99b3;margin-top:3px">${pt.description ?? pt.kind}</div></div>`
+        };
+      }),
+    [layers, disruptions, turn]
+  );
 
   // anillos pulsantes donde hay un evento esperando decision
   const rings = useMemo(
@@ -234,13 +264,39 @@ export default function GlobeView() {
 
       <div className="modes layers">
         <button className={layers.diplomacia ? 'on' : ''} onClick={() => toggleLayer('diplomacia')}>
-          {layers.diplomacia ? 'ON' : 'OFF'} Diplomacia
+          Diplomacia
         </button>
         <button className={layers.comercio ? 'on' : ''} onClick={() => toggleLayer('comercio')}>
-          {layers.comercio ? 'ON' : 'OFF'} Comercio
+          Comercio
         </button>
         <button className={layers.rutas ? 'on' : ''} onClick={() => toggleLayer('rutas')}>
-          {layers.rutas ? 'ON' : 'OFF'} Rutas maritimas
+          Rutas
+        </button>
+        <button className={layers.points ? 'on' : ''} onClick={() => toggleLayer('points')} title="Capa maestra de puntos">
+          Puntos
+        </button>
+        <button
+          className={layers.points && layers.capitals ? 'on' : ''}
+          onClick={() => toggleLayer('capitals')}
+          disabled={!layers.points}
+        >
+          Capitales
+        </button>
+        <button
+          className={layers.points && layers.ports ? 'on' : ''}
+          onClick={() => toggleLayer('ports')}
+          disabled={!layers.points}
+          title={PORT_HINT}
+        >
+          Puertos
+        </button>
+        <button
+          className={layers.points && layers.airports ? 'on' : ''}
+          onClick={() => toggleLayer('airports')}
+          disabled={!layers.points}
+          title={PORT_HINT}
+        >
+          Aeropuertos
         </button>
       </div>
 

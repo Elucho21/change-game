@@ -4,6 +4,9 @@ import { ALL_COUNTRIES, useGame } from '@/lib/store';
 
 export default function StartScreen() {
   const start = useGame((s) => s.start);
+  const savedGame = useGame((s) => s.savedGame);
+  const loadSaved = useGame((s) => s.loadSaved);
+  const newGame = useGame((s) => s.newGame);
   const list = Object.values(ALL_COUNTRIES).filter((c) => c.playable);
 
   const byRegion = list.reduce<Record<string, typeof list>>((acc, c) => {
@@ -18,6 +21,17 @@ export default function StartScreen() {
         Elegis un pais, gobernas mes a mes y el resto del mundo reacciona. Economia, calle, bloques
         comerciales, alianzas militares y eventos que no controlas. Nadie te va a hacer facil el turno que viene.
       </p>
+
+      {savedGame && (
+        <div className="card" style={{ maxWidth: 520, width: '100%', borderColor: 'var(--accent)' }}>
+          <h4>{savedGame.flag} Partida guardada: {savedGame.playerName}</h4>
+          <p>Turno {savedGame.turn} · {savedGame.date}</p>
+          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+            <button className="btn-primary" onClick={() => loadSaved()}>Continuar partida</button>
+            <button onClick={() => newGame()}>Descartar y empezar de cero</button>
+          </div>
+        </div>
+      )}
 
       {Object.entries(byRegion).map(([region, countries]) => (
         <div key={region} style={{ width: '100%', maxWidth: 900 }}>

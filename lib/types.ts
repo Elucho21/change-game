@@ -228,3 +228,81 @@ export interface DiploArc {
   strength: number;
   label: string;
 }
+
+// ============================================================
+// MAPA: MODOS, CAPAS Y PUNTOS
+// ============================================================
+
+export type MapMode = 'relaciones' | 'bloques' | 'estabilidad' | 'economia';
+
+/** Capas del globo que el jugador puede prender y apagar. */
+export interface Layers {
+  diplomacia: boolean;
+  comercio: boolean;
+  rutas: boolean;
+  /** capa maestra de puntos: si esta en false no se dibuja ningun punto */
+  points: boolean;
+  capitals: boolean;
+  ports: boolean;
+  airports: boolean;
+}
+
+export type PointKind = 'capital' | 'puerto' | 'aeropuerto' | 'chokepoint';
+
+/** Punto dibujable sobre el globo (pointsData). */
+export interface MapPoint {
+  id: string;
+  kind: PointKind;
+  name: string;
+  lat: number;
+  lng: number;
+  /** codigo del pais al que pertenece, si aplica */
+  country?: string;
+  /** importancia relativa 0-1: define el radio del punto */
+  weight?: number;
+  description?: string;
+}
+
+/** Crisis activa en un paso maritimo. */
+export interface ChokepointCrisis {
+  id: string;
+  name: string;
+  /** turno en el que se reabre */
+  until: number;
+  /** que lo cerro: id del evento o 'manual' */
+  cause: string;
+}
+
+// ============================================================
+// PROYECCION DE CONSECUENCIAS (2do y 3er orden)
+// ============================================================
+
+export type ProjectionKey =
+  | 'happiness' | 'stability' | 'gdp_growth' | 'inflation' | 'unemployment'
+  | 'fiscal_balance' | 'debt_to_gdp' | 'capital' | 'trade';
+
+export interface ProjectionMetric {
+  key: ProjectionKey;
+  label: string;
+  /** valor actual, antes de decidir */
+  now: number;
+  /** diferencia contra no hacer nada, en el turno 0 (inmediato), +1, +2, +3... */
+  deltas: number[];
+  tone: 'bueno' | 'malo' | 'neutral';
+}
+
+export interface ProjectionWarning {
+  turn: number;
+  severity: 'aviso' | 'grave';
+  text: string;
+}
+
+export interface Projection {
+  horizon: number;
+  metrics: ProjectionMetric[];
+  warnings: ProjectionWarning[];
+  /** eventos que esta decision vuelve posibles (no lo eran antes) */
+  unlocks: { id: string; title: string; emoji: string }[];
+  /** eventos que esta decision deja de habilitar */
+  defuses: { id: string; title: string; emoji: string }[];
+}

@@ -27,7 +27,8 @@ Uso personal, un solo jugador.
 1. Datos           engine/countries_mvp.json  (24 países, fuente de verdad)
                    lib/blocs.ts · lib/events/* · lib/decisions.ts · lib/routes.ts
 2. Transformación  scripts/build-data.mjs  →  lib/data/countries.gen.json
-3. Motor           lib/engine.ts · lib/trade.ts · lib/store.ts
+3. Motor           lib/engine.ts · lib/trade.ts · lib/simulation.ts · lib/store.ts
+                   lib/persistence.ts (guardado) · lib/points.ts (puntos del mapa)
 4. Capa de IA      docs/PROMPT_MAESTRO.md + puente en components/GrokBridge.tsx
 5. Interfaz        components/*.tsx sobre react-globe.gl
 6. Despliegue      Vercel (Next.js 15, sin variables de entorno)
@@ -235,16 +236,35 @@ La heurística local calcula una "relevancia" por país (relación + bloques com
 | Flujos comerciales | `arcsData` | grosor y opacidad según volumen; rojo si hay sanciones |
 | Rutas marítimas | `pathsData` | seis rutas reales, rojas y punteadas si están interrumpidas |
 | Chokepoints | `pointsData` | cinco pasos críticos, rojos cuando están cerrados |
+| Puntos | `pointsData` | chokepoints, capitales, puertos y aeropuertos (`lib/points.ts`) |
 | Alertas | `ringsData` | anillo pulsante donde hay un evento esperando decisión |
 
 **Modos de mapa**: relaciones · bloques · estabilidad · economía.
-**Capas que se prenden y apagan**: diplomacia · comercio · rutas marítimas.
+**Capas que se prenden y apagan**: diplomacia · comercio · rutas marítimas · puntos (capa maestra) · capitales · puertos · aeropuertos.
+
+Los puertos y aeropuertos están soportados por el motor y la UI pero todavía sin datos: ver `docs/PEDIDOS_A_GROK.md`.
 
 Los polígonos se pintan cruzando `ADM0_A3` del GeoJSON con el ISO3 de cada país. Se usa `ADM0_A3` y no `ISO_A3` porque en Natural Earth 110m Francia y Noruega tienen `ISO_A3: "-99"`.
 
 Texturas y mapa servidos desde `public/` (no desde CDN): `earth-night.jpg`, `earth-topology.png`, `countries.geojson`.
 
 ---
+
+## 10.1 Preview de consecuencias
+
+Antes de confirmar una decisión, el juego proyecta **3 meses** hacia adelante. La cuenta la hace `projectDecision()` (`lib/simulation.ts`): corre dos simulaciones deterministas en paralelo —con la decisión y sin ella— y muestra la diferencia mes a mes.
+
+Devuelve tres cosas:
+
+1. **Métricas**: felicidad, estabilidad, crecimiento, inflación, desempleo, balance fiscal, deuda, capital político y comercio total, con su delta inmediato y a +1, +2 y +3 meses.
+2. **Avisos**: umbrales que se cruzan por culpa de la decisión (estabilidad bajo 30, deuda sobre 100% del PBI, desempleo sobre 12%, países que pasan a hostil…).
+3. **Eventos que habilita o desactiva**: evalúa la condición `when` de los 38 eventos contra el estado proyectado y avisa cuáles se vuelven posibles. Un ajuste fiscal, por ejemplo, habilita "Marcha opositora masiva" al hundir la felicidad debajo de 58.
+
+No incluye eventos aleatorios: muestra la tendencia que la decisión empuja, no el futuro exacto.
+
+## 10.2 Guardado de partida
+
+Automático en `localStorage` (`change-game:save`, versión 1) al cerrar cada acción que cambia el mundo. Al abrir la página, la partida se retoma sola; la pantalla de inicio ofrece continuar o descartar. Detalles y política de versionado en `docs/REGLAS_DE_CODIGO.md`, sección 5.2.
 
 ## 11. Fin de partida
 
@@ -266,9 +286,9 @@ Formato exacto y límites en `docs/GROK.md`. Los cambios de relación se recorta
 
 ## 13. Estado del proyecto
 
-**Implementado**: globo 3D con cinco capas · 24 países · 10 bloques con mecánica · comercio bilateral por gravedad · rutas marítimas con chokepoints · 38 eventos · 25 decisiones · capital político · reacciones de la IA · puente con Grok · fin de partida.
+**Implementado**: globo 3D con seis capas conmutables · 24 países · 10 bloques con mecánica · comercio bilateral por gravedad · rutas marítimas con chokepoints y crisis · 38 eventos · 25 decisiones con preview de consecuencias a 3 meses · capital político · reacciones de la IA · puente con Grok · guardado automático · fin de partida.
 
-**Lo que sigue**, priorizado en `docs/PLAN_MEJORAS.md`: aranceles jugables por país y sector · sectores productivos que reaccionen · ciclo electoral con oposición parlamentaria · guerra limitada con los datos militares que ya existen · guardado de partidas · ampliación a 60+ países.
+**Lo que sigue**, priorizado en `docs/PLAN_MEJORAS.md`: aranceles jugables por país y sector · sectores productivos que reaccionen · ciclo electoral con oposición parlamentaria · guerra limitada con los datos militares que ya existen · ampliación a 60+ países.
 
 ---
 
@@ -277,6 +297,7 @@ Formato exacto y límites en `docs/GROK.md`. Los cambios de relación se recorta
 | Documento | Para qué |
 |---|---|
 | `docs/REGLAS_DE_CODIGO.md` | **obligatorio antes de escribir código** |
+| `docs/PEDIDOS_A_GROK.md` | datos y contenido que el motor ya soporta y faltan cargar |
 | `docs/PLAN_MEJORAS.md` | qué se hizo y qué sigue |
 | `docs/EVENTOS.md` | catálogo de eventos y cómo agregar uno |
 | `docs/GROK.md` | formato del puente y reparto de trabajo |

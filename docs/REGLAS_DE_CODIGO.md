@@ -13,9 +13,10 @@ El objetivo no es "código lindo". Es que dos agentes trabajando en paralelo, si
 Tres capas, en este orden:
 
 ```
-DATOS        engine/countries_mvp.json, lib/blocs.ts, lib/events/*, lib/decisions.ts, lib/routes.ts
-   ↓         (contenido puro: números, textos, listas. Sin lógica.)
-MOTOR        lib/engine.ts, lib/trade.ts, lib/store.ts
+DATOS        engine/countries_mvp.json, lib/blocs.ts, lib/events/*, lib/decisions.ts,
+   ↓         lib/routes.ts, lib/points.ts
+             (contenido puro: números, textos, listas. Sin lógica.)
+MOTOR        lib/engine.ts, lib/trade.ts, lib/simulation.ts, lib/store.ts, lib/persistence.ts
    ↓         (reglas del juego: funciones puras + un único store. Sin JSX.)
 INTERFAZ     components/*.tsx, app/*
              (dibuja lo que el motor calculó. Sin reglas del juego.)
@@ -91,7 +92,8 @@ Cada tarea vive en una zona. **Dos agentes no trabajan en la misma zona al mismo
 | **Contenido: bloques** | `lib/blocs.ts` | Bajo | ídem |
 | **Contenido: rutas** | `lib/routes.ts` | Bajo | ídem |
 | **Datos de países** | `engine/countries_mvp.json` + `scripts/build-data.mjs` | Medio | ampliar el mapa |
-| **Motor** | `lib/engine.ts`, `lib/trade.ts`, `lib/store.ts` | **Alto** | **una persona por vez** |
+| **Motor** | `lib/engine.ts`, `lib/trade.ts`, `lib/simulation.ts`, `lib/store.ts`, `lib/persistence.ts` | **Alto** | **una persona por vez** |
+| **Datos de puntos** | `lib/points.ts` (arrays `PORTS` y `AIRPORTS`) | Bajo | cargar puertos y aeropuertos |
 | **Interfaz** | `components/*.tsx`, `app/globals.css` | Medio | un componente por persona |
 | **Docs** | `docs/*`, `README.md` | Bajo | siempre |
 
@@ -152,11 +154,33 @@ set({ countries });
 
 Mutar el estado en el lugar hace que React no vea el cambio y la pantalla quede vieja. Es el bug más común de este stack y el más difícil de encontrar después.
 
-### 3.5 Números redondeados al guardar
+**Al leer, suscribite solo a lo que usás.** `useGame()` sin selector devuelve el store entero: el componente se re-renderiza ante cualquier cambio, incluido el feed. En componentes caros (el globo) eso significa recalcular arcos, rutas y puntos sin motivo.
+
+```ts
+// ❌ el globo se recalcula cada vez que entra una línea al feed
+const { countries, relations } = useGame();
+
+// ✅ solo cuando cambia lo que realmente usa
+const { countries, relations } = useGame(
+  useShallow((s) => ({ countries: s.countries, relations: s.relations }))
+);
+```
+
+Y memoizá cada capa por separado: prender el comercio no debería obligar a recalcular los arcos diplomáticos.
+
+### 3.5 El turno tiene UNA sola implementación
+
+Todo lo que pasa en un mes sin intervención del azar vive en `deterministicTick()` (`lib/simulation.ts`): economía, comercio, rutas cerradas, cohesión de bloques, capital político. Lo usan dos lugares: el turno real (`endTurn` en el store) y el preview de consecuencias.
+
+No es una elección estética. Si el preview reimplementara la economía, los dos cálculos se desincronizarían en el primer cambio de fórmula y el preview empezaría a mentir. Está verificado que coinciden: proyectar un ajuste fiscal a 3 meses da −6.4 de felicidad, y jugarlo de verdad da −6.4.
+
+Lo que queda fuera del tick porque no es determinista: sorteo de eventos, reacciones de la IA, resolución de eventos y feed.
+
+### 3.6 Números redondeados al guardar
 
 Los porcentajes del juego se guardan con 2 decimales como máximo (`round()` en `lib/engine.ts`). Nada de `inflation: 114.39999999999998` en pantalla.
 
-### 3.6 Sin dependencias nuevas sin motivo
+### 3.7 Sin dependencias nuevas sin motivo
 
 El proyecto tiene 6 dependencias: `next`, `react`, `react-dom`, `react-globe.gl`, `three`, `zustand`. Cada paquete nuevo es peso de build, superficie de bugs y una decisión que el otro agente no tomó. Si hace falta una función de utilidad de 20 líneas, se escribe.
 
@@ -168,7 +192,7 @@ El proyecto tiene 6 dependencias: `next`, `react`, `react-dom`, `react-globe.gl`
 
 Al actualizar `react-globe.gl`, revisá qué versión de `three` trae `globe.gl` y subí la del proyecto a la misma.
 
-### 3.7 Sin CSS-in-JS ni frameworks de estilo
+### 3.8 Sin CSS-in-JS ni frameworks de estilo
 
 Todo el estilo vive en `app/globals.css` con clases reutilizables (`.card`, `.row`, `.pill`, `.section`, `.decision`) y variables CSS (`--bg`, `--good`, `--bad`). Los `style={{}}` inline se usan solo para valores calculados (el ancho de una barra, el color de un bloque).
 
@@ -284,6 +308,22 @@ find node_modules -maxdepth 4 -type d -name three
 > ⚠️ **No corras `npm run build` con el `npm run dev` levantado.** Los dos escriben en `.next` y el dev server queda con chunks rotos (404 en `main-app.js`, página en blanco). Si te pasa: parar dev, `rm -rf .next`, volver a levantar.
 
 ---
+
+## 5.2 Guardado de partida
+
+La partida se guarda sola en `localStorage` al cerrar cada acción que cambia el mundo (decisión, evento resuelto, cambio de bloque, fin de turno) y se retoma sola al abrir la página.
+
+- Clave: `change-game:save`. Versión actual: **1** (`SAVE_VERSION` en `lib/persistence.ts`).
+- **Si cambiás la forma del estado persistido, subí `SAVE_VERSION` y agregá la migración en `migrate()`.** Un save de versión desconocida se descarta en silencio: perder una partida molesta, cargar un estado corrupto es peor.
+- Agregar un campo nuevo al estado no obliga a subir la versión si tiene un valor por defecto sensato: `loadSaved()` completa lo que falte con `initial()`. Eso es lo que permite que un save viejo siga andando cuando aparecen capas nuevas.
+- El save guarda solo datos, nunca funciones (`snapshot()` en `lib/store.ts`). Pesa ~38 KB por partida.
+
+Para probar a mano:
+
+```js
+window.__game.getState().newGame();     // borra el save y vuelve al inicio
+localStorage.getItem('change-game:save');
+```
 
 ## 6. Git: cómo commiteamos
 

@@ -227,7 +227,7 @@ export function naturalDrift(
 // EVENTOS
 // ============================================================
 
-function buildCtx(
+export function buildCtx(
   player: Country, world: GlobalState, turn: number, blocs: Bloc[], rel: Record<string, number>
 ): EventContext {
   return {
@@ -238,6 +238,26 @@ function buildCtx(
     relationOf: (other) => getRelation(rel, player.code, other),
     memberOf: (blocId) => !!blocs.find((b) => b.id === blocId && b.members.includes(player.code))
   };
+}
+
+/** Estado minimo que hace falta para saber que eventos estan habilitados. */
+export interface EligibilityState {
+  turn: number;
+  playerCode: string;
+  countries: Record<string, Country>;
+  relations: Record<string, number>;
+  blocs: Bloc[];
+  world: GlobalState;
+}
+
+/**
+ * Eventos que HOY podrian dispararse con este estado (pasan su condicion `when`).
+ * Lo usa el preview de consecuencias para avisar que decisiones habilitan o
+ * desactivan que riesgos.
+ */
+export function eligibleEvents(s: EligibilityState): GameEvent[] {
+  const ctx = buildCtx(s.countries[s.playerCode], s.world, s.turn, s.blocs, s.relations);
+  return [...WORLD_EVENTS, ...NATIONAL_EVENTS].filter((e) => !e.when || e.when(ctx));
 }
 
 function pick<T>(items: { item: T; weight: number }[]): T | null {

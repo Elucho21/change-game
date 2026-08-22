@@ -193,3 +193,26 @@ textarea {
 
 .modes.layers { top: 48px; }
 .modes.layers button { font-size: 11px; }
+
+/* ---------- preview de consecuencias ---------- */
+.decision.open { border-color: var(--accent); }
+.decision-open {
+  background: #0b1220; border: 1px solid var(--accent); border-top: none;
+  border-radius: 0 0 10px 10px; padding: 10px 12px; margin: -8px 0 10px;
+}
+.projection { font-size: 11.5px; }
+.proj-head {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+  font-size: 11px; text-transform: uppercase; letter-spacing: .5px;
+  color: var(--muted); margin-bottom: 6px;
+}
+.proj-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 2px 0; }
+.proj-label { color: var(--muted); }
+.proj-series { display: flex; gap: 4px; }
+.proj-series em {
+  font-style: normal; min-width: 42px; text-align: right; font-variant-numeric: tabular-nums;
+  background: #101a2e; border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px;
+}
+.proj-warnings { margin: 8px 0 0; padding-left: 4px; list-style: none; line-height: 1.5; }
+.proj-warnings li { margin-bottom: 2px; }
+.proj-events { margin: 6px 0 0; font-size: 11px; line-height: 1.4; }

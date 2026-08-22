@@ -29,6 +29,25 @@ export function distanceKm(aLat: number, aLng: number, bLat: number, bLng: numbe
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
+/**
+ * Cache de distancias entre paises. Las capitales no se mueven, asi que la
+ * distancia entre dos paises se calcula una sola vez por partida.
+ *
+ * Importa mas de lo que parece: el preview de consecuencias simula 3 turnos
+ * por duplicado y cada turno recalcula el comercio de los 24 paises contra
+ * todos los demas. Sin cache son ~3.500 haversine por preview.
+ */
+const distCache = new Map<string, number>();
+
+function cachedDistance(a: Country, b: Country): number {
+  const key = a.code < b.code ? `${a.code}|${b.code}` : `${b.code}|${a.code}`;
+  const hit = distCache.get(key);
+  if (hit !== undefined) return hit;
+  const d = distanceKm(a.lat, a.lng, b.lat, b.lng);
+  distCache.set(key, d);
+  return d;
+}
+
 export interface TradeContext {
   countries: Record<string, Country>;
   relations: Record<string, number>;
@@ -59,7 +78,7 @@ export function bilateralVolume(a: string, b: string, ctx: TradeContext): number
   if (!ca || !cb || a === b) return 0;
 
   const size = Math.sqrt(ca.economy.gdp_trillion_usd * cb.economy.gdp_trillion_usd);
-  const dist = distanceKm(ca.lat, ca.lng, cb.lat, cb.lng);
+  const dist = cachedDistance(ca, cb);
   const gravity = (size * K) / (dist / 1000 + 1) ** 0.6;
 
   const rel = getRelation(ctx.relations, a, b);

@@ -5,25 +5,25 @@ import data from './data/countries.gen.json';
 import { BLOCS } from './blocs';
 import { DECISIONS } from './decisions';
 import {
-  ARC_COLORS, adjustRelation, advanceMonth, aiReactions, applyDelta, blocEffects, buildGrokPrompt,
-  canJoin, checkGameOver, clamp, computeArcs, crisisEvents, dateLabel, getRelation, naturalDrift,
+  ARC_COLORS, adjustRelation, aiReactions, applyDelta, blocEffects, buildGrokPrompt,
+  canJoin, checkGameOver, clamp, computeArcs, crisisEvents, dateLabel, getRelation,
   previewDelta, relLabel, resolveRelationTargets, rollEvents
 } from './engine';
 import type { Reaction } from './engine';
-import { oilShock } from './routes';
-import { tradeBaseline, tradeGrowthEffect, type TradeContext } from './trade';
+import { CHOKEPOINTS } from './routes';
+import { tradeBaseline } from './trade';
+import { cloneSim, deterministicTick, projectDecision, type SimState } from './simulation';
+import {
+  clearGame, loadGame, saveGame, savedSummary,
+  type PersistedState, type SavedGame
+} from './persistence';
 import type {
-  ActiveEvent, Bloc, Country, Delta, FeedItem, GameEvent, GlobalState
+  ActiveEvent, Bloc, ChokepointCrisis, Country, Delta, FeedItem, GameEvent,
+  GlobalState, Layers, MapMode, Projection
 } from './types';
 
-export type MapMode = 'relaciones' | 'bloques' | 'estabilidad' | 'economia';
-
-/** Capas del globo que el jugador puede prender y apagar. */
-export interface Layers {
-  diplomacia: boolean;
-  comercio: boolean;
-  rutas: boolean;
-}
+// MapMode y Layers viven en lib/types.ts (los comparten el store, la UI y el save)
+export type { MapMode, Layers } from './types';
 
 const RAW = data as unknown as {
   countries: Record<string, Country>;
@@ -66,6 +66,8 @@ interface GameStore {
   selected: string | null;
   mapMode: MapMode;
   layers: Layers;
+  /** resumen de la partida guardada en localStorage, si hay alguna */
+  savedGame: SavedGame['summary'] | null;
   /** chokepoint id -> turno en que se reabre */
   disruptions: Record<string, number>;
   /** comercio total de cada pais al empezar la partida, para medir el impacto */
@@ -74,6 +76,17 @@ interface GameStore {
 
   start: (code: string) => void;
   toggleLayer: (l: keyof Layers) => void;
+  /** carga la partida guardada; devuelve false si no habia ninguna */
+  loadSaved: () => boolean;
+  /** borra el save y vuelve a la pantalla de seleccion de pais */
+  newGame: () => void;
+  refreshSavedSummary: () => void;
+  /** cierra un paso maritimo por N turnos (lo usan los eventos y el debug) */
+  triggerChokepointCrisis: (id: string, turns: number, cause?: string) => void;
+  clearChokepointCrisis: (id: string) => void;
+  activeCrises: () => ChokepointCrisis[];
+  /** que pasaria si tomo esta decision, a 3 turnos vista */
+  previewDecision: (id: string, target?: string) => Projection | null;
   reset: () => void;
   select: (code: string | null) => void;
   setMapMode: (m: MapMode) => void;
@@ -106,13 +119,71 @@ const initial = () => ({
   history: [] as HistoryPoint[],
   selected: null as string | null,
   mapMode: 'relaciones' as MapMode,
-  layers: { diplomacia: true, comercio: true, rutas: true } as Layers,
+  layers: {
+    diplomacia: true, comercio: true, rutas: true,
+    points: true, capitals: false, ports: true, airports: true
+  } as Layers,
+  savedGame: null as SavedGame['summary'] | null,
   disruptions: {} as Record<string, number>,
   tradeBase: {} as Record<string, number>,
   gameOver: null as { title: string; body: string } | null
 });
 
-export const useGame = create<GameStore>((set, get) => ({
+/** Estado serializable: lo que va al save. Nunca incluye funciones. */
+function snapshot(st: GameStore): PersistedState {
+  return {
+    playerCode: st.playerCode,
+    turn: st.turn,
+    capital: st.capital,
+    world: st.world,
+    countries: st.countries,
+    relations: st.relations,
+    blocs: st.blocs,
+    sanctions: st.sanctions,
+    feed: st.feed.slice(0, 60),
+    pending: st.pending,
+    recentEventIds: st.recentEventIds,
+    lastActions: st.lastActions,
+    history: st.history,
+    selected: st.selected,
+    mapMode: st.mapMode,
+    layers: st.layers,
+    disruptions: st.disruptions,
+    tradeBase: st.tradeBase,
+    gameOver: st.gameOver
+  };
+}
+
+export const useGame = create<GameStore>((set, get) => {
+  /** Guarda la partida. Se llama al cerrar cada accion que cambia el mundo. */
+  const persist = () => {
+    const st = get();
+    if (!st.started || !st.playerCode) return;
+    const player = st.countries[st.playerCode];
+    saveGame(snapshot(st), {
+      playerCode: st.playerCode,
+      playerName: player.name,
+      flag: player.flag,
+      turn: st.turn,
+      date: dateLabel(st.world)
+    });
+  };
+
+  /** Estado que consumen las funciones puras de lib/simulation.ts. */
+  const simOf = (st: GameStore): SimState => ({
+    turn: st.turn,
+    playerCode: st.playerCode,
+    countries: st.countries,
+    relations: st.relations,
+    blocs: st.blocs,
+    world: st.world,
+    capital: st.capital,
+    sanctions: st.sanctions,
+    disruptions: st.disruptions,
+    tradeBase: st.tradeBase
+  });
+
+  return {
   ...initial(),
 
   start: (code) => {
@@ -155,11 +226,121 @@ export const useGame = create<GameStore>((set, get) => ({
         }
       ]
     });
+    persist();
   },
 
-  reset: () => set(initial()),
+  reset: () => set({ ...initial(), savedGame: savedSummary() }),
   select: (code) => set({ selected: code }),
-  toggleLayer: (l) => set((st) => ({ layers: { ...st.layers, [l]: !st.layers[l] } })),
+  toggleLayer: (l) => {
+    set((st) => ({ layers: { ...st.layers, [l]: !st.layers[l] } }));
+    persist();
+  },
+
+  // ---------------------------------------------------------- guardado
+  refreshSavedSummary: () => set({ savedGame: savedSummary() }),
+
+  /** Carga la partida guardada. Devuelve false si no habia ninguna. */
+  loadSaved: () => {
+    const saved = loadGame();
+    if (!saved) {
+      set({ savedGame: null });
+      return false;
+    }
+    const st = saved.state;
+    set({
+      ...initial(),
+      started: true,
+      savedGame: saved.summary,
+      playerCode: st.playerCode,
+      turn: st.turn,
+      capital: st.capital,
+      world: st.world,
+      countries: st.countries,
+      relations: st.relations,
+      blocs: st.blocs,
+      sanctions: st.sanctions,
+      feed: st.feed,
+      pending: st.pending,
+      recentEventIds: st.recentEventIds,
+      lastActions: st.lastActions,
+      history: st.history,
+      selected: st.selected ?? st.playerCode,
+      mapMode: st.mapMode,
+      // un save viejo puede no traer las capas nuevas: se completan con los valores por defecto
+      layers: { ...initial().layers, ...st.layers },
+      disruptions: st.disruptions,
+      tradeBase: st.tradeBase,
+      gameOver: st.gameOver
+    });
+    return true;
+  },
+
+  /** Borra el save y vuelve a la seleccion de pais. */
+  newGame: () => {
+    clearGame();
+    set({ ...initial(), savedGame: null });
+  },
+
+  // ---------------------------------------------------------- crisis de rutas
+  /**
+   * Cierra un paso maritimo por N turnos. Lo usan los eventos con `disrupts`,
+   * y queda disponible para cualquier mecanica futura (guerra naval, bloqueo
+   * declarado por el jugador, sancion de un tercero).
+   */
+  triggerChokepointCrisis: (id, turns, cause = 'manual') => {
+    const st = get();
+    const cp = CHOKEPOINTS.find((c) => c.id === id);
+    if (!cp || turns <= 0) return;
+    const until = st.turn + turns;
+    set({
+      disruptions: { ...st.disruptions, [id]: until },
+      feed: [
+        {
+          turn: st.turn, date: dateLabel(st.world), kind: 'sistema', emoji: '⛴️',
+          title: `${cp.name} cerrado`,
+          body: `${cp.description} Bloqueado hasta el turno ${until}. El comercio de larga distancia se resiente y el barril sube.`,
+          tone: 'malo'
+        },
+        ...st.feed
+      ]
+    });
+    persist();
+  },
+
+  clearChokepointCrisis: (id) => {
+    const st = get();
+    const next = { ...st.disruptions };
+    delete next[id];
+    set({ disruptions: next });
+    persist();
+  },
+
+  /** Crisis de rutas activas en este turno. */
+  activeCrises: () => {
+    const st = get();
+    return CHOKEPOINTS
+      .filter((c) => (st.disruptions[c.id] ?? 0) > st.turn)
+      .map((c) => ({
+        id: c.id,
+        name: c.name,
+        until: st.disruptions[c.id],
+        cause: 'evento'
+      }));
+  },
+
+  // ---------------------------------------------------------- preview
+  /**
+   * Consecuencias probables de una decision a 3 turnos vista.
+   * La cuenta la hace lib/simulation.ts con las mismas reglas del turno real.
+   */
+  previewDecision: (id, target) => {
+    const st = get();
+    if (!st.started || st.gameOver) return null;
+    const dec = DECISIONS.find((d) => d.id === id);
+    if (!dec) return null;
+    if (dec.needsTarget && !target) return null;
+    return projectDecision(cloneSim(simOf(st)), dec, target, 3);
+  },
   setMapMode: (m) => set({ mapMode: m }),
 
   // ----------------------------------------------------------
@@ -213,6 +394,7 @@ export const useGame = create<GameStore>((set, get) => ({
         ...st.feed
       ]
     });
+    persist();
   },
 
   // ----------------------------------------------------------
@@ -267,6 +449,7 @@ export const useGame = create<GameStore>((set, get) => ({
         ...st.feed
       ]
     });
+    persist();
   },
 
   // ----------------------------------------------------------
@@ -297,48 +480,31 @@ export const useGame = create<GameStore>((set, get) => ({
       });
     }
 
-    // 2. avanza el mes y el mundo se mueve
-    advanceMonth(world);
-    const turn = st.turn + 1;
+    // 2. el mundo corre un mes: economia, comercio, rutas, cohesion y capital.
+    //    Es la MISMA funcion que usa el preview de consecuencias (lib/simulation.ts),
+    //    para que lo que el jugador ve antes de decidir sea lo que realmente pasa.
     const disruptions = { ...st.disruptions };
+    const tick = deterministicTick({
+      turn: st.turn,
+      playerCode: st.playerCode,
+      countries,
+      relations,
+      blocs,
+      world,
+      capital: st.capital,
+      sanctions: st.sanctions,
+      disruptions,
+      tradeBase: st.tradeBase
+    });
+    const turn = tick.state.turn;
 
-    // el comercio bilateral de este turno decide cuanto empuja cada economia
-    const tradeCtx: TradeContext = {
-      countries, relations, blocs, sanctions: st.sanctions, playerCode: st.playerCode, disruptions, turn
-    };
-    const tradeEffect: Record<string, number> = {};
-    for (const code of Object.keys(countries)) {
-      tradeEffect[code] = tradeGrowthEffect(code, tradeCtx, st.tradeBase);
-    }
-    naturalDrift(countries, blocs, world, tradeEffect);
-
-    // rutas cerradas: el barril sube mientras dure el bloqueo
-    const shock = oilShock(disruptions, turn);
-    if (shock > 0) {
-      world.oil_price = Math.round((world.oil_price + shock) * 10) / 10;
+    if (tick.oilShockApplied > 0) {
       feed.push({
         turn, date: dateLabel(world), kind: 'sistema', emoji: '⛴️',
         title: 'Rutas maritimas interrumpidas',
         body: `El bloqueo sigue activo: el barril sube a ${world.oil_price} USD y el flete de larga distancia se encarece.`,
         tone: 'malo'
       });
-    }
-
-    // 3. sanciones activas erosionan la relacion mes a mes
-    for (const s of st.sanctions) adjustRelation(relations, st.playerCode, s, -2);
-
-    // 4. cohesion de los bloques: sigue a la relacion promedio entre socios
-    for (const b of blocs) {
-      let sum = 0;
-      let n = 0;
-      for (let i = 0; i < b.members.length; i++) {
-        for (let j = i + 1; j < b.members.length; j++) {
-          sum += getRelation(relations, b.members[i], b.members[j]);
-          n++;
-        }
-      }
-      const avg = n ? sum / n : 0;
-      b.cohesion = clamp(Math.round(b.cohesion * 0.9 + ((avg + 100) / 2) * 0.1), 0, 100);
     }
 
     // 5. eventos del turno
@@ -397,12 +563,8 @@ export const useGame = create<GameStore>((set, get) => ({
       }
     }
 
-    // 7. capital politico: se recupera segun como te va con la gente
-    const capital = clamp(
-      st.capital + 6 + (countries[st.playerCode].population.happiness - 60) / 10,
-      0,
-      100
-    );
+    // 7. el capital politico ya lo recupero el tick determinista
+    const capital = tick.state.capital;
 
     const p2 = countries[st.playerCode];
     const gameOver = checkGameOver(p2, turn);
@@ -439,6 +601,7 @@ export const useGame = create<GameStore>((set, get) => ({
       ].slice(-60),
       gameOver
     });
+    persist();
   },
 
   // ----------------------------------------------------------
@@ -474,6 +637,7 @@ export const useGame = create<GameStore>((set, get) => ({
         ...st.feed
       ]
     });
+    persist();
   },
 
   leaveBloc: (id) => {
@@ -504,6 +668,7 @@ export const useGame = create<GameStore>((set, get) => ({
         ...st.feed
       ]
     });
+    persist();
   },
 
   summit: (id) => {
@@ -531,6 +696,7 @@ export const useGame = create<GameStore>((set, get) => ({
         ...st.feed
       ]
     });
+    persist();
   },
 
   // ----------------------------------------------------------
@@ -585,12 +751,14 @@ export const useGame = create<GameStore>((set, get) => ({
       }
 
       set({ countries, relations, world, feed: [...feed.reverse(), ...st.feed] });
+      persist();
       return `Aplicado: ${parsed.reactions?.length ?? 0} reacciones, ${parsed.internal_extra_effects?.length ?? 0} efectos internos.`;
     } catch (err) {
       return `No pude leer el JSON: ${(err as Error).message}`;
     }
   }
-}));
+  };
+});
 
 // util de debug: en el navegador, window.__game.getState() muestra el estado completo
 if (typeof window !== 'undefined') {
