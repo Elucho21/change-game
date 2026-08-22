@@ -200,6 +200,20 @@ export interface Chokepoint {
   lng: number;
   oilShare: number;      // fraccion del petroleo mundial que pasa por aca
   description: string;
+  /** fraccion del comercio maritimo mundial que transita por aca */
+  tradeShare?: number;
+  /** quien controla el paso: codigos del juego o nombres de paises no-MVP */
+  controllers?: string[];
+  /** paises del MVP mas expuestos a un cierre */
+  exposed?: string[];
+  /** dias extra de navegacion si hay que desviar */
+  altRouteDays?: number;
+  /** ancho aproximado del paso en km */
+  widthKm?: number;
+  /** gravedad de un cierre para el motor de crisis (1-3) */
+  crisisSeverity?: 1 | 2 | 3;
+  /** tags que un evento de crisis puede filtrar */
+  crisisTags?: string[];
 }
 
 /** Ruta maritima real, dibujada con pathsData en el globo. */

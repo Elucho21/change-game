@@ -471,6 +471,47 @@ export const NATIONAL_EVENTS: GameEvent[] = [
     when: (c) => c.player.population.stability > 55,
     effects: { gdp_growth: 0.6, happiness: 2, stability: 2, unemployment: -0.3 }
   },
+  {
+    id: 'huelga_portuaria',
+    scope: 'nacional',
+    title: 'Huelga en los puertos principales',
+    emoji: '📦',
+    tags: ['sindicatos', 'comercio', 'interior'],
+    weight: 6,
+    duration: 2,
+    description:
+      'Los gremios portuarios paran en los muelles clave. Se forma una cola de buques, sube el flete interno y los exportadores reclaman al gobierno.',
+    when: (c) =>
+      ['USA', 'China', 'Japan', 'SouthKorea', 'UK', 'France', 'Germany', 'Spain',
+        'Brazil', 'Canada', 'Mexico', 'Argentina', 'Chile', 'Colombia', 'Peru'].includes(c.player.code),
+    choices: [
+      {
+        id: 'militarizar_puerto',
+        label: 'Cubrir la operacion con fuerzas de seguridad',
+        detail: 'La carga se mueve. La imagen del operativo es cara en casa y afuera.',
+        cost: { capital: 14 },
+        effects: { stability: 3, happiness: -5, gdp_growth: 0.1 },
+        risk: {
+          chance: 0.3,
+          label: 'Un choque en el muelle convierte la huelga en crisis nacional',
+          effects: { stability: -10, happiness: -7 }
+        }
+      },
+      {
+        id: 'paritaria_puerto',
+        label: 'Abrir paritaria de emergencia',
+        detail: 'Se levanta el paro a cambio de un aumento. El resto de los gremios toma nota.',
+        cost: { capital: 8, fiscal: 0.4 },
+        effects: { happiness: 3, fiscal_balance: -0.4, inflation: 0.3 }
+      },
+      {
+        id: 'esperar_puerto',
+        label: 'No ceder y esperar el desgaste',
+        detail: 'Sin concesion ni represion. Los buques se van a otros puertos de la region.',
+        effects: { gdp_growth: -0.4, inflation: 0.3, happiness: -2, stability: -2 }
+      }
+    ]
+  },
 
   // ---------- Eventos personales / de liderazgo ----------
   {

@@ -5,6 +5,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ARC_COLORS, ISO_TO_CODE, useGame } from '@/lib/store';
 import { computeArcs, getRelation, relLabel, REL_COLORS } from '@/lib/engine';
 import { MARITIME_ROUTES, CHOKEPOINTS, routeDisrupted, activeDisruptions } from '@/lib/routes';
+import {
+  MAP_POINTS, POINT_COLORS, DEFAULT_POINT_LAYERS, filterMapPoints, pointRadius, pointTooltipHtml,
+  type PointLayer
+} from '@/lib/points';
 import { visibleFlows, type TradeContext } from '@/lib/trade';
 import type { Country } from '@/lib/types';
 
@@ -37,12 +41,32 @@ const heat = (v: number) => {
   return `rgb(${r},${g},${b})`;
 };
 
+type GlobePoint = {
+  lat: number;
+  lng: number;
+  color: string;
+  radius: number;
+  altitude: number;
+  label: string;
+};
+
+/** Lee una capa de puntos del store si Claude ya la agrego; si no, usa el fallback local. */
+function pointLayerOn(
+  layers: object,
+  key: PointLayer,
+  fallback: boolean
+): boolean {
+  const v = (layers as Record<string, unknown>)[key];
+  return typeof v === 'boolean' ? v : fallback;
+}
+
 export default function GlobeView() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const globeRef = useRef<GlobeInstance | null>(null);
   const [size, setSize] = useState({ w: 800, h: 600 });
   const [features, setFeatures] = useState<Feature[]>([]);
   const [hover, setHover] = useState<Feature | null>(null);
+  const [localPointLayers, setLocalPointLayers] = useState(DEFAULT_POINT_LAYERS);
 
   const {
     countries, relations, blocs, playerCode, selected, mapMode, sanctions, pending,
@@ -50,6 +74,21 @@ export default function GlobeView() {
   } = useGame();
   const select = useGame((s) => s.select);
   const toggleLayer = useGame((s) => s.toggleLayer);
+  const setMapMode = useGame((s) => s.setMapMode);
+
+  const pointLayers: Record<PointLayer, boolean> = {
+    capitales: pointLayerOn(layers, 'capitales', localPointLayers.capitales),
+    puertos: pointLayerOn(layers, 'puertos', localPointLayers.puertos),
+    aeropuertos: pointLayerOn(layers, 'aeropuertos', localPointLayers.aeropuertos)
+  };
+
+  const togglePointLayer = (key: PointLayer) => {
+    if (typeof (layers as unknown as Record<string, unknown>)[key] === 'boolean') {
+      toggleLayer(key as 'diplomacia');
+    } else {
+      setLocalPointLayers((s) => ({ ...s, [key]: !s[key] }));
+    }
+  };
 
   useEffect(() => {
     fetch('/countries.geojson')
@@ -188,18 +227,31 @@ export default function GlobeView() {
     });
   }, [layers.rutas, disruptions, turn]);
 
-  // chokepoints: puntos fijos, rojos cuando estan cerrados
+  // puntos del mapa (capitales / puertos / aeropuertos) + chokepoints si la capa de rutas esta on
   const points = useMemo(() => {
-    if (!layers.rutas) return [];
-    const closed = new Set(activeDisruptions(disruptions, turn).map((c) => c.id));
-    return CHOKEPOINTS.map((c) => ({
-      lat: c.lat,
-      lng: c.lng,
-      color: closed.has(c.id) ? '#e5484d' : '#7f8ea8',
-      radius: closed.has(c.id) ? 0.55 : 0.32,
-      label: `<div style="padding:6px 9px;background:#0e1524ee;border:1px solid #1e293f;border-radius:8px;font-size:12px;color:#e6ecf7;max-width:220px"><b>${c.name}</b>${closed.has(c.id) ? ' <span style="color:#e5484d">CERRADO</span>' : ''}<div style="color:#8c99b3;margin-top:3px">${c.description}</div></div>`
+    const out: GlobePoint[] = filterMapPoints(MAP_POINTS, pointLayers).map((p) => ({
+      lat: p.lat,
+      lng: p.lng,
+      color: POINT_COLORS[p.type],
+      radius: pointRadius(p),
+      altitude: p.type === 'capital' ? 0.022 : 0.016,
+      label: pointTooltipHtml(p)
     }));
-  }, [layers.rutas, disruptions, turn]);
+    if (layers.rutas) {
+      const closed = new Set(activeDisruptions(disruptions, turn).map((c) => c.id));
+      for (const c of CHOKEPOINTS) {
+        out.push({
+          lat: c.lat,
+          lng: c.lng,
+          color: closed.has(c.id) ? '#e5484d' : '#7f8ea8',
+          radius: closed.has(c.id) ? 0.55 : 0.32,
+          altitude: 0.02,
+          label: `<div style="padding:6px 9px;background:#0e1524ee;border:1px solid #1e293f;border-radius:8px;font-size:12px;color:#e6ecf7;max-width:220px"><b>${c.name}</b>${closed.has(c.id) ? ' <span style="color:#e5484d">CERRADO</span>' : ''}<div style="color:#8c99b3;margin-top:3px">${c.description}</div></div>`
+        });
+      }
+    }
+    return out;
+  }, [pointLayers.capitales, pointLayers.puertos, pointLayers.aeropuertos, layers.rutas, disruptions, turn]);
 
   // anillos pulsantes donde hay un evento esperando decision
   const rings = useMemo(
@@ -212,9 +264,6 @@ export default function GlobeView() {
     [pending, countries]
   );
 
-  const setMapMode = useGame((s) => s.setMapMode);
-
-  /** ref del globo + utilidad de debug: window.__globe (ver docs/REGLAS_DE_CODIGO.md) */
   const setGlobeRef = (instance: GlobeInstance | null) => {
     globeRef.current = instance;
     if (typeof window !== 'undefined') {
@@ -232,17 +281,33 @@ export default function GlobeView() {
         ))}
       </div>
 
-      <div className="modes layers">
-        <button className={layers.diplomacia ? 'on' : ''} onClick={() => toggleLayer('diplomacia')}>
-          {layers.diplomacia ? 'ON' : 'OFF'} Diplomacia
+      <aside className="layer-panel" aria-label="Capas del globo">
+        <h4>Capas</h4>
+        <button className={pointLayers.capitales ? 'on' : ''} onClick={() => togglePointLayer('capitales')}>
+          <span><span className="swatch" style={{ background: POINT_COLORS.capital }} /> Capitales</span>
+          <b>{pointLayers.capitales ? 'ON' : 'OFF'}</b>
         </button>
-        <button className={layers.comercio ? 'on' : ''} onClick={() => toggleLayer('comercio')}>
-          {layers.comercio ? 'ON' : 'OFF'} Comercio
+        <button className={pointLayers.puertos ? 'on' : ''} onClick={() => togglePointLayer('puertos')}>
+          <span><span className="swatch" style={{ background: POINT_COLORS.port }} /> Puertos</span>
+          <b>{pointLayers.puertos ? 'ON' : 'OFF'}</b>
+        </button>
+        <button className={pointLayers.aeropuertos ? 'on' : ''} onClick={() => togglePointLayer('aeropuertos')}>
+          <span><span className="swatch" style={{ background: POINT_COLORS.airport }} /> Aeropuertos</span>
+          <b>{pointLayers.aeropuertos ? 'ON' : 'OFF'}</b>
         </button>
         <button className={layers.rutas ? 'on' : ''} onClick={() => toggleLayer('rutas')}>
-          {layers.rutas ? 'ON' : 'OFF'} Rutas maritimas
+          <span><span className="swatch" style={{ background: '#00e5ff' }} /> Rutas maritimas</span>
+          <b>{layers.rutas ? 'ON' : 'OFF'}</b>
         </button>
-      </div>
+        <button className={layers.diplomacia ? 'on' : ''} onClick={() => toggleLayer('diplomacia')}>
+          <span><span className="swatch" style={{ background: '#4f7cff' }} /> Arcos diplomaticos</span>
+          <b>{layers.diplomacia ? 'ON' : 'OFF'}</b>
+        </button>
+        <button className={layers.comercio ? 'on' : ''} onClick={() => toggleLayer('comercio')}>
+          <span><span className="swatch" style={{ background: '#00d296' }} /> Flujos comerciales</span>
+          <b>{layers.comercio ? 'ON' : 'OFF'}</b>
+        </button>
+      </aside>
 
       <Globe
         ref={setGlobeRef}
@@ -297,9 +362,12 @@ export default function GlobeView() {
         pointsData={points}
         pointColor="color"
         pointRadius="radius"
-        pointAltitude={0.015}
+        pointAltitude="altitude"
         pointLabel="label"
         pointsMerge={false}
+        onPointClick={(p: GlobePoint) => {
+          globeRef.current?.pointOfView({ lat: p.lat, lng: p.lng, altitude: 1.55 }, 900);
+        }}
         ringsData={rings}
         ringColor={(r: { color: string }) => () => r.color}
         ringMaxRadius={5}
@@ -334,6 +402,9 @@ export default function GlobeView() {
         <div><i style={{ background: ARC_COLORS.sancion }} /> Sanciones</div>
         <div><i style={{ background: ARC_COLORS.flujo }} /> Flujo comercial</div>
         <div><i style={{ background: '#00e5ff' }} /> Ruta maritima</div>
+        <div><span className="dot" style={{ background: POINT_COLORS.capital }} /> Capital</div>
+        <div><span className="dot" style={{ background: POINT_COLORS.port }} /> Puerto</div>
+        <div><span className="dot" style={{ background: POINT_COLORS.airport }} /> Aeropuerto</div>
         {activeDisruptions(disruptions, turn).length > 0 && (
           <div className="bad">
             Cerrado: {activeDisruptions(disruptions, turn).map((c) => c.name).join(', ')}

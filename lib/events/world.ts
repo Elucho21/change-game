@@ -227,6 +227,49 @@ export const WORLD_EVENTS: GameEvent[] = [
     ]
   },
   {
+    id: 'cierre_gibraltar',
+    scope: 'mundial',
+    title: 'Tension naval en Gibraltar',
+    emoji: '🛳️',
+    tags: ['rutas', 'seguridad', 'europa'],
+    weight: 4,
+    duration: 2,
+    description:
+      'Un incidente entre buques cierra de hecho el Estrecho de Gibraltar. El trafico entre el Atlantico y el Mediterraneo se detiene y las primas de seguro se disparan.',
+    disrupts: ['gibraltar'],
+    worldEffects: { inflation: 0.5, gdp_growth: -0.2 },
+    effects: { global_tension: 5 },
+    choices: [
+      {
+        id: 'patrulla_otan',
+        label: 'Sumarte a la patrulla naval conjunta',
+        detail: 'Aportas medios para reabrir el paso. Caro y visible; Moscu lo lee como alineamiento.',
+        cost: { capital: 12, fiscal: 0.3 },
+        effects: { fiscal_balance: -0.3, global_tension: -1 },
+        relations: [
+          { target: 'UK', amount: 8 },
+          { target: 'Spain', amount: 8 },
+          { target: 'USA', amount: 6 },
+          { target: 'Russia', amount: -10 }
+        ]
+      },
+      {
+        id: 'mediar_gibraltar',
+        label: 'Ofrecerte como mediador y corredor humanitario',
+        detail: 'Ganas prestigio si el paso se reabre; nadie te debe nada si falla.',
+        cost: { capital: 8 },
+        effects: { capital: 3 },
+        relations: [{ target: 'todos', amount: 4 }]
+      },
+      {
+        id: 'esperar_gibraltar',
+        label: 'No involucrarte y absorber el flete',
+        detail: 'Cero costo diplomatico. El encarecimiento te pega igual.',
+        effects: { inflation: 0.3, gdp_growth: -0.15 }
+      }
+    ]
+  },
+  {
     id: 'ciberataque',
     scope: 'mundial',
     title: 'Ciberataque a infraestructura critica',

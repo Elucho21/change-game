@@ -16,7 +16,15 @@ export const CHOKEPOINTS: Chokepoint[] = [
     lat: 26.57,
     lng: 56.25,
     oilShare: 0.2,
-    description: 'Por aca sale una quinta parte del petroleo del mundo. Cerrarlo dispara el barril.'
+    tradeShare: 0.1,
+    controllers: ['Iran', 'Oman', 'UAE'],
+    exposed: ['China', 'Japan', 'SouthKorea', 'USA'],
+    altRouteDays: 0,
+    widthKm: 33,
+    crisisSeverity: 3,
+    crisisTags: ['energia', 'petroleo', 'golfo'],
+    description:
+      'Por aca sale una quinta parte del petroleo del mundo. No hay desvio real: cerrarlo dispara el barril y corta el flujo del Golfo.'
   },
   {
     id: 'suez',
@@ -24,7 +32,15 @@ export const CHOKEPOINTS: Chokepoint[] = [
     lat: 30.02,
     lng: 32.55,
     oilShare: 0.08,
-    description: 'Atajo entre Asia y Europa. Sin el, los buques rodean Africa y suman dos semanas.'
+    tradeShare: 0.12,
+    controllers: ['Egypt'],
+    exposed: ['UK', 'France', 'Germany', 'Spain', 'China', 'Japan'],
+    altRouteDays: 14,
+    widthKm: 0.2,
+    crisisSeverity: 2,
+    crisisTags: ['comercio', 'europa', 'asia'],
+    description:
+      'Atajo entre Asia y Europa. Sin el, los buques rodean Africa y suman dos semanas. Un solo barco encallado lo cierra.'
   },
   {
     id: 'malaca',
@@ -32,7 +48,15 @@ export const CHOKEPOINTS: Chokepoint[] = [
     lat: 1.43,
     lng: 102.9,
     oilShare: 0.15,
-    description: 'Cuello de botella del comercio asiatico. Un incidente aca frena a China entera.'
+    tradeShare: 0.25,
+    controllers: ['Singapore', 'Malaysia', 'Indonesia'],
+    exposed: ['China', 'Japan', 'SouthKorea'],
+    altRouteDays: 3,
+    widthKm: 2.8,
+    crisisSeverity: 3,
+    crisisTags: ['comercio', 'asia', 'energia'],
+    description:
+      'Cuello de botella del comercio asiatico. Un incidente aca frena a China, Japon y Corea. El desvio por Lombok suma dias, no semanas.'
   },
   {
     id: 'panama',
@@ -40,7 +64,15 @@ export const CHOKEPOINTS: Chokepoint[] = [
     lat: 8.98,
     lng: -79.52,
     oilShare: 0.03,
-    description: 'Une los dos oceanos. Las sequias bajan el calado y limitan el trafico.'
+    tradeShare: 0.05,
+    controllers: ['Panama'],
+    exposed: ['USA', 'China', 'Chile', 'Peru', 'Colombia', 'Mexico'],
+    altRouteDays: 10,
+    widthKm: 0.33,
+    crisisSeverity: 2,
+    crisisTags: ['comercio', 'americas', 'clima'],
+    description:
+      'Une los dos oceanos. Las sequias bajan el calado y limitan el trafico; el desvio es Cabo de Hornos o el cabo de Buena Esperanza.'
   },
   {
     id: 'gibraltar',
@@ -48,7 +80,15 @@ export const CHOKEPOINTS: Chokepoint[] = [
     lat: 35.95,
     lng: -5.6,
     oilShare: 0.04,
-    description: 'Puerta del Mediterraneo hacia el Atlantico.'
+    tradeShare: 0.08,
+    controllers: ['Spain', 'UK'],
+    exposed: ['Spain', 'France', 'UK', 'Germany'],
+    altRouteDays: 0,
+    widthKm: 14,
+    crisisSeverity: 2,
+    crisisTags: ['comercio', 'europa', 'mediterraneo'],
+    description:
+      'Puerta del Mediterraneo hacia el Atlantico. Lo controlan Espana y el Reino Unido; no hay otra entrada oeste al Mediterraneo.'
   }
 ];
 
@@ -107,6 +147,35 @@ export const MARITIME_ROUTES: MaritimeRoute[] = [
 ];
 
 export const chokepointById = (id: string) => CHOKEPOINTS.find((c) => c.id === id);
+
+/** Chokepoints que un pais del MVP sufre mas si se cierran. */
+export const chokepointsExposing = (code: string) =>
+  CHOKEPOINTS.filter((c) => c.exposed?.includes(code));
+
+/** Chokepoints cuyo control menciona a este actor (codigo MVP o nombre no-MVP). */
+export const chokepointsControlledBy = (actor: string) =>
+  CHOKEPOINTS.filter((c) => c.controllers?.includes(actor));
+
+/**
+ * Perfil listo para un motor de crisis. No aplica efectos: solo agrupa
+ * los numeros que Claude puede leer desde lib/engine.ts.
+ */
+export function chokepointCrisisProfile(id: string) {
+  const c = chokepointById(id);
+  if (!c) return null;
+  return {
+    id: c.id,
+    name: c.name,
+    oilShare: c.oilShare,
+    tradeShare: c.tradeShare ?? 0,
+    severity: c.crisisSeverity ?? 1,
+    altRouteDays: c.altRouteDays ?? 0,
+    controllers: c.controllers ?? [],
+    exposed: c.exposed ?? [],
+    tags: c.crisisTags ?? [],
+    oilShockPerTurn: c.oilShare * 60
+  };
+}
 
 /** Una ruta esta interrumpida si alguno de sus chokepoints lo esta. */
 export const routeDisrupted = (route: MaritimeRoute, disruptions: Record<string, number>, turn: number) =>

@@ -11,7 +11,7 @@ Si un evento tiene `choices`, frena el turno y espera tu decisión. Si lo ignor�
 
 ---
 
-## Eventos mundiales (18)
+## Eventos mundiales (19)
 
 | Evento | Se dispara | Qué mueve | Opciones |
 |---|---|---|---|
@@ -33,14 +33,17 @@ Si un evento tiene `choices`, frena el turno y espera tu decisión. Si lo ignor�
 | 🚢 Bloqueo del Canal de Suez | siempre | **cierra Suez 2 turnos**, inflación +0.6 global | — |
 | 🏜️ Sequía en el Canal de Panamá | siempre | **cierra Panamá 4 turnos**, inflación +0.4 global | — |
 | ⚓ Incidente en el Estrecho de Malaca | siempre | **cierra Malaca 2 turnos**, petróleo +7 | escoltar con fuerza naval / no involucrarte |
+| 🛳️ Tensión naval en Gibraltar | siempre | **cierra Gibraltar 2 turnos**, inflación +0.5 global | patrulla OTAN / mediar / no involucrarte |
 
 ### Chokepoints y su efecto
 
 Mientras un chokepoint está cerrado, las rutas que pasan por él se dibujan en rojo, el comercio de larga distancia (más de 6.000 km) cae hasta un 45% según el volumen afectado, y el barril sube cada turno en proporción a la participación petrolera del paso: Ormuz 20%, Malaca 15%, Suez 8%, Gibraltar 4%, Panamá 3%.
 
+Cada chokepoint en `lib/routes.ts` ahora trae también `tradeShare`, `controllers`, `exposed`, `altRouteDays`, `crisisSeverity` y `crisisTags`, más el helper `chokepointCrisisProfile(id)`, para que el motor de crisis pueda apuntar efectos al país expuesto y no solo al mundo entero.
+
 Para que un evento cierre un paso, alcanza con agregarle `disrupts: ['ormuz']`. Se reabre solo después de `duration` turnos.
 
-## Eventos nacionales (15)
+## Eventos nacionales (16)
 
 | Evento | Se dispara cuando | Opciones |
 |---|---|---|
@@ -60,6 +63,7 @@ Para que un evento cierre un paso, alcanza con agregarle `disrupts: ['ormuz']`. 
 | 🧳 Ingreso masivo de migrantes | siempre | abrir con plan de integración / militarizar la frontera |
 | 🏫 Huelga docente | inflación > 6% | mejorar la oferta / descontar los días |
 | 🏗️ Oleada de inversión extranjera | estabilidad > 55 | automático: crecimiento +0.6, desempleo −0.3 |
+| 📦 Huelga en los puertos principales | país con puerto importante | militarizar el muelle (30% de choque) / paritaria / esperar el desgaste |
 
 ## Eventos de liderazgo (4)
 
