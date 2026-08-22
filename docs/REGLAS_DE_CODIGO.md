@@ -93,7 +93,7 @@ Cada tarea vive en una zona. **Dos agentes no trabajan en la misma zona al mismo
 | **Contenido: bloques** | `lib/blocs.ts` | Bajo | ídem |
 | **Contenido: rutas** | `lib/routes.ts` | Bajo | ídem |
 | **Datos de países** | `engine/countries_mvp.json` + `scripts/build-data.mjs` | Medio | ampliar el mapa |
-| **Motor** | `lib/engine.ts`, `lib/trade.ts`, `lib/simulation.ts`, `lib/politics.ts`, `lib/store.ts`, `lib/persistence.ts` | **Alto** | **una persona por vez** |
+| **Motor** | `lib/engine.ts`, `lib/trade.ts`, `lib/simulation.ts`, `lib/politics.ts`, `lib/orders.ts`, `lib/store.ts`, `lib/persistence.ts` | **Alto** | **una persona por vez** |
 | **Tests** | `tests/*.test.ts` | Bajo | sumar casos al agregar contenido |
 | **Datos de puntos** | `lib/points.ts` (arrays `PORTS` y `AIRPORTS`) | Bajo | cargar puertos y aeropuertos |
 | **Interfaz** | `components/*.tsx`, `app/globals.css` | Medio | un componente por persona |
@@ -178,11 +178,22 @@ No es una elección estética. Si el preview reimplementara la economía, los do
 
 Lo que queda fuera del tick porque no es determinista: sorteo de eventos, reacciones de la IA, resolución de eventos y feed.
 
-### 3.6 Números redondeados al guardar
+### 3.6 El jugador planifica, el turno ejecuta
+
+Nada de lo que el jugador elige toca el mundo en el momento. Las acciones se acumulan como **órdenes** (`lib/orders.ts`) y se ejecutan todas juntas al avanzar el mes, en `runPlan()` (`lib/store.ts`).
+
+Esto es una decisión de diseño, no una implementación accidental: el jugador tiene que poder probar, comparar previews y arrepentirse sin ensuciar la partida. Consecuencias para quien programe acá:
+
+- **`runPlan()` es el único lugar donde las órdenes tocan el estado del mundo.** Si agregás un tipo de acción, se planifica primero y se ejecuta ahí.
+- **Al historial entra lo ejecutado, no lo intentado.** Una línea por acción, escrita en `runPlan()`.
+- **Las órdenes del mismo tipo se consolidan.** Subir el IVA dos puntos y bajarlo dos deja el plan vacío, sin dos líneas contradictorias. Igual con decisiones repetidas y respuestas a eventos: elegir otra opción reemplaza la anterior.
+- **El capital político se compromete al planificar** y se libera al cancelar. `availableCapital()` es lo que queda libre; validá contra eso, no contra `capital`.
+
+### 3.7 Números redondeados al guardar
 
 Los porcentajes del juego se guardan con 2 decimales como máximo (`round()` en `lib/engine.ts`). Nada de `inflation: 114.39999999999998` en pantalla.
 
-### 3.7 Sin dependencias nuevas sin motivo
+### 3.8 Sin dependencias nuevas sin motivo
 
 El proyecto tiene 6 dependencias de producción: `next`, `react`, `react-dom`, `react-globe.gl`, `three`, `zustand`, y una sola de desarrollo además de TypeScript: `vitest`. Cada paquete nuevo es peso de build, superficie de bugs y una decisión que el otro agente no tomó. Si hace falta una función de utilidad de 20 líneas, se escribe.
 
@@ -196,7 +207,7 @@ El proyecto tiene 6 dependencias de producción: `next`, `react`, `react-dom`, `
 
 Al actualizar `react-globe.gl`, revisá qué versión de `three` trae `globe.gl` y subí la del proyecto a la misma.
 
-### 3.8 Sin CSS-in-JS ni frameworks de estilo
+### 3.9 Sin CSS-in-JS ni frameworks de estilo
 
 Todo el estilo vive en `app/globals.css` con clases reutilizables (`.card`, `.row`, `.pill`, `.section`, `.decision`) y variables CSS (`--bg`, `--good`, `--bad`). Los `style={{}}` inline se usan solo para valores calculados (el ancho de una barra, el color de un bloque).
 

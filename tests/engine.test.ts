@@ -6,6 +6,7 @@ import { deterministicTick, projectDecision, type SimState } from '../lib/simula
 import { driftOpposition, defaultPolitics, poll } from '../lib/politics';
 import { BLOCS } from '../lib/blocs';
 import { DECISIONS } from '../lib/decisions';
+import { addDecisionOrder, addTaxOrder, committedCapital } from '../lib/orders';
 import type { Country, GlobalState } from '../lib/types';
 
 /**
@@ -284,5 +285,43 @@ describe('bloques', () => {
     const otan = s.blocs.find((b) => b.id === 'otan')!;
     const check = canJoin(otan, 'Argentina', s.relations, 100);
     expect(check.ok).toBe(false);
+  });
+});
+
+// ============================================================
+describe('plan del turno', () => {
+  it('subir y bajar la misma alicuota deja el plan vacio', () => {
+    let orders = addTaxOrder([], 'iva', 2);
+    expect(orders).toHaveLength(1);
+    orders = addTaxOrder(orders, 'iva', -2);
+    // este era el bug: quedaban dos lineas contradictorias en el historial
+    expect(orders).toHaveLength(0);
+  });
+
+  it('los cambios sobre la misma alicuota se consolidan en uno solo', () => {
+    let orders = addTaxOrder([], 'iva', 2);
+    orders = addTaxOrder(orders, 'iva', 2);
+    orders = addTaxOrder(orders, 'iva', -1);
+    expect(orders).toHaveLength(1);
+    const tax = orders[0] as { delta: number };
+    expect(tax.delta).toBe(3);
+  });
+
+  it('alicuotas distintas conviven como ordenes separadas', () => {
+    let orders = addTaxOrder([], 'iva', 2);
+    orders = addTaxOrder(orders, 'corporate', -3);
+    expect(orders).toHaveLength(2);
+  });
+
+  it('planificar la misma decision dos veces no la duplica', () => {
+    let orders = addDecisionOrder([], 'obra_publica', 8);
+    orders = addDecisionOrder(orders, 'obra_publica', 8);
+    expect(orders).toHaveLength(1);
+  });
+
+  it('el capital comprometido suma el costo de todo el plan', () => {
+    let orders = addDecisionOrder([], 'obra_publica', 8);
+    orders = addTaxOrder(orders, 'iva', 4);   // 2 + 4*1.5 = 8
+    expect(committedCapital(orders)).toBe(16);
   });
 });

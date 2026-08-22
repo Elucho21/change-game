@@ -25,7 +25,8 @@ export default function CountryPanel() {
     countries, relations, blocs, playerCode, selected, capital, sanctions,
     disruptions, turn, tradeBase
   } = useGame();
-  const take = useGame((s) => s.takeDecision);
+  const plan = useGame((s) => s.planDecision);
+  const available = useGame((s) => s.availableCapital)();
   const code = selected ?? playerCode;
   const c = countries[code];
   if (!c) return null;
@@ -135,13 +136,13 @@ export default function CountryPanel() {
         <div className="section">
           <h3>Acciones bilaterales</h3>
           {BILATERAL.map((d) => {
-            const afford = capital >= d.cost.capital;
+            const afford = available >= d.cost.capital;
             return (
               <button
                 key={d.id}
                 className="decision"
                 disabled={!afford}
-                onClick={() => take(d.id, code)}
+                onClick={() => plan(d.id, code)}
                 title={afford ? '' : 'Capital politico insuficiente'}
               >
                 <strong>{d.emoji} {d.label} <span className="muted">({d.cost.capital} cap.)</span></strong>

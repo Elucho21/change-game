@@ -4,6 +4,7 @@ import { useGame } from '@/lib/store';
 import { monthsToElection, needsSuccessor, oppositionCostFactor } from '@/lib/politics';
 import { systemOf } from '@/lib/electoral';
 import { damagedSectors, taxEffects } from '@/lib/engine';
+import { plannedTaxRate } from '@/lib/orders';
 
 /**
  * Panel de gobierno: mandato, oposicion, encuesta y politica impositiva.
@@ -11,7 +12,8 @@ import { damagedSectors, taxEffects } from '@/lib/engine';
  */
 export default function GovernmentPanel() {
   const { countries, playerCode, politics, turn, capital, taxBase, active } = useGame();
-  const setTaxRate = useGame((s) => s.setTaxRate);
+  const planTaxChange = useGame((s) => s.planTaxChange);
+  const orders = useGame((s) => s.orders);
   const currentPoll = useGame((s) => s.currentPoll);
 
   const country = countries[playerCode];
@@ -102,23 +104,36 @@ export default function GovernmentPanel() {
 
       <div className="section">
         <h3>Politica impositiva</h3>
-        {TAXES.map((t) => (
-          <div key={t.kind} style={{ marginBottom: 10 }}>
-            <div className="row">
-              <span>{t.label}</span>
-              <span style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
-                <button
-                  onClick={() => setTaxRate(t.kind, -2)}
-                  disabled={capital < 5 || t.value <= 0}
-                  title="Bajar 2 puntos"
-                >−</button>
-                <b style={{ minWidth: 44, textAlign: 'center' }}>{t.value}%</b>
-                <button onClick={() => setTaxRate(t.kind, 2)} disabled={capital < 5} title="Subir 2 puntos">+</button>
-              </span>
+        {TAXES.map((t) => {
+          const planeado = plannedTaxRate(orders, t.kind, country);
+          return (
+            <div key={t.kind} style={{ marginBottom: 10 }}>
+              <div className="row">
+                <span>{t.label}</span>
+                <span style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+                  <button
+                    onClick={() => planTaxChange(t.kind, -2)}
+                    disabled={capital < 5 || t.value <= 0}
+                    title="Bajar 2 puntos en el plan"
+                  >−</button>
+                  <b style={{ minWidth: 44, textAlign: 'center' }}>
+                    {t.value}%
+                    {planeado !== null && planeado !== t.value && (
+                      <span className="warn"> → {planeado}%</span>
+                    )}
+                  </b>
+                  <button onClick={() => planTaxChange(t.kind, 2)} disabled={capital < 5} title="Subir 2 puntos en el plan">+</button>
+                </span>
+              </div>
+              <small className="muted" style={{ fontSize: 11, lineHeight: 1.35 }}>{t.hint}</small>
             </div>
-            <small className="muted" style={{ fontSize: 11, lineHeight: 1.35 }}>{t.hint}</small>
-          </div>
-        ))}
+          );
+        })}
+
+        <p className="muted" style={{ fontSize: 11, marginTop: -2 }}>
+          Los cambios quedan en el plan del turno y se aplican al avanzar el mes. Si subis y
+          despues bajas la misma alicuota, se cancelan solos y no queda nada en el historial.
+        </p>
 
         <div className="card" style={{ marginTop: 4 }}>
           <h4 style={{ fontSize: 12 }}>Contra la estructura con la que arrancaste</h4>

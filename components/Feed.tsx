@@ -1,19 +1,23 @@
 'use client';
 
 import { previewDelta } from '@/lib/engine';
+import { chosenFor } from '@/lib/orders';
 import { useGame } from '@/lib/store';
 
 const TONE: Record<string, string> = { bueno: 'good', malo: 'bad', neutral: 'muted' };
 
 export default function Feed() {
-  const { feed, pending, history, capital } = useGame();
-  const resolve = useGame((s) => s.resolveEvent);
+  const { feed, pending, history, capital, orders } = useGame();
+  const planChoice = useGame((s) => s.planEventChoice);
 
   return (
     <div>
       {pending.length > 0 && (
         <div className="section">
           <h3 className="warn">Esperan tu decision ({pending.length})</h3>
+          <p className="muted" style={{ fontSize: 11, margin: '-4px 0 8px' }}>
+            Tu respuesta queda en el plan y se resuelve al avanzar el mes. Podes cambiarla antes.
+          </p>
           {pending.map((p) => (
             <div className="card" key={p.key} style={{ borderColor: 'var(--warn)' }}>
               <h4>{p.event.emoji} {p.event.title}</h4>
@@ -21,15 +25,16 @@ export default function Feed() {
               <div style={{ marginTop: 9 }}>
                 {p.event.choices?.map((c) => {
                   const cost = c.cost?.capital ?? 0;
+                  const elegida = chosenFor(orders, p.key) === c.id;
                   return (
                     <button
                       key={c.id}
-                      className="decision"
+                      className={`decision${elegida ? ' planned' : ''}`}
                       disabled={capital < cost}
-                      onClick={() => resolve(p.key, c.id)}
-                      title={capital < cost ? 'Capital politico insuficiente' : ''}
+                      onClick={() => planChoice(p.key, c.id)}
+                      title={capital < cost ? 'Capital politico insuficiente' : 'Queda en el plan del turno'}
                     >
-                      <strong>{c.label} {cost ? <span className="muted">({cost} cap.)</span> : null}</strong>
+                      <strong>{elegida ? '✓ ' : ''}{c.label} {cost ? <span className="muted">({cost} cap.)</span> : null}</strong>
                       <small>{c.detail}</small>
                       <span className="preview">
                         {previewDelta(c.effects).map((d) => (

@@ -23,6 +23,11 @@ import {
   CAPITAL_ON_MIDTERM_WIN, CAPITAL_ON_WIN, grantHoneymoon, systemOf
 } from './electoral';
 import {
+  addBlocOrder, addDecisionOrder, addEventOrder, addTaxOrder, committedCapital,
+  TAX_FIELD, TAX_LABELS,
+  type PlannedOrder, type TaxKind
+} from './orders';
+import {
   clearGame, loadGame, saveGame, savedSummary,
   type PersistedState, type SavedGame
 } from './persistence';
@@ -87,6 +92,11 @@ interface GameStore {
   politics: Politics;
   /** PBI al asumir, para el balance de gestion del final */
   startingGdp: number;
+  /**
+   * Plan del turno: lo que decidiste hacer, todavia sin ejecutar.
+   * Se aplica entero al avanzar el mes.
+   */
+  orders: PlannedOrder[];
   /** eleccion resuelta esperando que el jugador la lea */
   election: ElectionResult | null;
   /** candidatos a sucederte: si esta lleno, la partida espera tu eleccion */
@@ -106,8 +116,8 @@ interface GameStore {
   activeCrises: () => ChokepointCrisis[];
   /** que pasaria si tomo esta decision, a 3 turnos vista */
   previewDecision: (id: string, target?: string) => Projection | null;
-  /** mueve una alicuota impositiva (IVA, corporativo o ingresos) */
-  setTaxRate: (kind: keyof TaxRates, delta: number) => void;
+  /** planifica mover una alicuota; los cambios sobre la misma se consolidan */
+  planTaxChange: (kind: TaxKind, delta: number) => void;
   /** intencion de voto proyectada de hoy */
   currentPoll: () => number;
   /** elige quien te sucede cuando se te agotan los mandatos */
@@ -117,12 +127,20 @@ interface GameStore {
   reset: () => void;
   select: (code: string | null) => void;
   setMapMode: (m: MapMode) => void;
-  takeDecision: (id: string, target?: string) => void;
-  resolveEvent: (key: string, choiceId: string) => void;
+  /** suma una decision al plan del turno (no la ejecuta) */
+  planDecision: (id: string, target?: string) => void;
+  /** elige como responder a un evento abierto (se resuelve al avanzar el mes) */
+  planEventChoice: (key: string, choiceId: string) => void;
+  /** quita una orden del plan */
+  cancelOrder: (index: number) => void;
+  /** vacia el plan del turno */
+  clearOrders: () => void;
+  /** capital politico que queda libre despues de comprometer el plan */
+  availableCapital: () => number;
   endTurn: () => void;
-  joinBloc: (id: string) => void;
-  leaveBloc: (id: string) => void;
-  summit: (id: string) => void;
+  planJoinBloc: (id: string) => void;
+  planLeaveBloc: (id: string) => void;
+  planSummit: (id: string) => void;
   grokPrompt: () => string;
   applyGrokJson: (raw: string) => string;
 }
@@ -160,6 +178,7 @@ const initial = () => ({
     electionsWon: 0, powerSince: 1, honeymoonUntil: 5, pendingBallotage: false
   } as Politics,
   startingGdp: 0,
+  orders: [] as PlannedOrder[],
   election: null as ElectionResult | null,
   succession: [] as Candidate[],
   gameOver: null as { title: string; body: string } | null
@@ -190,8 +209,179 @@ function snapshot(st: GameStore): PersistedState {
     taxBase: st.taxBase,
     politics: st.politics,
     startingGdp: st.startingGdp,
+    orders: st.orders,
     gameOver: st.gameOver
   };
+}
+
+interface PlanRun {
+  countries: Record<string, Country>;
+  relations: Record<string, number>;
+  world: GlobalState;
+  blocs: Bloc[];
+  sanctions: string[];
+  capital: number;
+  feed: FeedItem[];
+  pending: ActiveEvent[];
+  lastActions: string[];
+  /** hostilidad neta de lo que hiciste: define el tono de las reacciones */
+  hostility: number;
+}
+
+/**
+ * Ejecuta el plan del turno.
+ *
+ * Es el unico lugar donde las ordenes tocan el mundo. Mientras el jugador
+ * planifica no se aplica nada, asi puede probar, comparar y arrepentirse sin
+ * ensuciar la partida ni el historial: al historial entra lo que quedo en el
+ * plan cuando apreto avanzar mes, una sola linea por accion.
+ */
+function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
+  const run: PlanRun = {
+    countries: fresh(st.countries),
+    relations: { ...st.relations },
+    world: fresh(st.world),
+    blocs: fresh(st.blocs),
+    sanctions: [...st.sanctions],
+    capital: st.capital,
+    feed: [],
+    pending: [...st.pending],
+    lastActions: [],
+    hostility: 0
+  };
+
+  const log = (emoji: string, title: string, body: string, tone: FeedItem['tone'] = 'neutral') => {
+    run.feed.push({ turn: st.turn, date: dateLabel(run.world), kind: 'decision', emoji, title, body, tone });
+    run.lastActions.push(title);
+  };
+
+  for (const order of orders) {
+    run.capital = clamp(run.capital - order.capitalCost, 0, 100);
+
+    // ---------------------------------------------------------- decisiones
+    if (order.kind === 'decision') {
+      const dec = DECISIONS.find((d) => d.id === order.id);
+      if (!dec) continue;
+      applyDelta(run.countries[st.playerCode], dec.effects, run.world);
+
+      for (const rd of dec.relations ?? []) {
+        const targets = resolveRelationTargets(rd, {
+          player: st.playerCode, target: order.target, countries: run.countries, blocs: run.blocs
+        });
+        targets.forEach((t) => adjustRelation(run.relations, st.playerCode, t, rd.amount));
+        run.hostility += rd.amount;
+      }
+
+      if (dec.id === 'sancionar' && order.target && !run.sanctions.includes(order.target)) {
+        run.sanctions.push(order.target);
+      }
+      run.capital = clamp(run.capital + (dec.effects.capital ?? 0), 0, 100);
+      log(dec.emoji, order.label, dec.detail);
+      continue;
+    }
+
+    // ---------------------------------------------------------- impuestos
+    if (order.kind === 'tax') {
+      const e = run.countries[st.playerCode].economy;
+      const field = TAX_FIELD[order.rate];
+      const before = e[field];
+      const after = clamp(Math.round((before + order.delta) * 10) / 10, 0, 60);
+      if (after === before) continue;
+      e[field] = after;
+      const fx = taxEffects(run.countries[st.playerCode], st.taxBase[st.playerCode]);
+      log(
+        order.emoji,
+        `${TAX_LABELS[order.rate]}: ${before}% -> ${after}%`,
+        `Contra la estructura con la que arrancaste: recaudacion ${fx.fiscal >= 0 ? '+' : ''}${fx.fiscal} del PBI, `
+        + `crecimiento ${fx.growth >= 0 ? '+' : ''}${fx.growth}, humor social ${fx.happiness >= 0 ? '+' : ''}${fx.happiness} por turno.`
+      );
+      continue;
+    }
+
+    // ---------------------------------------------------------- bloques
+    if (order.kind === 'bloc') {
+      const bloc = run.blocs.find((b) => b.id === order.blocId);
+      if (!bloc) continue;
+
+      if (order.action === 'join') {
+        if (bloc.members.includes(st.playerCode)) continue;
+        bloc.members.push(st.playerCode);
+        bloc.candidates = bloc.candidates.filter((c) => c !== st.playerCode);
+        bloc.cohesion = clamp(bloc.cohesion - 4, 0, 100);
+        bloc.members.forEach((m) => m !== st.playerCode && adjustRelation(run.relations, st.playerCode, m, 10));
+        bloc.rivals.forEach((r) => adjustRelation(run.relations, st.playerCode, r, -15));
+        run.feed.push({
+          turn: st.turn, date: dateLabel(run.world), kind: 'bloque', emoji: '🤝',
+          title: `${run.countries[st.playerCode].name} ingresa a ${bloc.short}`,
+          body: bloc.rules[0], tone: 'bueno'
+        });
+        run.lastActions.push(order.label);
+      } else if (order.action === 'leave') {
+        if (!bloc.members.includes(st.playerCode)) continue;
+        bloc.members = bloc.members.filter((m) => m !== st.playerCode);
+        bloc.cohesion = clamp(bloc.cohesion - 10, 0, 100);
+        bloc.members.forEach((m) => adjustRelation(run.relations, st.playerCode, m, -20));
+        applyDelta(run.countries[st.playerCode], { gdp_growth: -0.5, stability: -3 }, undefined);
+        run.hostility -= 20;
+        run.feed.push({
+          turn: st.turn, date: dateLabel(run.world), kind: 'bloque', emoji: '🚪',
+          title: `${run.countries[st.playerCode].name} abandona ${bloc.short}`,
+          body: 'Los socios lo leen como una traicion. Cae el comercio y la confianza.', tone: 'malo'
+        });
+        run.lastActions.push(order.label);
+      } else {
+        if (!bloc.members.includes(st.playerCode)) continue;
+        bloc.cohesion = clamp(bloc.cohesion + 8, 0, 100);
+        bloc.members.forEach((m) => m !== st.playerCode && adjustRelation(run.relations, st.playerCode, m, 8));
+        run.feed.push({
+          turn: st.turn, date: dateLabel(run.world), kind: 'bloque', emoji: '🏛️',
+          title: `Cumbre de ${bloc.short} en ${run.countries[st.playerCode].capital}`,
+          body: `Cohesion del bloque +8 (ahora ${bloc.cohesion}). Las relaciones con los socios mejoran.`,
+          tone: 'bueno'
+        });
+        run.lastActions.push(order.label);
+      }
+      continue;
+    }
+
+    // ---------------------------------------------------------- eventos
+    if (order.kind === 'event') {
+      const item = run.pending.find((x) => x.key === order.eventKey);
+      const choice = item?.event.choices?.find((c) => c.id === order.choiceId);
+      if (!item || !choice) continue;
+
+      applyDelta(run.countries[st.playerCode], choice.effects, run.world);
+      if (choice.cost?.fiscal) {
+        applyDelta(run.countries[st.playerCode], { fiscal_balance: -choice.cost.fiscal }, run.world);
+      }
+
+      let outcome = choice.detail;
+      let tone: FeedItem['tone'] = 'neutral';
+      if (choice.risk && Math.random() < choice.risk.chance) {
+        applyDelta(run.countries[st.playerCode], choice.risk.effects, run.world);
+        outcome = `${choice.detail} PERO: ${choice.risk.label}.`;
+        tone = 'malo';
+      }
+
+      for (const rd of choice.relations ?? []) {
+        const targets = resolveRelationTargets(rd, {
+          player: st.playerCode, target: item.target, countries: run.countries, blocs: run.blocs
+        });
+        targets.forEach((t) => adjustRelation(run.relations, st.playerCode, t, rd.amount));
+        run.hostility += rd.amount;
+      }
+
+      run.capital = clamp(run.capital + (choice.effects.capital ?? 0), 0, 100);
+      run.pending = run.pending.filter((x) => x.key !== order.eventKey);
+      run.feed.push({
+        turn: st.turn, date: dateLabel(run.world), kind: 'evento', emoji: item.event.emoji,
+        title: `${item.event.title}: ${choice.label}`, body: outcome, tone
+      });
+      run.lastActions.push(order.label);
+    }
+  }
+
+  return run;
 }
 
 /**
@@ -439,6 +629,7 @@ export const useGame = create<GameStore>((set, get) => {
         };
       })(),
       startingGdp: st.startingGdp ?? st.countries[st.playerCode].economy.gdp_trillion_usd,
+      orders: st.orders ?? [],
       gameOver: st.gameOver
     });
     return true;
@@ -508,106 +699,70 @@ export const useGame = create<GameStore>((set, get) => {
     const dec = DECISIONS.find((d) => d.id === id);
     if (!dec) return null;
     if (dec.needsTarget && !target) return null;
-    return projectDecision(cloneSim(simOf(st)), dec, target, 3);
+
+    // El preview parte del mundo CON el plan ya ejecutado: si planificaste un
+    // ajuste fiscal, lo que ves es lo que agrega esta decision encima de eso,
+    // no lo que pasaria si fuera lo unico que hacés.
+    const base = st.orders.length
+      ? { ...st, ...runPlan(st, st.orders) } as GameStore
+      : st;
+    return projectDecision(cloneSim(simOf(base)), dec, target, 3);
   },
 
   /**
    * Sube o baja una alicuota. El costo politico crece con el tamano del
    * cambio: retocar dos puntos es un tramite, subir diez es una reforma.
    */
-  setTaxRate: (kind, delta) => {
+  /**
+   * Planifica mover una alicuota. Los cambios sobre la misma se consolidan:
+   * subir dos puntos y despues bajarlos deja el plan como estaba, sin dos
+   * lineas contradictorias en el historial.
+   */
+  planTaxChange: (kind, delta) => {
     const st = get();
     if (!st.started || st.gameOver || !delta) return;
 
-    const cost = Math.round(2 + Math.abs(delta) * 1.5);
-    if (st.capital < cost) return;
+    const orders = addTaxOrder(st.orders, kind, delta);
+    // el capital tiene que alcanzar para el plan completo, no solo para este cambio
+    if (committedCapital(orders) > st.capital) return;
 
-    const countries = fresh(st.countries);
-    const e = countries[st.playerCode].economy;
-    const field = kind === 'iva' ? 'tax_iva' : kind === 'corporate' ? 'tax_corporate' : 'tax_income_avg';
-    const before = e[field];
-    const after = clamp(Math.round((before + delta) * 10) / 10, 0, 60);
-    if (after === before) return;
-    e[field] = after;
-
-    const label = kind === 'iva' ? 'IVA' : kind === 'corporate' ? 'Impuesto a las empresas' : 'Impuesto a los ingresos';
-    const fx = taxEffects(countries[st.playerCode], st.taxBase[st.playerCode]);
-
-    set({
-      countries,
-      capital: clamp(st.capital - cost, 0, 100),
-      lastActions: [...st.lastActions, `${label}: ${before}% -> ${after}%`],
-      feed: [
-        {
-          turn: st.turn,
-          date: dateLabel(st.world),
-          kind: 'decision',
-          emoji: after > before ? '📈' : '📉',
-          title: `${label} ${after > before ? 'sube' : 'baja'} a ${after}%`,
-          body: `Contra la estructura con la que arrancaste: recaudacion ${fx.fiscal >= 0 ? '+' : ''}${fx.fiscal} del PBI, crecimiento ${fx.growth >= 0 ? '+' : ''}${fx.growth}, humor social ${fx.happiness >= 0 ? '+' : ''}${fx.happiness} por turno.`,
-          tone: 'neutral'
-        },
-        ...st.feed
-      ]
-    });
+    set({ orders });
     persist();
   },
   setMapMode: (m) => set({ mapMode: m }),
 
   // ----------------------------------------------------------
-  takeDecision: (id, target) => {
+  /** Suma una decision al plan del turno. No toca el mundo hasta avanzar el mes. */
+  planDecision: (id, target) => {
     const st = get();
-    if (st.gameOver) return;
+    if (!st.started || st.gameOver) return;
     const dec = DECISIONS.find((d) => d.id === id);
     if (!dec) return;
-    // con una oposicion fuerte, gobernar sale mas caro
-    const cost = Math.round(dec.cost.capital * oppositionCostFactor(st.politics.opposition));
-    if (st.capital < cost) return;
     if (dec.needsTarget && !target) return;
 
-    const countries = fresh(st.countries);
-    const relations = { ...st.relations };
-    const world = fresh(st.world);
-    const player = countries[st.playerCode];
+    // con una oposicion fuerte, gobernar sale mas caro
+    const cost = Math.round(dec.cost.capital * oppositionCostFactor(st.politics.opposition));
+    const orders = addDecisionOrder(st.orders, id, cost, target, target ? st.countries[target]?.name : undefined);
+    if (committedCapital(orders) > st.capital) return;
 
-    applyDelta(player, dec.effects, world);
-
-    let hostility = 0;
-    for (const rd of dec.relations ?? []) {
-      const targets = resolveRelationTargets(rd, {
-        player: st.playerCode, target, countries, blocs: st.blocs
-      });
-      targets.forEach((t) => adjustRelation(relations, st.playerCode, t, rd.amount));
-      hostility += rd.amount;
-    }
-
-    const sanctions = [...st.sanctions];
-    if (dec.id === 'sancionar' && target && !sanctions.includes(target)) sanctions.push(target);
-
-    const targetName = target ? countries[target]?.name : '';
-    const title = dec.needsTarget ? `${dec.label} - ${targetName}` : dec.label;
-
-    set({
-      countries,
-      relations,
-      world,
-      sanctions,
-      capital: clamp(st.capital - cost + (dec.effects.capital ?? 0), 0, 100),
-      lastActions: [...st.lastActions, title],
-      feed: [
-        {
-          turn: st.turn,
-          date: dateLabel(world),
-          kind: 'decision',
-          emoji: dec.emoji,
-          title,
-          body: dec.detail,
-          tone: 'neutral'
-        },
-        ...st.feed
-      ]
-    });
+    set({ orders });
     persist();
+  },
+
+  cancelOrder: (index) => {
+    const st = get();
+    set({ orders: st.orders.filter((_, i) => i !== index) });
+    persist();
+  },
+
+  clearOrders: () => {
+    set({ orders: [] });
+    persist();
+  },
+
+  availableCapital: () => {
+    const st = get();
+    return Math.round((st.capital - committedCapital(st.orders)) * 10) / 10;
   },
 
   // ---------------------------------------------------------- politica
@@ -651,57 +806,18 @@ export const useGame = create<GameStore>((set, get) => {
   dismissElection: () => set({ election: null }),
 
   // ----------------------------------------------------------
-  resolveEvent: (key, choiceId) => {
+  /** Elige como responder a un evento abierto. Se resuelve al avanzar el mes. */
+  planEventChoice: (key, choiceId) => {
     const st = get();
     const item = st.pending.find((p) => p.key === key);
     if (!item) return;
     const choice = item.event.choices?.find((c) => c.id === choiceId);
     if (!choice) return;
 
-    const countries = fresh(st.countries);
-    const relations = { ...st.relations };
-    const world = fresh(st.world);
-    const player = countries[st.playerCode];
+    const orders = addEventOrder(st.orders, item.event, key, choiceId, choice.cost?.capital ?? 0);
+    if (committedCapital(orders) > st.capital) return;
 
-    applyDelta(player, choice.effects, world);
-    if (choice.cost?.fiscal) applyDelta(player, { fiscal_balance: -choice.cost.fiscal }, world);
-
-    let outcome = choice.detail;
-    let tone: FeedItem['tone'] = 'neutral';
-
-    if (choice.risk && Math.random() < choice.risk.chance) {
-      applyDelta(player, choice.risk.effects, world);
-      outcome = `${choice.detail} PERO: ${choice.risk.label}.`;
-      tone = 'malo';
-    }
-
-    for (const rd of choice.relations ?? []) {
-      const targets = resolveRelationTargets(rd, {
-        player: st.playerCode, target: item.target, countries, blocs: st.blocs
-      });
-      targets.forEach((t) => adjustRelation(relations, st.playerCode, t, rd.amount));
-    }
-
-    set({
-      countries,
-      relations,
-      world,
-      capital: clamp(st.capital - (choice.cost?.capital ?? 0) + (choice.effects.capital ?? 0), 0, 100),
-      pending: st.pending.filter((p) => p.key !== key),
-      lastActions: [...st.lastActions, `${item.event.title} -> ${choice.label}`],
-      feed: [
-        {
-          turn: st.turn,
-          date: dateLabel(world),
-          kind: 'evento',
-          emoji: item.event.emoji,
-          title: `${item.event.title}: ${choice.label}`,
-          body: outcome,
-          tone
-        },
-        ...st.feed
-      ]
-    });
+    set({ orders });
     persist();
   },
 
@@ -710,15 +826,20 @@ export const useGame = create<GameStore>((set, get) => {
     const st = get();
     if (st.gameOver) return;
 
-    const countries = fresh(st.countries);
-    const relations = { ...st.relations };
-    const world = fresh(st.world);
-    const blocs = fresh(st.blocs);
+    // 0. se ejecuta el plan del turno: recien aca las decisiones tocan el mundo
+    const run = runPlan(st, st.orders);
+    const countries = run.countries;
+    const relations = run.relations;
+    const world = run.world;
+    const blocs = run.blocs;
+    // lo que se ejecuto del plan va arriba de todo en el historial del turno:
+    // primero "esto hice", despues "esto paso en el mundo"
+    const planFeed: FeedItem[] = run.feed;
     const feed: FeedItem[] = [];
     const pending: ActiveEvent[] = [];
 
-    // 1. eventos sin resolver: la inaccion tambien es una decision
-    for (const p of st.pending) {
+    // 1. eventos que quedaron sin respuesta: la inaccion tambien es una decision
+    for (const p of run.pending) {
       const player = countries[st.playerCode];
       if (p.event.effects) applyDelta(player, p.event.effects, world);
       applyDelta(player, { stability: -1 }, world);
@@ -744,8 +865,8 @@ export const useGame = create<GameStore>((set, get) => {
       relations,
       blocs,
       world,
-      capital: st.capital,
-      sanctions: st.sanctions,
+      capital: run.capital,
+      sanctions: run.sanctions,
       disruptions,
       tradeBase: st.tradeBase,
       active: st.active,
@@ -817,9 +938,11 @@ export const useGame = create<GameStore>((set, get) => {
 
     // 6. reaccion del resto del mundo a lo que hiciste
     let reactions: Reaction[] = [];
-    if (st.lastActions.length) {
-      const hostility = st.lastActions.some((a) => /sancion|Movilizar|Retirar|aranceles/i.test(a)) ? -18 : 8;
-      reactions = aiReactions(countries, relations, blocs, st.playerCode, st.lastActions[0], hostility);
+    if (run.lastActions.length) {
+      const hostility = run.hostility !== 0
+        ? clamp(run.hostility, -30, 30)
+        : (run.lastActions.some((a) => /sancion|Movilizar|Retirar|aranceles/i.test(a)) ? -18 : 8);
+      reactions = aiReactions(countries, relations, blocs, st.playerCode, run.lastActions[0], hostility);
       for (const r of reactions) {
         feed.push({
           turn,
@@ -898,11 +1021,11 @@ export const useGame = create<GameStore>((set, get) => {
         if (after.gameOver) {
           set({
             turn, world, countries, relations, blocs, disruptions, active, capital,
-            politics, election, succession: [],
+            politics, election, succession: [], sanctions: run.sanctions, orders: [],
             reactions, lastActions: [],
             pending: [...pending],
             recentEventIds: [...rolled.map((e) => e.id), ...st.recentEventIds].slice(0, 8),
-            feed: [...feed.reverse(), ...st.feed].slice(0, 200),
+            feed: [...planFeed, ...feed.reverse(), ...st.feed].slice(0, 200),
             gameOver: after.gameOver
           });
           persist();
@@ -939,11 +1062,13 @@ export const useGame = create<GameStore>((set, get) => {
       politics,
       election,
       succession,
+      sanctions: run.sanctions,
+      orders: [],
       reactions,
       lastActions: [],
       pending: [...pending],
       recentEventIds: [...rolled.map((e) => e.id), ...st.recentEventIds].slice(0, 8),
-      feed: [...feed.reverse(), ...st.feed].slice(0, 200),
+      feed: [...planFeed, ...feed.reverse(), ...st.feed].slice(0, 200),
       history: [
         ...st.history,
         {
@@ -961,97 +1086,38 @@ export const useGame = create<GameStore>((set, get) => {
   },
 
   // ----------------------------------------------------------
-  joinBloc: (id) => {
+  planJoinBloc: (id) => {
     const st = get();
     const bloc = st.blocs.find((b) => b.id === id);
     if (!bloc) return;
     const check = canJoin(bloc, st.playerCode, st.relations, st.capital);
     if (!check.ok) return;
 
-    const blocs = fresh(st.blocs);
-    const relations = { ...st.relations };
-    const target = blocs.find((b) => b.id === id)!;
-    target.members.push(st.playerCode);
-    target.candidates = target.candidates.filter((c) => c !== st.playerCode);
-    target.cohesion = clamp(target.cohesion - 4, 0, 100);
-
-    target.members.forEach((m) => m !== st.playerCode && adjustRelation(relations, st.playerCode, m, 10));
-    target.rivals.forEach((r) => adjustRelation(relations, st.playerCode, r, -15));
-
-    set({
-      blocs,
-      relations,
-      capital: clamp(st.capital - (check.cost ?? 20), 0, 100),
-      lastActions: [...st.lastActions, `Ingreso a ${target.short}`],
-      feed: [
-        {
-          turn: st.turn, date: dateLabel(st.world), kind: 'bloque', emoji: '🤝',
-          title: `${st.countries[st.playerCode].name} ingresa a ${target.short}`,
-          body: target.rules[0],
-          tone: 'bueno'
-        },
-        ...st.feed
-      ]
-    });
+    const orders = addBlocOrder(st.orders, 'join', bloc, check.cost ?? 20);
+    if (committedCapital(orders) > st.capital) return;
+    set({ orders });
     persist();
   },
 
-  leaveBloc: (id) => {
+  planLeaveBloc: (id) => {
     const st = get();
-    const blocs = fresh(st.blocs);
-    const relations = { ...st.relations };
-    const target = blocs.find((b) => b.id === id);
-    if (!target || !target.members.includes(st.playerCode)) return;
+    const bloc = st.blocs.find((b) => b.id === id);
+    if (!bloc || !bloc.members.includes(st.playerCode)) return;
 
-    target.members = target.members.filter((m) => m !== st.playerCode);
-    target.cohesion = clamp(target.cohesion - 10, 0, 100);
-    target.members.forEach((m) => adjustRelation(relations, st.playerCode, m, -20));
-
-    const countries = fresh(st.countries);
-    applyDelta(countries[st.playerCode], { gdp_growth: -0.5, stability: -3 }, undefined);
-
-    set({
-      blocs, relations, countries,
-      capital: clamp(st.capital - 15, 0, 100),
-      lastActions: [...st.lastActions, `Salida de ${target.short}`],
-      feed: [
-        {
-          turn: st.turn, date: dateLabel(st.world), kind: 'bloque', emoji: '🚪',
-          title: `${st.countries[st.playerCode].name} abandona ${target.short}`,
-          body: 'Los socios lo leen como una traicion. Cae el comercio y la confianza.',
-          tone: 'malo'
-        },
-        ...st.feed
-      ]
-    });
+    const orders = addBlocOrder(st.orders, 'leave', bloc, 15);
+    if (committedCapital(orders) > st.capital) return;
+    set({ orders });
     persist();
   },
 
-  summit: (id) => {
+  planSummit: (id) => {
     const st = get();
-    if (st.capital < 10) return;
-    const blocs = fresh(st.blocs);
-    const relations = { ...st.relations };
-    const target = blocs.find((b) => b.id === id);
-    if (!target || !target.members.includes(st.playerCode)) return;
+    const bloc = st.blocs.find((b) => b.id === id);
+    if (!bloc || !bloc.members.includes(st.playerCode)) return;
 
-    target.cohesion = clamp(target.cohesion + 8, 0, 100);
-    target.members.forEach((m) => m !== st.playerCode && adjustRelation(relations, st.playerCode, m, 8));
-
-    set({
-      blocs, relations,
-      capital: clamp(st.capital - 10, 0, 100),
-      lastActions: [...st.lastActions, `Cumbre de ${target.short}`],
-      feed: [
-        {
-          turn: st.turn, date: dateLabel(st.world), kind: 'bloque', emoji: '🏛️',
-          title: `Cumbre de ${target.short} en ${st.countries[st.playerCode].capital}`,
-          body: `Cohesion del bloque +8 (ahora ${target.cohesion}). Las relaciones con los socios mejoran.`,
-          tone: 'bueno'
-        },
-        ...st.feed
-      ]
-    });
+    const orders = addBlocOrder(st.orders, 'summit', bloc, 10);
+    if (committedCapital(orders) > st.capital) return;
+    set({ orders });
     persist();
   },
 

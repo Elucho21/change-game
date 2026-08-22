@@ -27,7 +27,7 @@ Uso personal, un solo jugador.
 1. Datos           engine/countries_mvp.json  (24 países, fuente de verdad)
                    lib/blocs.ts · lib/events/* · lib/decisions.ts · lib/routes.ts
 2. Transformación  scripts/build-data.mjs  →  lib/data/countries.gen.json
-3. Motor           lib/engine.ts · lib/trade.ts · lib/simulation.ts · lib/store.ts
+3. Motor           lib/engine.ts · lib/trade.ts · lib/simulation.ts · lib/orders.ts · lib/store.ts
                    lib/persistence.ts (guardado) · lib/points.ts (puntos del mapa)
 4. Capa de IA      docs/PROMPT_MAESTRO.md + puente en components/GrokBridge.tsx
 5. Interfaz        components/*.tsx sobre react-globe.gl
@@ -39,9 +39,11 @@ El motor Python original (`engine/game_engine.py`) sigue en el repo y sigue func
 ### Flujo de un turno
 
 ```
-1. El jugador toma decisiones (gasta capital político)
-2. Los eventos abiertos esperan respuesta
+1. El jugador arma el PLAN del turno: decisiones, impuestos, bloques y
+   respuestas a eventos. Nada toca el mundo todavia; puede sacar lo que quiera.
+2. Los eventos abiertos esperan respuesta (la respuesta tambien va al plan)
 3. "Avanzar mes":
+   0. Se ejecuta el plan completo y entra al historial, una linea por accion
    a. Los eventos sin responder se aplican solos, con penalidad de estabilidad
    b. Avanza el calendario
    c. Se recalcula el comercio bilateral de todos los países

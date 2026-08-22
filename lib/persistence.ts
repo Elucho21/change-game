@@ -3,6 +3,7 @@ import type {
 } from './types';
 import type { TaxRates } from './engine';
 import type { Politics } from './politics';
+import type { PlannedOrder } from './orders';
 
 /**
  * Guardado de partida en localStorage.
@@ -45,6 +46,8 @@ export interface PersistedState {
   taxBase?: Record<string, TaxRates>;
   politics?: Politics;
   startingGdp?: number;
+  /** plan del turno sin ejecutar */
+  orders?: PlannedOrder[];
   gameOver: { title: string; body: string } | null;
 }
 

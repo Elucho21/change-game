@@ -14,9 +14,10 @@ Después, para entender qué hace el sistema: **`docs/ESPECIFICACION.md`** y **`
 6. **Nada de dependencias nuevas** sin justificarlo.
 7. **Contenido de datos sin tildes ni ñ** (`lib/events/*`, `lib/blocs.ts`, `lib/decisions.ts`): ese texto pasa por el motor Python y por consolas de Windows.
 8. **Toda opción de evento tiene un costo y ninguna es obviamente la mejor.** Si hay una respuesta correcta, no es una decisión.
-9. **El turno tiene una sola implementación**: `deterministicTick()` en `lib/simulation.ts`, que usan tanto `endTurn` como el preview de consecuencias. No reimplementes la economía en otro lado.
-10. **Si cambiás la forma del estado guardado**, subí `SAVE_VERSION` en `lib/persistence.ts` y agregá la migración. Un campo nuevo *opcional* no necesita versión nueva.
-11. **Si agregás contenido, sumá el caso al test** (`tests/engine.test.ts`).
+9. **El jugador planifica, el turno ejecuta.** Las acciones se acumulan como órdenes (`lib/orders.ts`) y solo tocan el mundo en `runPlan()` al avanzar el mes. Al historial entra lo ejecutado, no lo intentado.
+10. **El turno tiene una sola implementación**: `deterministicTick()` en `lib/simulation.ts`, que usan tanto `endTurn` como el preview de consecuencias. No reimplementes la economía en otro lado.
+11. **Si cambiás la forma del estado guardado**, subí `SAVE_VERSION` en `lib/persistence.ts` y agregá la migración. Un campo nuevo *opcional* no necesita versión nueva.
+12. **Si agregás contenido, sumá el caso al test** (`tests/engine.test.ts`).
 
 ## Antes de commitear, los tres comandos
 
@@ -35,7 +36,7 @@ npm run build
 |---|---|---|
 | Contenido | `lib/events/*`, `lib/decisions.ts`, `lib/blocs.ts`, `lib/routes.ts` | bajo — ideal para trabajo en paralelo |
 | Datos | `engine/countries_mvp.json`, `scripts/build-data.mjs` | medio |
-| Motor | `lib/engine.ts`, `lib/trade.ts`, `lib/simulation.ts`, `lib/politics.ts`, `lib/store.ts`, `lib/persistence.ts` | **alto — una persona por vez** |
+| Motor | `lib/engine.ts`, `lib/trade.ts`, `lib/simulation.ts`, `lib/politics.ts`, `lib/orders.ts`, `lib/store.ts`, `lib/persistence.ts` | **alto — una persona por vez** |
 | Datos de puntos | `lib/points.ts` → arrays `PORTS` y `AIRPORTS` | bajo — ver `docs/PEDIDOS_A_GROK.md` |
 | Interfaz | `components/*.tsx`, `app/globals.css` | medio — un componente por persona |
 

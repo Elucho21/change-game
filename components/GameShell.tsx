@@ -10,6 +10,7 @@ import BlocsPanel from './BlocsPanel';
 import EventCatalog from './EventCatalog';
 import GovernmentPanel from './GovernmentPanel';
 import ElectionModal from './ElectionModal';
+import TurnPlan from './TurnPlan';
 import Feed from './Feed';
 import GrokBridge from './GrokBridge';
 
@@ -52,6 +53,7 @@ export default function GameShell() {
         <GlobeView />
 
         <div className="col right">
+          <TurnPlan />
           <Feed />
         </div>
       </div>

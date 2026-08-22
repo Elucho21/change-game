@@ -13,7 +13,7 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: str
 }
 
 export default function TopBar({ onGrok }: { onGrok: () => void }) {
-  const { countries, playerCode, turn, capital, world, pending, politics, active } = useGame();
+  const { countries, playerCode, turn, capital, world, pending, politics, active, orders } = useGame();
   const endTurn = useGame((s) => s.endTurn);
   const newGame = useGame((s) => s.newGame);
   const p = countries[playerCode];
@@ -72,8 +72,14 @@ export default function TopBar({ onGrok }: { onGrok: () => void }) {
         >
           ↺ Nueva
         </button>
-        <button className="btn-primary" onClick={endTurn}>
-          {pending.length ? `Avanzar mes (${pending.length} sin resolver)` : 'Avanzar mes ▶'}
+        <button
+          className="btn-primary"
+          onClick={endTurn}
+          title={orders.length ? 'Ejecuta el plan y avanza el mes' : 'Avanza el mes sin tomar decisiones'}
+        >
+          {orders.length
+            ? `Ejecutar ${orders.length} y avanzar ▶`
+            : pending.length ? `Avanzar mes (${pending.length} sin responder)` : 'Avanzar mes ▶'}
         </button>
       </div>
     </div>

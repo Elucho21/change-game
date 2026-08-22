@@ -15,9 +15,10 @@ export default function DecisionsPanel() {
   const [cat, setCat] = useState<(typeof CATEGORIES)[number]['id']>('economia');
   const [open, setOpen] = useState<string | null>(null);
 
-  const { capital, selected, playerCode, countries, lastActions, turn } = useGame();
-  const take = useGame((s) => s.takeDecision);
+  const { capital, selected, playerCode, countries, orders, turn } = useGame();
+  const plan = useGame((s) => s.planDecision);
   const preview = useGame((s) => s.previewDecision);
+  const available = useGame((s) => s.availableCapital)();
   const target = selected && selected !== playerCode ? selected : undefined;
 
   const list = DECISIONS.filter((d) => d.category === cat);
@@ -32,7 +33,12 @@ export default function DecisionsPanel() {
   return (
     <div>
       <div className="section" style={{ position: 'sticky', top: 0, zIndex: 4 }}>
-        <h3>Capital politico disponible: {Math.round(capital)}</h3>
+        <h3>
+          Capital politico: {available} libre
+          {available !== Math.round(capital) && (
+            <span className="muted"> (de {Math.round(capital)}, el resto ya esta en el plan)</span>
+          )}
+        </h3>
         <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
           {CATEGORIES.map((c) => (
             <button
@@ -44,9 +50,9 @@ export default function DecisionsPanel() {
             </button>
           ))}
         </div>
-        {lastActions.length > 0 && (
+        {orders.length > 0 && (
           <p className="muted" style={{ fontSize: 11.5, marginTop: 8 }}>
-            Este turno: {lastActions.join(' · ')}
+            En el plan: {orders.map((o) => o.label).join(' · ')}
           </p>
         )}
       </div>
@@ -54,20 +60,21 @@ export default function DecisionsPanel() {
       <div className="section">
         {list.map((d) => {
           const needsTarget = d.needsTarget && !target;
-          const afford = capital >= d.cost.capital;
+          const afford = available >= d.cost.capital;
+          const yaEnPlan = orders.some((o) => o.kind === 'decision' && o.id === d.id);
           const disabled = !afford || needsTarget;
           const isOpen = open === d.id;
 
           return (
             <div key={d.id}>
               <button
-                className={`decision${isOpen ? ' open' : ''}`}
+                className={`decision${isOpen ? ' open' : ''}${yaEnPlan ? ' planned' : ''}`}
                 disabled={disabled}
                 onClick={() => setOpen(isOpen ? null : d.id)}
                 title={needsTarget ? 'Elegi un pais en el globo primero' : afford ? '' : 'Capital politico insuficiente'}
               >
                 <strong>
-                  {d.emoji} {d.label}{' '}
+                  {d.emoji} {d.label}{yaEnPlan ? ' ✓' : ''}{' '}
                   <span className="muted">
                     ({d.cost.capital} cap.{d.cost.fiscal ? ` · ${d.cost.fiscal}% PBI` : ''})
                   </span>
@@ -98,10 +105,10 @@ export default function DecisionsPanel() {
                   <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
                     <button
                       className="btn-primary"
-                      onClick={() => { take(d.id, target); setOpen(null); }}
+                      onClick={() => { plan(d.id, target); setOpen(null); }}
                       disabled={disabled}
                     >
-                      Confirmar decision
+                      {yaEnPlan ? 'Actualizar en el plan' : 'Agregar al plan'}
                     </button>
                     <button onClick={() => setOpen(null)}>Cancelar</button>
                   </div>

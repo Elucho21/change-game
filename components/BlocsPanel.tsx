@@ -12,9 +12,10 @@ const TYPE_LABEL: Record<string, string> = {
 
 export default function BlocsPanel() {
   const { blocs, playerCode, countries, relations, capital } = useGame();
-  const join = useGame((s) => s.joinBloc);
-  const leave = useGame((s) => s.leaveBloc);
-  const summit = useGame((s) => s.summit);
+  const join = useGame((s) => s.planJoinBloc);
+  const leave = useGame((s) => s.planLeaveBloc);
+  const summit = useGame((s) => s.planSummit);
+  const orders = useGame((s) => s.orders);
 
   const fx = blocEffects(blocs, playerCode);
 
@@ -56,13 +57,16 @@ export default function BlocsPanel() {
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {isMember ? (
                 <>
-                  <button onClick={() => summit(b.id)} disabled={capital < 10}>🏛️ Convocar cumbre (10 cap.)</button>
-                  <button onClick={() => leave(b.id)} disabled={capital < 15}>🚪 Abandonar (15 cap.)</button>
+                  <button onClick={() => summit(b.id)} disabled={capital < 10}>🏛️ Cumbre al plan (10 cap.)</button>
+                  <button onClick={() => leave(b.id)} disabled={capital < 15}>🚪 Salir, al plan (15 cap.)</button>
                 </>
               ) : (
                 <button onClick={() => join(b.id)} disabled={!check.ok} title={check.reason}>
-                  🤝 Solicitar ingreso
+                  🤝 Pedir ingreso, al plan
                 </button>
+              )}
+              {orders.some((o) => o.kind === 'bloc' && o.blocId === b.id) && (
+                <span className="pill warn">en el plan</span>
               )}
             </div>
             {!isMember && <p className="muted" style={{ fontSize: 11, marginTop: 5 }}>{check.reason}</p>}
