@@ -40,6 +40,7 @@ export interface PersistedState {
     // agregados despues: los saves viejos no los traen
     unemployment?: number; fiscal?: number; debt?: number;
     capital?: number; opposition?: number; tension?: number; oil?: number;
+    fx?: number;
   }[];
   selected: string | null;
   mapMode: MapMode;

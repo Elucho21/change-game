@@ -390,7 +390,7 @@ export function naturalDrift(
 export function buildCtx(
   player: Country, world: GlobalState, turn: number, blocs: Bloc[], rel: Record<string, number>,
   /** contexto politico y comercial, para condicionar eventos de oposicion o economia externa */
-  extra?: Pick<EventContext, 'politics' | 'trade'>
+  extra?: Pick<EventContext, 'politics' | 'trade' | 'imf' | 'fx'>
 ): EventContext {
   return {
     player,
@@ -412,7 +412,7 @@ export interface EligibilityState {
   blocs: Bloc[];
   world: GlobalState;
   /** contexto politico y comercial, si esta disponible */
-  eventExtra?: Pick<EventContext, 'politics' | 'trade'>;
+  eventExtra?: Pick<EventContext, 'politics' | 'trade' | 'imf' | 'fx'>;
 }
 
 /**
@@ -441,7 +441,7 @@ function pick<T>(items: { item: T; weight: number }[]): T | null {
 export function rollEvents(
   player: Country, world: GlobalState, turn: number, blocs: Bloc[],
   rel: Record<string, number>, recentIds: string[],
-  extra?: Pick<EventContext, 'politics' | 'trade'>
+  extra?: Pick<EventContext, 'politics' | 'trade' | 'imf' | 'fx'>
 ): GameEvent[] {
   const ctx = buildCtx(player, world, turn, blocs, rel, extra);
   const out: GameEvent[] = [];

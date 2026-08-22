@@ -6,6 +6,30 @@ Bitácora corta y en orden inverso: lo último arriba. Es lo que tenés que sabe
 
 ---
 
+## motor/fx-imf · 22/08/2026 · FMI + tipo de cambio en el tick
+
+El índice de tipo de cambio y el arco FMI ya no son módulos sueltos: corren en `deterministicTick()`.
+
+### Contrato nuevo para eventos
+
+```ts
+when: (c) => (c.imf?.weight ?? 0) >= 5
+when: (c) => c.imf?.stage === 'watch'
+when: (c) => (c.fx ?? 100) > 120
+```
+
+`EventContext.imf` y `EventContext.fx` son opcionales. `Country.fx` arranca en 100 (sube = depreciación).
+
+### Qué hay
+
+- `lib/imf.ts`: bandas 60/75/90/110, weight 0-18, stages none/watch/mission/program/exit.
+- `lib/fx.ts`: índice, pressure, passthrough a inflación, salto al **devaluar**.
+- KPI **Tipo de cambio** en la barra.
+- Eventos: `fmi_watch` (stage watch) y `fmi` cuando `weight >= 5`.
+- `corrida_cambiaria` también puede salir si el índice pasa 115.
+
+---
+
 ## dfc6202 · 22/08/2026 · Capital ×2, 31 acciones nuevas, Comunicación, enfriamientos, KPIs con gráfico
 
 Pedido del jugador, en una sola pasada.
