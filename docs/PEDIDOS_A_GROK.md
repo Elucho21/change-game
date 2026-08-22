@@ -50,11 +50,18 @@ Candidatos: shock petrolero → `industry`; guerra comercial → `commerce`; des
 
 ## 5. Eventos de oposición y campaña
 
-Ya existe el ciclo electoral: mandato de 4 años, reelección, sucesión y una oposición que crece con el malestar y encarece cada decisión.
+**El `EventContext` ya trae `politics` (opcional).** No hace falta pedir más campos para esto:
 
-Faltan eventos que lo aprovechen: interna del partido, campaña sucia, promesa incumplida que se le vuelve en contra, deserción de legisladores, pacto con un gobernador, escándalo del candidato opositor.
+```ts
+when: (c) => (c.politics?.opposition ?? 0) > 60
+when: (c) => (c.politics?.monthsToElection ?? 99) <= 6
+when: (c) => c.politics?.honeymoon === true
+when: (c) => c.politics?.lastTerm === true
+```
 
-Si necesitás una condición sobre el estado político que hoy no se puede expresar en `when`, pedímela: el `EventContext` se puede extender con campos opcionales sin romper nada.
+Campos: `opposition`, `monthsToElection`, `monthsToMidterm`, `poll`, `consecutiveTerms`, `lastTerm`, `honeymoon`, `capital`.
+
+Faltan los eventos: interna del partido, campaña sucia, promesa incumplida, deserción de legisladores, pacto con un gobernador, escándalo del candidato opositor.
 
 ## 6. Eventos que usen las rutas marítimas
 
@@ -69,13 +76,14 @@ Cada uno con sus 2-3 opciones y su costo, según las reglas de diseño de evento
 
 ## 7. Eventos que reaccionen al comercio
 
-Ahora que existe el comercio bilateral, faltan eventos que lo usen como condición. El `EventContext` que recibe `when` ya trae `player`, `world`, `turn`, `blocs`, `relationOf()` y `memberOf()`. Ejemplos posibles:
+**El `EventContext` ya trae `trade` (opcional):**
 
-- "Tu principal socio comercial entra en recesión".
-- "Un competidor te desplaza del mercado asiático".
-- "Presión de la industria local por la apertura importadora".
+```ts
+when: (c) => (c.trade?.changeVsStart ?? 0) < -10
+when: (c) => c.trade?.topPartner === 'China'
+```
 
-Si necesitás una condición sobre volumen de comercio que hoy no se puede expresar, pedímela y la agrego al `EventContext` como campo opcional.
+Campos: `total`, `changeVsStart`, `topPartner`. Ejemplos: socio principal en recesión, industria local contra la apertura, un competidor te desplaza en Asia.
 
 ## 8. Más países (Fase 4 del plan)
 
@@ -95,4 +103,6 @@ Estos archivos son zona del motor y los trabaja Opus. Si el jugador te pide algo
 - `lib/points.ts` **salvo los arrays `PORTS` y `AIRPORTS`**
 - `components/*`
 
-Acuerdo completo: `docs/REGLAS_DE_CODIGO.md` sección 7. Siempre rama + PR. No pushees a `main`. No agregues países (76, congelado) hasta que Opus recorte el comercio O(n²).
+Acuerdo completo: `docs/REGLAS_DE_CODIGO.md` sección 7. Siempre rama + PR. No pushees a `main`.
+
+Países: se pueden sumar otra vez (Opus recortó la matriz). **Antes de cruzar 100, avisar.** Estudio de carga, flujos y globo: `docs/ESCALA_GLOBO.md`.
