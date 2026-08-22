@@ -30,8 +30,6 @@ const MODES: { id: 'relaciones' | 'bloques' | 'estabilidad' | 'economia'; label:
   { id: 'economia', label: '💰 Economia' }
 ];
 
-const PORT_HINT = 'Los datos de puertos y aeropuertos todavia no estan cargados (ver docs/PEDIDOS_A_GROK.md)';
-
 const heat = (v: number) => {
   // 0 = rojo, 100 = verde
   const t = Math.max(0, Math.min(100, v)) / 100;
@@ -286,7 +284,6 @@ export default function GlobeView() {
           className={layers.points && layers.ports ? 'on' : ''}
           onClick={() => toggleLayer('ports')}
           disabled={!layers.points}
-          title={PORT_HINT}
         >
           Puertos
         </button>
@@ -294,7 +291,6 @@ export default function GlobeView() {
           className={layers.points && layers.airports ? 'on' : ''}
           onClick={() => toggleLayer('airports')}
           disabled={!layers.points}
-          title={PORT_HINT}
         >
           Aeropuertos
         </button>
