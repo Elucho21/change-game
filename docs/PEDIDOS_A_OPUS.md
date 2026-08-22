@@ -12,25 +12,35 @@ Ver `docs/REGLAS_DE_CODIGO.md` sección 7.
 
 > Cerrados en este pase: tasador diplomático y comercio O(n²). Ver abajo.
 
-### 1. Gabinete de 5 sillas
-
-Economía, Interior, Exterior, Defensa, Jefatura. Cada ministro es un perfil con pasivos chicos (capital/mes, estabilidad, multiplicador de costo de una categoría). Catálogo de nombres: Grok, `lib/cabinet.ts`, cuando el store exista.
-
-### 2. Coalición
-
-Una silla ocupada por `party: 'oposicion' | 'aliado'` = más encuesta y estabilidad, evento cada 6–8 meses que pide algo. Si decís que no, se va y te deja en minoría.
-
-### 3. Parlamento y gráfico de encuesta
-
-100 escaños post-elección / midterm. Sin mayoría (51), las decisiones de costo ≥ 15 pagan ×1.4. `pollHistory: {turn, value}[]` y una línea en `GovernmentPanel`.
-
-### 4. Irán y Ormuz
-
-Irán está en el JSON (`Iran`, ISO `IRN`). Ormuz puede dejar de ser solo evento aleatorio y pasar a ser decisión de un país.
+(ninguno abierto: la bandeja quedó vacía)
 
 ---
 
 ## Cerrados
+
+### Gabinete de 5 sillas — hecho
+
+`lib/cabinet.ts` (mecánica + catálogo de referencia) y pestaña **👥 Gabinete**. Cinco sillas; cada ministro suma un pasivo mensual chico y abarata una categoría de decisiones. Nombrar cuesta 8 de capital, reemplazar 20 (echar tiene su propio costo) y mover una silla cuesta estabilidad: es señal de crisis.
+
+**Grok**: el catálogo está con dos o tres opciones por silla, de referencia. Ampliarlo es tuyo — `MINISTERS` en `lib/cabinet.ts`, mismo formato. La mecánica no cambia.
+
+### Coalición — hecho
+
+Un ministro con `party: 'oposicion' | 'aliado'` presta escaños y votos. Cada 7 meses pasa factura con un pedido incómodo (obra pública en sus distritos, cargos, o bancar su ley). Decirle que no lo saca del gabinete y te deja sin sus escaños, que es justo lo que te sostenía las medidas grandes.
+
+Probado de punta a punta: coalición armada → factura en el turno 14 → "decirle que no" → el socio se va y el Congreso vuelve a estar en contra.
+
+### Parlamento y gráfico de encuesta — hecho
+
+100 escaños. Sin mayoría (51), las decisiones de 15 o más de capital pagan ×1.4. Medido: la reforma laboral cuesta **21 con coalición y 30 sin ella**. Los escaños se reparten tras cada presidencial y cada medio término con `seatsFromVote()`, que sigue al voto sin copiarlo: ganar con 60% no te da 60 bancas.
+
+`pollHistory` se registra cada turno y hay una línea con el umbral del 50% en el panel de Gobierno.
+
+### Irán y Ormuz — hecho
+
+`CHOKEPOINT_OWNER` en `lib/routes.ts`: Ormuz tiene dueño. Si la relación Irán–EE.UU. cae por debajo de −40 o la tensión global pasa 60, hay riesgo mensual (hasta 12%) de que Teherán cierre el paso tres meses. Probado: con relación −85 y tensión 85 cerró y el barril saltó a 105.
+
+Si el jugador **es** Irán, no se dispara solo: la decisión es suya. Esa decisión es contenido — te la dejo pedida en `PEDIDOS_A_GROK.md`.
 
 ### Tasador diplomático — hecho
 

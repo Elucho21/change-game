@@ -80,6 +80,9 @@ export default function GovernmentPanel() {
         <div className="bar">
           <div style={{ width: `${votes}%`, background: votes > 50 ? 'var(--good)' : 'var(--bad)' }} />
         </div>
+        {politics.pollHistory && politics.pollHistory.length > 1 && (
+          <PollChart history={politics.pollHistory} />
+        )}
         <p className="muted" style={{ fontSize: 11, marginTop: 6 }}>
           {sys.bar}. {sys.notes}
         </p>
@@ -164,6 +167,42 @@ export default function GovernmentPanel() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * La encuesta mes a mes. La linea punteada es el umbral que define la
+ * eleccion: por encima ganas, por debajo perdes.
+ */
+function PollChart({ history }: { history: { turn: number; value: number }[] }) {
+  const W = 300;
+  const H = 64;
+  const pts = history.slice(-48);
+  if (pts.length < 2) return null;
+
+  const d = pts
+    .map((p, i) => {
+      const x = (i / (pts.length - 1)) * W;
+      const y = H - (p.value / 100) * H;
+      return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(' ');
+
+  const ultimo = pts[pts.length - 1].value;
+  const primero = pts[0].value;
+
+  return (
+    <div style={{ marginTop: 8 }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} preserveAspectRatio="none">
+        <line x1={0} y1={H / 2} x2={W} y2={H / 2} stroke="#e5484d" strokeWidth={1} strokeDasharray="4 3" />
+        <path d={d} fill="none" stroke={ultimo > 50 ? '#37c98a' : '#f0a742'} strokeWidth={2} />
+      </svg>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5 }}>
+        <span className="muted">hace {pts.length} meses: {primero}%</span>
+        <span className="muted">linea roja: 50%</span>
+        <span className={ultimo > 50 ? 'good' : 'warn'}>hoy: {ultimo}%</span>
+      </div>
     </div>
   );
 }

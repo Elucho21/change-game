@@ -11,29 +11,34 @@ import {
   ratesOf, rollEvents, taxEffects, type TaxRates
 } from './engine';
 import type { Reaction } from './engine';
-import { CHOKEPOINTS } from './routes';
+import { CHOKEPOINTS, CHOKEPOINT_OWNER, chokepointClosureRisk } from './routes';
 import { tradeBaseline } from './trade';
 import { cloneSim, deterministicTick, eventExtraOf, projectDecision, type SimState } from './simulation';
 import {
   defaultPolitics, driftOpposition, isElectionDue, isMidtermDue, legacy, needsSuccessor,
-  oppositionCostFactor, poll, runElection, runMidterm, successors,
+  oppositionCostFactor, parliamentCostFactor, poll, runElection, runMidterm, seatsFromVote,
+  successors,
   type Candidate, type ElectionResult, type Politics
 } from './politics';
 import {
   CAPITAL_ON_MIDTERM_WIN, CAPITAL_ON_WIN, grantHoneymoon, systemOf
 } from './electoral';
 import {
-  addBlocOrder, addDecisionOrder, addEventOrder, addTaxOrder, committedCapital,
+  addBlocOrder, addCabinetOrder, addDecisionOrder, addEventOrder, addTaxOrder, committedCapital,
   TAX_FIELD, TAX_LABELS,
   type PlannedOrder, type TaxKind
 } from './orders';
 import { cooldownKey, cooldownLeft, cooldownUntil, scaleDecision } from './diplomacy';
 import {
+  cabinetCostFactor, cabinetVoteBonus, coalitionDemand, coalitionPartners, coalitionSeats,
+  DEMAND_EVERY, ministerById, SEAT_LABEL, type Cabinet, type CabinetSeat
+} from './cabinet';
+import {
   clearGame, loadGame, saveGame, savedSummary,
   type PersistedState, type SavedGame
 } from './persistence';
 import type {
-  ActiveEvent, Bloc, ChokepointCrisis, Country, Delta, FeedItem, GameEvent,
+  ActiveEvent, Bloc, ChokepointCrisis, Country, Decision, Delta, FeedItem, GameEvent,
   GlobalState, Layers, MapMode, Projection
 } from './types';
 
@@ -100,6 +105,10 @@ interface GameStore {
   orders: PlannedOrder[];
   /** acciones diplomaticas en enfriamiento: "decision|pais" -> turno en que se liberan */
   cooldowns: Record<string, number>;
+  /** quien ocupa cada silla del gabinete */
+  cabinet: Cabinet;
+  /** turno de la ultima factura del socio de coalicion */
+  lastCoalitionDemand: number;
   /** eleccion resuelta esperando que el jugador la lea */
   election: ElectionResult | null;
   /** candidatos a sucederte: si esta lleno, la partida espera tu eleccion */
@@ -140,6 +149,8 @@ interface GameStore {
   clearOrders: () => void;
   /** capital politico que queda libre despues de comprometer el plan */
   availableCapital: () => number;
+  /** nombra o saca a un ministro (queda en el plan del turno) */
+  planCabinet: (seat: CabinetSeat, ministerId: string | null) => void;
   /** costo y efectos reales de una decision contra un pais concreto */
   quoteDecision: (id: string, target?: string) => {
     cost: number; size: number; reason: string; cooldown: number;
@@ -187,6 +198,8 @@ const initial = () => ({
   startingGdp: 0,
   orders: [] as PlannedOrder[],
   cooldowns: {} as Record<string, number>,
+  cabinet: {} as Cabinet,
+  lastCoalitionDemand: 0,
   election: null as ElectionResult | null,
   succession: [] as Candidate[],
   gameOver: null as { title: string; body: string } | null
@@ -219,8 +232,25 @@ function snapshot(st: GameStore): PersistedState {
     startingGdp: st.startingGdp,
     orders: st.orders,
     cooldowns: st.cooldowns,
+    cabinet: st.cabinet,
+    lastCoalitionDemand: st.lastCoalitionDemand,
     gameOver: st.gameOver
   };
+}
+
+/**
+ * Costo final de una decision. Suman tres frentes:
+ *  - la oposicion en la calle encarece todo
+ *  - sin mayoria en el Congreso, las medidas grandes hay que negociarlas
+ *  - un ministro de esa area las abarata
+ */
+function decisionCost(st: GameStore, dec: Decision, baseCost: number): number {
+  const seats = coalitionSeats(st.cabinet);
+  const factor =
+    oppositionCostFactor(st.politics.opposition)
+    * parliamentCostFactor(st.politics, baseCost, seats)
+    * cabinetCostFactor(st.cabinet, dec.category);
+  return Math.max(1, Math.round(baseCost * factor));
 }
 
 interface PlanRun {
@@ -237,6 +267,8 @@ interface PlanRun {
   hostility: number;
   /** enfriamientos actualizados */
   cooldowns: Record<string, number>;
+  /** gabinete despues de los cambios del plan */
+  cabinet: Cabinet;
 }
 
 /** Turnos de enfriamiento de una decision, 0 si no tiene. */
@@ -262,7 +294,8 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
     pending: [...st.pending],
     lastActions: [],
     hostility: 0,
-    cooldowns: { ...st.cooldowns }
+    cooldowns: { ...st.cooldowns },
+    cabinet: { ...st.cabinet }
   };
 
   const log = (emoji: string, title: string, body: string, tone: FeedItem['tone'] = 'neutral') => {
@@ -368,6 +401,33 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
       continue;
     }
 
+    // ---------------------------------------------------------- gabinete
+    if (order.kind === 'cabinet') {
+      const saliente = ministerById(run.cabinet[order.seat]);
+      const entrante = ministerById(order.ministerId ?? undefined);
+
+      if (order.ministerId) run.cabinet[order.seat] = order.ministerId;
+      else delete run.cabinet[order.seat];
+
+      // mover el gabinete siempre cuesta algo de estabilidad: es senal de crisis
+      applyDelta(run.countries[st.playerCode], { stability: saliente ? -1.5 : 0 }, run.world);
+
+      const detalle = entrante
+        ? `${entrante.description}${entrante.party !== 'oficialismo' ? ' Es un gesto de coalicion: suma votos y escanos, y va a pedir algo a cambio.' : ''}`
+        : `${SEAT_LABEL[order.seat]} queda sin titular. Nadie coordina esa area.`;
+
+      run.feed.push({
+        turn: st.turn, date: dateLabel(run.world), kind: 'decision', emoji: order.emoji,
+        title: saliente && entrante
+          ? `${SEAT_LABEL[order.seat]}: sale ${saliente.name}, entra ${entrante.name}`
+          : order.label,
+        body: detalle,
+        tone: entrante?.party !== 'oficialismo' && entrante ? 'bueno' : 'neutral'
+      });
+      run.lastActions.push(order.label);
+      continue;
+    }
+
     // ---------------------------------------------------------- eventos
     if (order.kind === 'event') {
       const item = run.pending.find((x) => x.key === order.eventKey);
@@ -396,6 +456,22 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
       }
 
       run.capital = clamp(run.capital + (choice.effects.capital ?? 0), 0, 100);
+
+      // si le dijiste que no al socio de coalicion, se levanta de la mesa
+      if (order.choiceId === 'romper') {
+        const socio = coalitionPartners(run.cabinet)[0];
+        if (socio) {
+          delete run.cabinet[socio.seat];
+          run.feed.push({
+            turn: st.turn, date: dateLabel(run.world), kind: 'sistema', emoji: '💔',
+            title: `${socio.name} deja el gabinete`,
+            body: `Se lleva ${socio.seats ?? 0} escanos y su bloque pasa a la oposicion. `
+              + 'Las medidas grandes vuelven a costarte el doble de negociacion.',
+            tone: 'malo'
+          });
+        }
+      }
+
       run.pending = run.pending.filter((x) => x.key !== order.eventKey);
       run.feed.push({
         turn: st.turn, date: dateLabel(run.world), kind: 'evento', emoji: item.event.emoji,
@@ -458,6 +534,8 @@ function applyElection(st: GameStore, result: ElectionResult, candidate?: Candid
     termStart: st.turn,
     consecutiveTerms: st.politics.consecutiveTerms + 1,
     electionsWon: st.politics.electionsWon + 1,
+    // el Congreso se renueva a medias: ganar la presidencial arrastra, no barre
+    seats: seatsFromVote(result.vote, st.politics.seats),
     opposition: clamp(st.politics.opposition - 12, 0, 100),
     honeymoonUntil: grantHoneymoon(st.turn),
     pendingBallotage: false
@@ -484,6 +562,7 @@ function applyElection(st: GameStore, result: ElectionResult, candidate?: Candid
 }
 
 function applyMidterm(st: GameStore, result: ElectionResult): Partial<GameStore> {
+  const seats = seatsFromVote(result.vote, st.politics.seats);
   const feed: FeedItem = {
     turn: st.turn,
     date: dateLabel(st.world),
@@ -500,14 +579,15 @@ function applyMidterm(st: GameStore, result: ElectionResult): Partial<GameStore>
       politics: {
         ...st.politics,
         honeymoonUntil: grantHoneymoon(st.turn),
-        opposition: clamp(st.politics.opposition - 8, 0, 100)
+        opposition: clamp(st.politics.opposition - 8, 0, 100),
+        seats
       },
       feed: [feed, ...st.feed]
     };
   }
   return {
     election: result,
-    politics: { ...st.politics, opposition: clamp(st.politics.opposition + 10, 0, 100) },
+    politics: { ...st.politics, opposition: clamp(st.politics.opposition + 10, 0, 100), seats },
     feed: [feed, ...st.feed]
   };
 }
@@ -656,6 +736,8 @@ export const useGame = create<GameStore>((set, get) => {
       startingGdp: st.startingGdp ?? st.countries[st.playerCode].economy.gdp_trillion_usd,
       orders: st.orders ?? [],
       cooldowns: st.cooldowns ?? {},
+      cabinet: st.cabinet ?? {},
+      lastCoalitionDemand: st.lastCoalitionDemand ?? 0,
       gameOver: st.gameOver
     });
     return true;
@@ -772,10 +854,22 @@ export const useGame = create<GameStore>((set, get) => {
     // el costo sale del tamano del objetivo y de la relacion, y encima pesa
     // la oposicion: gobernar con el Congreso en contra sale mas caro
     const scaled = scaleDecision(dec, st.countries[st.playerCode], target ? st.countries[target] : undefined, st.relations);
-    const cost = Math.round(scaled.cost * oppositionCostFactor(st.politics.opposition));
+    const cost = decisionCost(st, dec, scaled.cost);
     const orders = addDecisionOrder(st.orders, id, cost, target, target ? st.countries[target]?.name : undefined);
     if (committedCapital(orders) > st.capital) return;
 
+    set({ orders });
+    persist();
+  },
+
+  planCabinet: (seat, ministerId) => {
+    const st = get();
+    if (!st.started || st.gameOver) return;
+    if (ministerId && !ministerById(ministerId)) return;
+    if (!ministerId && !st.cabinet[seat]) return;   // ya esta vacia
+
+    const orders = addCabinetOrder(st.orders, seat, ministerId, !!st.cabinet[seat]);
+    if (committedCapital(orders) > st.capital) return;
     set({ orders });
     persist();
   },
@@ -790,7 +884,7 @@ export const useGame = create<GameStore>((set, get) => {
       dec, st.countries[st.playerCode], target ? st.countries[target] : undefined, st.relations
     );
     return {
-      cost: Math.round(scaled.cost * oppositionCostFactor(st.politics.opposition)),
+      cost: decisionCost(st, dec, scaled.cost),
       size: scaled.size,
       reason: scaled.reason,
       cooldown: cooldownLeft(st.cooldowns, id, target, st.turn)
@@ -817,7 +911,7 @@ export const useGame = create<GameStore>((set, get) => {
   currentPoll: () => {
     const st = get();
     if (!st.started) return 0;
-    return poll(st.countries[st.playerCode], st.politics, st.capital);
+    return poll(st.countries[st.playerCode], st.politics, st.capital, cabinetVoteBonus(st.cabinet));
   },
 
   /**
@@ -918,7 +1012,8 @@ export const useGame = create<GameStore>((set, get) => {
       disruptions,
       tradeBase: st.tradeBase,
       active: st.active,
-      taxBase: st.taxBase
+      taxBase: st.taxBase,
+      cabinet: run.cabinet
     });
     const turn = tick.state.turn;
     const active = tick.state.active;
@@ -941,6 +1036,35 @@ export const useGame = create<GameStore>((set, get) => {
       ...rollEvents(player, world, turn, blocs, relations, st.recentEventIds, eventExtra),
       ...crisisEvents(player)
     ];
+
+    // el socio de coalicion pasa factura cada tanto
+    const socios = coalitionPartners(run.cabinet);
+    let lastCoalitionDemand = st.lastCoalitionDemand;
+    if (socios.length && turn - lastCoalitionDemand >= DEMAND_EVERY) {
+      rolled.push(coalitionDemand(socios[0], turn));
+      lastCoalitionDemand = turn;
+    }
+
+    // Ormuz: si Teheran esta acorralado, lo cierra. Salvo que Teheran seas vos.
+    for (const [cpId, owner] of Object.entries(CHOKEPOINT_OWNER)) {
+      if (!countries[owner] || owner === st.playerCode) continue;
+      if ((disruptions[cpId] ?? 0) > turn) continue;
+      const riesgo = chokepointClosureRisk(
+        cpId, getRelation(relations, owner, 'USA'), world.global_tension
+      );
+      if (riesgo > 0 && Math.random() < riesgo) {
+        const cp = CHOKEPOINTS.find((c) => c.id === cpId)!;
+        disruptions[cpId] = turn + 3;
+        applyDelta(player, { global_tension: 8, oil_price: 15 }, world);
+        feed.push({
+          turn, date: dateLabel(world), kind: 'evento', emoji: '⛴️',
+          title: `${countries[owner].name} cierra el ${cp.name}`,
+          body: `${cp.description} Teheran responde a la presion internacional cortando el paso por tres meses. `
+            + 'El barril se dispara y el comercio de larga distancia se encarece.',
+          tone: 'malo'
+        });
+      }
+    }
 
     for (const ev of rolled) {
       const key = `${ev.id}-${turn}`;
@@ -1012,8 +1136,13 @@ export const useGame = create<GameStore>((set, get) => {
 
     const p2 = countries[st.playerCode];
 
-    // 8. la oposicion se mueve todos los meses segun como te vaya
-    let politics: Politics = { ...st.politics, opposition: driftOpposition(st.politics, p2) };
+    // 8. la oposicion se mueve todos los meses; la encuesta queda registrada
+    const encuesta = poll(p2, st.politics, capital, cabinetVoteBonus(run.cabinet));
+    let politics: Politics = {
+      ...st.politics,
+      opposition: driftOpposition(st.politics, p2),
+      pollHistory: [...(st.politics.pollHistory ?? []), { turn, value: encuesta }].slice(-60)
+    };
     let election: ElectionResult | null = null;
     let succession: Candidate[] = [];
 
@@ -1055,7 +1184,7 @@ export const useGame = create<GameStore>((set, get) => {
           tone: 'neutral'
         });
       } else {
-        const result = runElection(p2, politics, capital);
+        const result = runElection(p2, politics, capital, undefined, cabinetVoteBonus(run.cabinet));
         const after = applyElection(
           { ...st, turn, world, countries, capital, politics } as GameStore, result
         );
@@ -1073,7 +1202,7 @@ export const useGame = create<GameStore>((set, get) => {
           set({
             turn, world, countries, relations, blocs, disruptions, active, capital,
             politics, election, succession: [], sanctions: run.sanctions, orders: [],
-            cooldowns: run.cooldowns,
+            cooldowns: run.cooldowns, cabinet: run.cabinet,
             reactions, lastActions: [],
             pending: [...pending],
             recentEventIds: [...rolled.map((e) => e.id), ...st.recentEventIds].slice(0, 8),
@@ -1117,6 +1246,8 @@ export const useGame = create<GameStore>((set, get) => {
       sanctions: run.sanctions,
       orders: [],
       cooldowns: run.cooldowns,
+      cabinet: run.cabinet,
+      lastCoalitionDemand,
       reactions,
       lastActions: [],
       pending: [...pending],

@@ -268,6 +268,18 @@ No incluye eventos aleatorios: muestra la tendencia que la decisión empuja, no 
 
 Automático en `localStorage` (`change-game:save`, versión 1) al cerrar cada acción que cambia el mundo. Al abrir la página, la partida se retoma sola; la pantalla de inicio ofrece continuar o descartar. Detalles y política de versionado en `docs/REGLAS_DE_CODIGO.md`, sección 5.2.
 
+## 10.3 Gabinete, coalición y parlamento
+
+Cinco sillas (Economía, Interior, Exterior, Defensa, Jefatura). Cada ministro aporta un pasivo mensual chico y abarata una categoría de decisiones. Sentar a alguien de otro partido arma una **coalición**: presta escaños y votos, y cada 7 meses pasa factura con un pedido incómodo. Decirle que no lo saca del gabinete.
+
+El **parlamento** son 100 escaños que se reparten tras cada presidencial y cada medio término, siguiendo al voto sin copiarlo. Sin mayoría (51), las decisiones de 15 o más de capital pagan ×1.4: la reforma laboral cuesta 21 con coalición y 30 sin ella.
+
+El costo final de una decisión junta tres frentes: la oposición en la calle, la mayoría en el Congreso y el ministro del área.
+
+## 10.4 Tasador diplomático
+
+Una acción bilateral vale según con quién. `scaleDecision()` (`lib/diplomacy.ts`) ajusta costo y efectos por el tamaño relativo de la otra economía y por la relación actual. Desde Argentina, el tratado comercial: **Uruguay 6 de capital, Estados Unidos 32**, con efectos escalados en la misma proporción. Las acciones diplomáticas tienen cooldown por país para que repetirlas no sea una estrategia.
+
 ## 11. Fin de partida
 
 | Final | Condición |

@@ -203,6 +203,10 @@ export interface EventContext {
     honeymoon: boolean;
     /** capital politico disponible ahora */
     capital: number;
+    /** escanos propios en el parlamento de 100 */
+    seats: number;
+    /** true si hay algun ministro de otro partido en el gabinete */
+    coalition: boolean;
   };
   /**
    * Comercio del jugador, para eventos que reaccionen a la economia externa.

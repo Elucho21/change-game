@@ -3,11 +3,17 @@ import data from '../lib/data/countries.gen.json';
 import { applySectorShock, canJoin, ratesOf, taxEffects } from '../lib/engine';
 import { bilateralVolume, tradeBaseline, tradeMatrix, volumeFrom, type TradeContext } from '../lib/trade';
 import { deterministicTick, projectDecision, type SimState } from '../lib/simulation';
-import { driftOpposition, defaultPolitics, poll } from '../lib/politics';
+import {
+  defaultPolitics, driftOpposition, parliamentCostFactor, poll, seatsFromVote
+} from '../lib/politics';
 import { BLOCS } from '../lib/blocs';
 import { DECISIONS } from '../lib/decisions';
 import { addDecisionOrder, addTaxOrder, committedCapital } from '../lib/orders';
 import { cooldownLeft, scaleDecision } from '../lib/diplomacy';
+import {
+  cabinetCostFactor, cabinetPassive, cabinetVoteBonus, coalitionSeats, hasCoalition
+} from '../lib/cabinet';
+import { chokepointClosureRisk } from '../lib/routes';
 import type { Country, GlobalState } from '../lib/types';
 
 /**
@@ -383,5 +389,66 @@ describe('comercio a escala', () => {
       .filter((c) => c !== 'Argentina')
       .reduce((acc, c) => acc + volumeFrom(m, 'Argentina', c), 0);
     expect(m.totals.Argentina).toBeCloseTo(suma, 0);
+  });
+});
+
+// ============================================================
+describe('gabinete y parlamento', () => {
+  it('los pasivos del gabinete se suman', () => {
+    const cabinet = { economia: 'eco_ortodoxa', jefatura: 'jef_armador' };
+    const p = cabinetPassive(cabinet);
+    expect(p.capitalPerTurn).toBeGreaterThan(0);      // el armador aporta capital
+    expect(p.inflation).toBeLessThan(0);              // la ortodoxa baja inflacion
+    expect(p.happiness).toBeLessThan(0);              // y cuesta humor social
+  });
+
+  it('un ministro del area abarata esa categoria y no las otras', () => {
+    const cabinet = { exterior: 'ext_carrera' };
+    expect(cabinetCostFactor(cabinet, 'diplomacia')).toBeLessThan(1);
+    expect(cabinetCostFactor(cabinet, 'economia')).toBe(1);
+  });
+
+  it('sentar a un opositor arma coalicion, suma votos y escanos', () => {
+    const cabinet = { jefatura: 'jef_coalicion' };
+    expect(hasCoalition(cabinet)).toBe(true);
+    expect(coalitionSeats(cabinet)).toBeGreaterThan(0);
+    expect(cabinetVoteBonus(cabinet)).toBeGreaterThan(0);
+    expect(hasCoalition({ economia: 'eco_ortodoxa' })).toBe(false);
+  });
+
+  it('sin mayoria las medidas grandes cuestan mas, las chicas no', () => {
+    const country = fresh(RAW.countries.Argentina);
+    const p = { ...defaultPolitics(country, 1), seats: 40 };
+    expect(parliamentCostFactor(p, 20)).toBe(1.4);
+    expect(parliamentCostFactor(p, 8)).toBe(1);
+    // con los escanos prestados por la coalicion, alcanza la mayoria
+    expect(parliamentCostFactor(p, 20, 12)).toBe(1);
+  });
+
+  it('el reparto de escanos sigue al voto sin copiarlo', () => {
+    const previo = 48;
+    const conVictoria = seatsFromVote(60, previo);
+    const conDerrota = seatsFromVote(35, previo);
+    expect(conVictoria).toBeGreaterThan(previo);
+    expect(conDerrota).toBeLessThan(previo);
+    // nunca barre el Congreso de un saque
+    expect(conVictoria).toBeLessThan(70);
+  });
+});
+
+// ============================================================
+describe('chokepoints con duenio', () => {
+  it('sin hostilidad ni tension, nadie cierra nada', () => {
+    expect(chokepointClosureRisk('ormuz', 10, 40)).toBe(0);
+  });
+
+  it('con Iran acorralado y tension alta, el riesgo aparece', () => {
+    const riesgo = chokepointClosureRisk('ormuz', -85, 85);
+    expect(riesgo).toBeGreaterThan(0);
+    expect(riesgo).toBeLessThanOrEqual(0.12);
+  });
+
+  it('un paso sin duenio no tiene riesgo politico', () => {
+    expect(chokepointClosureRisk('panama', -90, 90)).toBe(0);
   });
 });

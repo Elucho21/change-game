@@ -11,6 +11,7 @@ import { monthsToElection, needsSuccessor, poll } from './politics';
 import { systemOf } from './electoral';
 import { topPartnerOf, totalTrade, tradeMatrix, type TradeContext } from './trade';
 import type { Politics } from './politics';
+import { cabinetPassive, coalitionPartners as coalitionPartnersOf, type Cabinet } from './cabinet';
 import { CAPITAL_PASSIVE_BASE } from './electoral';
 
 /**
@@ -43,6 +44,8 @@ export interface SimState {
   taxBase: Record<string, TaxRates>;
   /** estado politico, para condicionar eventos (opcional en tests) */
   politics?: Politics;
+  /** gabinete: sus pasivos se aplican en cada tick */
+  cabinet?: Cabinet;
   /** hasta este turno el pasivo de capital va doble (100 dias / luna de miel) */
   honeymoonUntil?: number;
 }
@@ -76,7 +79,10 @@ export function eventExtraOf(s: SimState) {
       consecutiveTerms: s.politics.consecutiveTerms,
       lastTerm: needsSuccessor(s.politics),
       honeymoon: (s.honeymoonUntil ?? 0) >= s.turn,
-      capital: s.capital
+      capital: s.capital,
+      seats: s.politics.seats,
+      coalition: !!s.cabinet && Object.values(s.cabinet).length > 0
+        && !!coalitionPartnersOf(s.cabinet).length
     },
     trade: {
       total: Math.round(total),
@@ -167,6 +173,14 @@ export function deterministicTick(s: SimState): TickResult {
     if (next.turnsLeft > 0) stillActive.push(next);
   }
   s.active = stillActive;
+
+  // el gabinete trabaja todos los meses, en chico
+  if (s.cabinet) {
+    const passive = cabinetPassive(s.cabinet);
+    const { capitalPerTurn, ...delta } = passive;
+    if (Object.keys(delta).length) applyDelta(s.countries[s.playerCode], delta, s.world);
+    if (capitalPerTurn) s.capital = clamp(s.capital + capitalPerTurn, 0, 100);
+  }
 
   naturalDrift(s.countries, s.blocs, s.world, tradeEffects(s), s.taxBase);
 

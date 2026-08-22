@@ -133,3 +133,33 @@ export function disruptionFactor(disruptions: Record<string, number>, turn: numb
 export function oilShock(disruptions: Record<string, number>, turn: number) {
   return activeDisruptions(disruptions, turn).reduce((s, c) => s + c.oilShare * 60, 0);
 }
+
+// ------------------------------------------------------------------
+// Chokepoints que dependen de un pais
+// ------------------------------------------------------------------
+
+/**
+ * Pasos maritimos que un pais concreto puede cerrar.
+ * Ormuz no es un accidente del clima: es una decision de Teheran cuando la
+ * situacion se le pone existencial.
+ */
+export const CHOKEPOINT_OWNER: Record<string, string> = {
+  ormuz: 'Iran'
+};
+
+/**
+ * Probabilidad mensual de que el duenio de un paso decida cerrarlo.
+ * Sube con la hostilidad hacia Estados Unidos y con la tension global; si el
+ * jugador ES ese pais, no se dispara solo: decide el.
+ */
+export function chokepointClosureRisk(
+  chokepointId: string,
+  relationToUS: number,
+  globalTension: number
+): number {
+  if (!CHOKEPOINT_OWNER[chokepointId]) return 0;
+  if (relationToUS > -40 && globalTension < 60) return 0;
+  const porRelacion = Math.max(0, (-relationToUS - 40) / 100);   // 0 a 0.6
+  const porTension = Math.max(0, (globalTension - 60) / 100);    // 0 a 0.4
+  return Math.min(0.12, porRelacion * 0.12 + porTension * 0.1);
+}

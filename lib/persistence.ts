@@ -4,6 +4,7 @@ import type {
 import type { TaxRates } from './engine';
 import type { Politics } from './politics';
 import type { PlannedOrder } from './orders';
+import type { Cabinet } from './cabinet';
 
 /**
  * Guardado de partida en localStorage.
@@ -50,6 +51,8 @@ export interface PersistedState {
   orders?: PlannedOrder[];
   /** acciones diplomaticas en enfriamiento */
   cooldowns?: Record<string, number>;
+  cabinet?: Cabinet;
+  lastCoalitionDemand?: number;
   gameOver: { title: string; body: string } | null;
 }
 

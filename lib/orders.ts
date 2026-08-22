@@ -1,5 +1,6 @@
 import type { Bloc, Country, GameEvent } from './types';
 import { DECISIONS } from './decisions';
+import { APPOINT_COST, DISMISS_COST, ministerById, SEAT_LABEL, type CabinetSeat } from './cabinet';
 
 /**
  * Plan del turno: lo que el jugador decidio hacer, todavia sin ejecutar.
@@ -52,7 +53,17 @@ export interface EventOrder {
   emoji: string;
 }
 
-export type PlannedOrder = DecisionOrder | TaxOrder | BlocOrder | EventOrder;
+export interface CabinetOrder {
+  kind: 'cabinet';
+  seat: CabinetSeat;
+  /** id del ministro, o null para dejar la silla vacia */
+  ministerId: string | null;
+  capitalCost: number;
+  label: string;
+  emoji: string;
+}
+
+export type PlannedOrder = DecisionOrder | TaxOrder | BlocOrder | EventOrder | CabinetOrder;
 
 export const TAX_LABELS: Record<TaxKind, string> = {
   iva: 'IVA',
@@ -155,6 +166,40 @@ export function addEventOrder(
       capitalCost,
       label: `${event.title}: ${choice.label}`,
       emoji: event.emoji
+    }
+  ];
+}
+
+/**
+ * Una silla por vez: volver a mover la misma reemplaza la orden anterior.
+ * Nombrar cuesta menos que echar: sacar a alguien tiene costo politico propio.
+ */
+export function addCabinetOrder(
+  orders: PlannedOrder[], seat: CabinetSeat, ministerId: string | null, ocupada: boolean
+): PlannedOrder[] {
+  const rest = orders.filter((o) => !(o.kind === 'cabinet' && o.seat === seat));
+  const minister = ministerById(ministerId ?? undefined);
+
+  if (!ministerId) {
+    return [
+      ...rest,
+      {
+        kind: 'cabinet', seat, ministerId: null,
+        capitalCost: DISMISS_COST,
+        label: `Dejar vacante ${SEAT_LABEL[seat]}`,
+        emoji: '🚪'
+      }
+    ];
+  }
+  if (!minister) return orders;
+
+  return [
+    ...rest,
+    {
+      kind: 'cabinet', seat, ministerId,
+      capitalCost: ocupada ? APPOINT_COST + DISMISS_COST : APPOINT_COST,
+      label: `${SEAT_LABEL[seat]}: ${minister.name} (${minister.title})`,
+      emoji: minister.party === 'oposicion' ? '🤝' : '👤'
     }
   ];
 }

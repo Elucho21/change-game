@@ -29,6 +29,10 @@ export interface Politics {
   electionsWon: number;
   /** turno en que asumio el partido por primera vez */
   powerSince: number;
+  /** escanos propios en un parlamento de 100 */
+  seats: number;
+  /** intencion de voto turno a turno, para el grafico */
+  pollHistory: { turn: number; value: number }[];
   /** hasta este turno (inclusive) el pasivo de capital va doble: los 100 dias */
   honeymoonUntil: number;
   /** hay una segunda vuelta pendiente el proximo mes */
@@ -87,6 +91,9 @@ export function defaultPolitics(country: Country, turn: number): Politics {
     opposition: clamp(Math.round(100 - country.population.stability), 20, 80),
     electionsWon: 0,
     powerSince: turn,
+    // el oficialismo arranca con una mayoria ajustada, no comoda
+    seats: clamp(Math.round(48 + (country.population.stability - 50) * 0.2), 30, 62),
+    pollHistory: [],
     honeymoonUntil: grantHoneymoon(turn),
     pendingBallotage: false
   };
@@ -131,6 +138,39 @@ export const oppositionCostFactor = (opposition: number) =>
   Math.round((1 + (opposition - 40) / 150) * 100) / 100;
 
 // ------------------------------------------------------------------
+// Parlamento
+// ------------------------------------------------------------------
+
+export const MAJORITY = 51;
+
+/** Escanos totales del oficialismo mas los que aportan sus socios de coalicion. */
+export const totalSeats = (p: Politics, coalitionSeats = 0) =>
+  clamp(p.seats + coalitionSeats, 0, 100);
+
+export const hasMajority = (p: Politics, coalitionSeats = 0) =>
+  totalSeats(p, coalitionSeats) >= MAJORITY;
+
+/**
+ * Sin mayoria, las medidas grandes hay que negociarlas voto por voto.
+ * Solo pesa en las decisiones caras: las chicas pasan igual.
+ */
+export function parliamentCostFactor(p: Politics, capitalCost: number, coalitionSeats = 0): number {
+  if (capitalCost < 15) return 1;
+  return hasMajority(p, coalitionSeats) ? 1 : 1.4;
+}
+
+/**
+ * Reparto de escanos despues de una eleccion.
+ * El voto presidencial arrastra, pero nunca del todo: aunque ganes con el 60%
+ * el Congreso queda mas repartido que la boleta.
+ */
+export function seatsFromVote(vote: number, previous: number): number {
+  const target = clamp(Math.round(30 + (vote - 30) * 0.85), 20, 72);
+  // el recambio es parcial: se renueva la mitad
+  return clamp(Math.round(previous * 0.5 + target * 0.5), 15, 80);
+}
+
+// ------------------------------------------------------------------
 // Elecciones
 // ------------------------------------------------------------------
 
@@ -145,6 +185,7 @@ export const needsSuccessor = (p: Politics) => p.consecutiveTerms >= p.maxConsec
  * jugador durante el mandato no le miente: si llega al final con 46, pierde.
  */
 export function poll(country: Country, p: Politics, capital: number, bonus = 0): number {
+  // `bonus` junta lo del candidato y lo que aporta el gabinete
   const e = country.economy;
   const pop = country.population;
   const vote =
@@ -166,10 +207,11 @@ export const isMidtermDue = (p: Politics, turn: number, code: string) => {
 
 /** Resuelve la eleccion. El ruido evita que el resultado sea cantado. */
 export function runElection(
-  country: Country, p: Politics, capital: number, candidate?: Candidate
+  country: Country, p: Politics, capital: number, candidate?: Candidate, cabinetBonus = 0
 ): ElectionResult {
   const sys = systemOf(country.code);
-  const base = poll(country, p, capital, candidate?.voteBonus ?? 0);
+  // el gabinete tambien pesa en la boleta: un ministro de la oposicion suma
+  const base = poll(country, p, capital, (candidate?.voteBonus ?? 0) + cabinetBonus);
   const noise = (Math.random() - 0.5) * 6;
   const vote = clamp(Math.round((base + noise) * 10) / 10, 1, 99);
   const quien = candidate ? candidate.name : p.leaderName;

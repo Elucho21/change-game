@@ -9,16 +9,18 @@ import DecisionsPanel from './DecisionsPanel';
 import BlocsPanel from './BlocsPanel';
 import EventCatalog from './EventCatalog';
 import GovernmentPanel from './GovernmentPanel';
+import CabinetPanel from './CabinetPanel';
 import ElectionModal from './ElectionModal';
 import TurnPlan from './TurnPlan';
 import Feed from './Feed';
 import GrokBridge from './GrokBridge';
 
-type Tab = 'pais' | 'gobierno' | 'decisiones' | 'bloques' | 'eventos';
+type Tab = 'pais' | 'gobierno' | 'gabinete' | 'decisiones' | 'bloques' | 'eventos';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'pais', label: '📊 Pais' },
   { id: 'gobierno', label: '🏛️ Gobierno' },
+  { id: 'gabinete', label: '👥 Gabinete' },
   { id: 'decisiones', label: '🎯 Decisiones' },
   { id: 'bloques', label: '🧩 Bloques' },
   { id: 'eventos', label: '📚 Eventos' }
@@ -45,6 +47,7 @@ export default function GameShell() {
           </div>
           {tab === 'pais' && <CountryPanel />}
           {tab === 'gobierno' && <GovernmentPanel />}
+          {tab === 'gabinete' && <CabinetPanel />}
           {tab === 'decisiones' && <DecisionsPanel />}
           {tab === 'bloques' && <BlocsPanel />}
           {tab === 'eventos' && <EventCatalog />}

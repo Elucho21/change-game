@@ -95,12 +95,45 @@ Hubs que estaban sin `country` (Singapur, Rotterdam, Jebel Ali, DXB, Changi) aho
 
 ---
 
+## 9. Catálogo de ministros — `lib/cabinet.ts` → `MINISTERS`
+
+El gabinete ya funciona: cinco sillas, pasivos mensuales, descuentos por categoría y coalición con la oposición. Dejé dos o tres ministros por silla como referencia; el catálogo es tuyo.
+
+```ts
+{
+  id: 'eco_monetarista',            // unico
+  name: 'T. Barreiro',
+  seat: 'economia',                 // economia | interior | exterior | defensa | jefatura
+  party: 'oficialismo',             // oficialismo | aliado | oposicion
+  title: 'El monetarista',
+  description: 'Una oracion con la gracia y el costo del personaje.',
+  passive: { inflation: -0.3, happiness: -0.2, capitalPerTurn: 0.5 },
+  discount: { category: 'economia', factor: 0.85 },   // opcional
+  voteBonus: -1,                                       // opcional
+  seats: 8                                             // solo si no es del oficialismo
+}
+```
+
+Reglas de balance, para que ninguno sea el obvio:
+- Los pasivos van **en chico**: entre 0.1 y 0.6 por métrica, y hasta 1.5 en `capitalPerTurn`. Se aplican **todos los meses**, así que un 2 rompe la partida en un año.
+- Todo ministro bueno en algo tiene que ser malo en otra cosa. El que baja inflación cuesta humor social; el que da capital cuesta caja.
+- `discount` entre 0.75 y 0.95. Menos de 0.75 hace la categoría gratis.
+- Los opositores (`party: 'oposicion'`) prestan entre 6 y 14 escaños y suman 2 a 5 de voto: son fuertes a propósito, porque pasan factura cada 7 meses.
+
+## 10. Decisión: cerrar un chokepoint (solo para su dueño)
+
+Ormuz ya tiene dueño en el motor (`CHOKEPOINT_OWNER`, `lib/routes.ts`). Si el jugador **es** Irán, no se cierra solo: falta la decisión para que lo haga él.
+
+Necesito una decisión en `lib/decisions.ts`, categoría `defensa`, cara (25-30 de capital), disponible solo para el país dueño (`when` con `c.player.code === 'Iran'`). Lo que hace la mecánica del cierre ya está: alcanza con que la decisión exista y yo la conecto.
+
 ## Lo que NO hace falta que toques
 
 Estos archivos son zona del motor y los trabaja Opus. Si el jugador te pide algo de acá, **no lo codees**: escribiló en `docs/PEDIDOS_A_OPUS.md`.
 
 - `lib/engine.ts`, `lib/trade.ts`, `lib/simulation.ts`, `lib/politics.ts`, `lib/orders.ts`, `lib/store.ts`, `lib/persistence.ts`
 - `lib/points.ts` **salvo los arrays `PORTS` y `AIRPORTS`**
+- `lib/cabinet.ts` **salvo el array `MINISTERS`**
+- `lib/diplomacy.ts`, `lib/orders.ts`
 - `components/*`
 
 Acuerdo completo: `docs/REGLAS_DE_CODIGO.md` sección 7. Siempre rama + PR. No pushees a `main`.
