@@ -15,6 +15,12 @@ const Globe = dynamic(() => import('react-globe.gl'), { ssr: false }) as unknown
 
 type Feature = { properties: Record<string, string | number>; geometry: unknown };
 
+/** Lo unico que usamos de la instancia imperativa de react-globe.gl. */
+type GlobeInstance = {
+  pointOfView: (v: Record<string, number>, ms?: number) => void;
+  scene: () => unknown;
+};
+
 const MODES: { id: 'relaciones' | 'bloques' | 'estabilidad' | 'economia'; label: string }[] = [
   { id: 'relaciones', label: '🤝 Relaciones' },
   { id: 'bloques', label: '🧩 Bloques' },
@@ -33,7 +39,7 @@ const heat = (v: number) => {
 
 export default function GlobeView() {
   const wrapRef = useRef<HTMLDivElement>(null);
-  const globeRef = useRef<{ pointOfView: (v: Record<string, number>, ms?: number) => void } | null>(null);
+  const globeRef = useRef<GlobeInstance | null>(null);
   const [size, setSize] = useState({ w: 800, h: 600 });
   const [features, setFeatures] = useState<Feature[]>([]);
   const [hover, setHover] = useState<Feature | null>(null);
@@ -208,10 +214,13 @@ export default function GlobeView() {
 
   const setMapMode = useGame((s) => s.setMapMode);
 
-  // debug: window.__globe da acceso a la instancia three.js del globo
-  useEffect(() => {
-    (window as unknown as { __globe: unknown }).__globe = globeRef.current;
-  }, [features.length, arcs.length]);
+  /** ref del globo + utilidad de debug: window.__globe (ver docs/REGLAS_DE_CODIGO.md) */
+  const setGlobeRef = (instance: GlobeInstance | null) => {
+    globeRef.current = instance;
+    if (typeof window !== 'undefined') {
+      (window as unknown as { __globe: GlobeInstance | null }).__globe = instance;
+    }
+  };
 
   return (
     <div className="globe-wrap" ref={wrapRef}>
@@ -236,7 +245,7 @@ export default function GlobeView() {
       </div>
 
       <Globe
-        ref={globeRef}
+        ref={setGlobeRef}
         width={size.w}
         height={size.h}
         backgroundColor="#04070f"

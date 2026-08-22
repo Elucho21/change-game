@@ -160,6 +160,14 @@ Los porcentajes del juego se guardan con 2 decimales como máximo (`round()` en 
 
 El proyecto tiene 6 dependencias: `next`, `react`, `react-dom`, `react-globe.gl`, `three`, `zustand`. Cada paquete nuevo es peso de build, superficie de bugs y una decisión que el otro agente no tomó. Si hace falta una función de utilidad de 20 líneas, se escribe.
 
+**`three` va alineada con la que pide `globe.gl`.** Si conviven dos versiones, three.js renderiza objetos creados por la otra copia y el globo se cae con `determinantAffine is not a function`. `package.json` fuerza una sola copia:
+
+```json
+"overrides": { "three": "$three" }
+```
+
+Al actualizar `react-globe.gl`, revisá qué versión de `three` trae `globe.gl` y subí la del proyecto a la misma.
+
 ### 3.7 Sin CSS-in-JS ni frameworks de estilo
 
 Todo el estilo vive en `app/globals.css` con clases reutilizables (`.card`, `.row`, `.pill`, `.section`, `.decision`) y variables CSS (`--bg`, `--good`, `--bad`). Los `style={{}}` inline se usan solo para valores calculados (el ancho de una barra, el color de un bloque).
@@ -244,6 +252,33 @@ Y el globo en `window.__globe`:
 ```js
 const c = {}; window.__globe.scene().traverse(o => { if (o.__globeObjType) c[o.__globeObjType] = (c[o.__globeObjType]||0)+1; }); c;
 // { polygon: 288, arc: 42, path: 6, point: 5, ring: 1 }
+```
+
+### Verificar que el globo realmente dibuja
+
+Contar objetos en la escena **no alcanza**: los objetos pueden existir mientras el render está roto. Lo que prueba que se ve algo es que avance el contador de frames del renderer.
+
+```js
+const r = window.__globe.renderer().info.render;
+const f = r.frame;
+setTimeout(() => console.log('frames nuevos:', window.__globe.renderer().info.render.frame - f), 1000);
+// tiene que dar > 0. Si da 0, el render está muerto aunque la escena esté llena.
+```
+
+## 5.1 Errores conocidos y qué significan
+
+| Síntoma | Causa | Solución |
+|---|---|---|
+| `object.matrixWorld.determinantAffine is not a function` y globo negro | dos copias de `three` en `node_modules` (una del proyecto, otra anidada bajo `globe.gl`): los objetos los crea una versión y los renderiza la otra | `package.json` tiene `"overrides": { "three": "$three" }` justamente para esto. Verificá con el comando de abajo y, si hay dos, `rm -rf node_modules package-lock.json && npm install` |
+| 404 en `main-app.js`, página en blanco | corriste `npm run build` con `npm run dev` levantado; los dos escriben en `.next` | parar dev, `rm -rf .next`, levantar de nuevo |
+| `Failed to read source code from .../globe.gl/node_modules/three/...` | caché de webpack apuntando a una copia de three que ya se borró | `rm -rf .next` y reiniciar dev |
+| El país no se pinta en el globo | su ISO3 no coincide con `ADM0_A3` del GeoJSON | revisá `META` en `scripts/build-data.mjs` y corré `npm run data` |
+
+Comprobar que hay una sola copia de three:
+
+```bash
+find node_modules -maxdepth 4 -type d -name three
+# tiene que devolver exactamente una linea: node_modules/three
 ```
 
 > ⚠️ **No corras `npm run build` con el `npm run dev` levantado.** Los dos escriben en `.next` y el dev server queda con chunks rotos (404 en `main-app.js`, página en blanco). Si te pasa: parar dev, `rm -rf .next`, volver a levantar.

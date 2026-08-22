@@ -14,7 +14,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-globe.gl": "^2.34.4",
-    "three": "^0.172.0",
+    "three": "^0.185.1",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
@@ -22,5 +22,8 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "typescript": "^5.7.0"
+  },
+  "overrides": {
+    "three": "$three"
   }
 }
