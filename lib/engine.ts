@@ -255,10 +255,10 @@ export function taxEffects(country: Country, baseline?: TaxRates): TaxEffects {
   const dInc = e.tax_income_avg - baseline.income;
 
   return {
-    fiscal: round(dIva * 0.09 + dCorp * 0.05 + dInc * 0.06),
-    inflation: round(dIva * 0.05),
-    growth: round(-(dCorp * 0.03) - dIva * 0.012 - dInc * 0.01),
-    happiness: round(-(dIva * 0.10) - dInc * 0.08 - dCorp * 0.02)
+    fiscal: round(dIva * 0.28 + dCorp * 0.10 + dInc * 0.16),
+    inflation: round(dIva * 0.08),
+    growth: round(-(dCorp * 0.06) - dIva * 0.02 - dInc * 0.018),
+    happiness: round(-(dIva * 0.15) - dInc * 0.12 - dCorp * 0.04)
   };
 }
 
@@ -330,10 +330,20 @@ export function naturalDrift(
     // la estructura impositiva empuja la recaudacion y los precios
     if (tax.inflation) e.inflation = round(Math.max(-2, e.inflation + tax.inflation));
 
+    // la recaudacion extra (o faltante) por la politica impositiva se asienta
+    // en el balance fiscal de forma escalonada: solo se suma el tramo nuevo
+    // respecto del turno anterior, como una reforma que ya quedo asentada.
+    // Asi el numero que ve el jugador (Balance fiscal / FISCAL) se mueve de
+    // verdad con los impuestos, en vez de quedar escondido solo en la deuda.
+    const taxFiscalPrev = c.taxFiscalApplied ?? 0;
+    if (tax.fiscal !== taxFiscalPrev) {
+      e.fiscal_balance = round(e.fiscal_balance + (tax.fiscal - taxFiscalPrev));
+      c.taxFiscalApplied = tax.fiscal;
+    }
+
     // deficit sostenido acumula deuda; la recaudacion extra lo amortigua
-    const effectiveBalance = e.fiscal_balance + tax.fiscal;
-    if (effectiveBalance < 0) e.debt_to_gdp = round(e.debt_to_gdp + Math.abs(effectiveBalance) * 0.08);
-    else e.debt_to_gdp = round(Math.max(0, e.debt_to_gdp - effectiveBalance * 0.05));
+    if (e.fiscal_balance < 0) e.debt_to_gdp = round(e.debt_to_gdp + Math.abs(e.fiscal_balance) * 0.08);
+    else e.debt_to_gdp = round(Math.max(0, e.debt_to_gdp - e.fiscal_balance * 0.05));
 
     // los sectores golpeados se recuperan solos
     recoverSectors(c);

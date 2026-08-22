@@ -70,6 +70,8 @@ export interface Country {
   sectorHealth?: Record<string, number>;
   /** inflacion del mes anterior: sirve para saber si sube o baja */
   prevInflation?: number;
+  /** ultimo efecto fiscal por impuestos ya asentado en fiscal_balance (ver taxEffects en engine.ts) */
+  taxFiscalApplied?: number;
 }
 
 export interface GlobalState {
