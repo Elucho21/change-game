@@ -8,36 +8,11 @@ Cosas que el motor ya soporta pero que están vacías porque los datos son conte
 
 ## 1. Puertos principales — `lib/points.ts` → `PORTS`
 
-**Estado**: el array existe vacío. La capa "Puertos" ya está en el globo y en el store; cuando llenes el array, aparece sola. No hay que tocar ningún componente.
-
-**Qué se necesita**: entre 25 y 40 puertos, priorizando los que mueven el comercio de los 24 países del juego. Sudamérica bien cubierta (es donde transcurre la mayoría de las partidas): Santos, Buenos Aires, Callao, Valparaíso, Cartagena, Montevideo, Guayaquil, Paranaguá.
-
-**Formato exacto** (el tipo `MapPoint` está en `lib/types.ts`):
-
-```ts
-export const PORTS: MapPoint[] = [
-  {
-    id: 'puerto-santos',          // 'puerto-' + slug, unico
-    kind: 'puerto',               // literal, no cambiar
-    name: 'Santos',
-    lat: -23.96,
-    lng: -46.33,
-    country: 'Brazil',            // codigo tal cual esta en countries_mvp.json
-    weight: 0.9,                  // 0 a 1: importancia relativa, define el radio del punto
-    description: 'Mayor puerto de America Latina: soja, cafe y contenedores.'
-  }
-];
-```
-
-**Reglas**:
-- `country` tiene que ser una clave existente de `engine/countries_mvp.json` (`Brazil`, `USA`, `SouthKorea`…), no el nombre en español.
-- `weight` es relativo entre puertos: el más grande del mundo 1.0, un puerto regional 0.3.
-- `description` en una oración, sin tildes ni ñ (regla 3.1 de las reglas de código).
-- Coordenadas con 2 decimales alcanza.
+**Estado**: hecho (38 puertos). La capa "Puertos" ya pinta. Sudamerica cubierta; hubs globales sin `country` (Singapur, Rotterdam, Jebel Ali) hasta Fase 4.
 
 ## 2. Aeropuertos principales — `lib/points.ts` → `AIRPORTS`
 
-Igual que arriba, con `kind: 'aeropuerto'` e `id: 'aeropuerto-ezeiza'`. Entre 20 y 30, los hubs internacionales de los 24 países. `weight` por tráfico internacional.
+**Estado**: hecho (29 aeropuertos). Un hub internacional por pais del MVP mas DXB y Changi.
 
 ## 3. Eventos que usen las rutas marítimas
 
