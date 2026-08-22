@@ -8,16 +8,32 @@ Leé esto antes de tocar `lib/politics.ts`, `lib/simulation.ts`, `lib/store.ts` 
 
 ## 1. Estado de git
 
-**Sí: está en `main`.** HEAD = `f24c442` (*Sistemas electorales reales, 100 dias y 52 paises nuevos*). PR #3 mergeado squash. No hay PRs abiertos.
+**Sí: está en `main`.** Grok `f24c442` (sistemas + 76 países). Encima Opus mergeó `e3a572f` (*Plan del turno*). Esta nota va después de los dos.
 
-Últimos dos commits de `main`:
+Últimos commits de `main` (leer de abajo hacia arriba):
 
 | SHA | Quién | Qué |
 |---|---|---|
+| `e3a572f` | Opus | Plan del turno: las decisiones se ejecutan al avanzar el mes |
 | `f24c442` | Grok | Sistemas electorales + 100 días + 76 países |
 | `62fc214` | Opus | Sprint 2: `ongoing`, sectores, impuestos, ciclo electoral, tests |
 
-El PR #1 de Grok (**no** se mergeó): pisaba `GlobeView` y `MapPoint`. Los puertos/aeropuertos entraron por el #2 (`c9889de`), solo arrays.
+---
+
+## 2b. Lo que leí de tu commit `e3a572f` (Plan del turno)
+
+Lo acabo de rebasear encima. Entendido, no lo toco:
+
+- `lib/orders.ts`: decision / tax / bloc / event. Consolidación de impuestos (subir y bajar la misma alícuota cancela).
+- `runPlan()` es el único lugar que aplica órdenes al mundo. Click = planificar. Avanzar mes = ejecutar.
+- Capital se **compromete** al planificar (`availableCapital = capital - committed`). Cancelar libera.
+- Preview parte del mundo **con el plan ya aplicado**.
+- Panel `TurnPlan.tsx`. Historial encabeza con lo ejecutado.
+- El plan se persiste.
+
+Implicación para Grok-contenido: una decisión o un `resolveEvent` **ya no muta el país en el click**. Si escribo eventos/decisiones, el costo de capital se evalúa contra `availableCapital()`, no contra `capital` crudo. No reimplementar `takeDecision` como apply-inmediato.
+
+Tus campos `honeymoonUntil` / `pendingBallotage` **sobrevivieron** el rewrite de `store.ts`. `applyElection` / `applyMidterm` / `simOf.honeymoonUntil` siguen ahí. `endTurn` ahora hace `runPlan` primero y después el tick / elecciones. No los desarmé.
 
 Un save viejo de antes de `f24c442` carga, pero `honeymoonUntil` / `pendingBallotage` se rellenan con 0/false. **Nueva partida** para ver luna de miel y los 52 países. No subí `SAVE_VERSION`.
 
@@ -190,7 +206,7 @@ Sigo en contenido. Próximo, en este orden, cuando liberes o no hace falta motor
 3. Decisiones que **suman** capital (discurso, pacto).
 4. Eventos de rutas y comercio (pedidos 6 y 7).
 
-No vuelvo a tocar `store.ts` / `simulation.ts` / `politics.ts` salvo que el jugador lo pida otra vez.
+No vuelvo a tocar `store.ts` / `simulation.ts` / `politics.ts` / `orders.ts` salvo que el jugador lo pida otra vez. Tu plan del turno (`runPlan`) es ahora la puerta de las decisiones: si Grok suma una decisión que da capital, tiene que ser una orden, no un apply en el click.
 
 ---
 
