@@ -13,7 +13,7 @@ import {
 import type { Reaction } from './engine';
 import { CHOKEPOINTS } from './routes';
 import { tradeBaseline } from './trade';
-import { cloneSim, deterministicTick, projectDecision, type SimState } from './simulation';
+import { cloneSim, deterministicTick, eventExtraOf, projectDecision, type SimState } from './simulation';
 import {
   defaultPolitics, driftOpposition, isElectionDue, isMidtermDue, legacy, needsSuccessor,
   oppositionCostFactor, poll, runElection, runMidterm, successors,
@@ -27,6 +27,7 @@ import {
   TAX_FIELD, TAX_LABELS,
   type PlannedOrder, type TaxKind
 } from './orders';
+import { cooldownKey, cooldownLeft, cooldownUntil, scaleDecision } from './diplomacy';
 import {
   clearGame, loadGame, saveGame, savedSummary,
   type PersistedState, type SavedGame
@@ -97,6 +98,8 @@ interface GameStore {
    * Se aplica entero al avanzar el mes.
    */
   orders: PlannedOrder[];
+  /** acciones diplomaticas en enfriamiento: "decision|pais" -> turno en que se liberan */
+  cooldowns: Record<string, number>;
   /** eleccion resuelta esperando que el jugador la lea */
   election: ElectionResult | null;
   /** candidatos a sucederte: si esta lleno, la partida espera tu eleccion */
@@ -137,6 +140,10 @@ interface GameStore {
   clearOrders: () => void;
   /** capital politico que queda libre despues de comprometer el plan */
   availableCapital: () => number;
+  /** costo y efectos reales de una decision contra un pais concreto */
+  quoteDecision: (id: string, target?: string) => {
+    cost: number; size: number; reason: string; cooldown: number;
+  } | null;
   endTurn: () => void;
   planJoinBloc: (id: string) => void;
   planLeaveBloc: (id: string) => void;
@@ -179,6 +186,7 @@ const initial = () => ({
   } as Politics,
   startingGdp: 0,
   orders: [] as PlannedOrder[],
+  cooldowns: {} as Record<string, number>,
   election: null as ElectionResult | null,
   succession: [] as Candidate[],
   gameOver: null as { title: string; body: string } | null
@@ -210,6 +218,7 @@ function snapshot(st: GameStore): PersistedState {
     politics: st.politics,
     startingGdp: st.startingGdp,
     orders: st.orders,
+    cooldowns: st.cooldowns,
     gameOver: st.gameOver
   };
 }
@@ -226,7 +235,12 @@ interface PlanRun {
   lastActions: string[];
   /** hostilidad neta de lo que hiciste: define el tono de las reacciones */
   hostility: number;
+  /** enfriamientos actualizados */
+  cooldowns: Record<string, number>;
 }
+
+/** Turnos de enfriamiento de una decision, 0 si no tiene. */
+const COOLDOWN_TURNS = (id: string) => cooldownUntil(id, 0);
 
 /**
  * Ejecuta el plan del turno.
@@ -247,7 +261,8 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
     feed: [],
     pending: [...st.pending],
     lastActions: [],
-    hostility: 0
+    hostility: 0,
+    cooldowns: { ...st.cooldowns }
   };
 
   const log = (emoji: string, title: string, body: string, tone: FeedItem['tone'] = 'neutral') => {
@@ -262,7 +277,16 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
     if (order.kind === 'decision') {
       const dec = DECISIONS.find((d) => d.id === order.id);
       if (!dec) continue;
-      applyDelta(run.countries[st.playerCode], dec.effects, run.world);
+
+      // los efectos tambien escalan: un tratado con Estados Unidos mueve la
+      // aguja mucho mas que el mismo tratado con Uruguay
+      const scaled = scaleDecision(
+        dec, run.countries[st.playerCode], order.target ? run.countries[order.target] : undefined, run.relations
+      );
+      applyDelta(run.countries[st.playerCode], scaled.effects, run.world);
+      if (COOLDOWN_TURNS(order.id)) {
+        run.cooldowns[cooldownKey(order.id, order.target)] = cooldownUntil(order.id, st.turn);
+      }
 
       for (const rd of dec.relations ?? []) {
         const targets = resolveRelationTargets(rd, {
@@ -517,6 +541,7 @@ export const useGame = create<GameStore>((set, get) => {
     tradeBase: st.tradeBase,
     active: st.active,
     taxBase: st.taxBase,
+    politics: st.politics,
     honeymoonUntil: st.politics.honeymoonUntil
   });
 
@@ -630,6 +655,7 @@ export const useGame = create<GameStore>((set, get) => {
       })(),
       startingGdp: st.startingGdp ?? st.countries[st.playerCode].economy.gdp_trillion_usd,
       orders: st.orders ?? [],
+      cooldowns: st.cooldowns ?? {},
       gameOver: st.gameOver
     });
     return true;
@@ -740,13 +766,35 @@ export const useGame = create<GameStore>((set, get) => {
     if (!dec) return;
     if (dec.needsTarget && !target) return;
 
-    // con una oposicion fuerte, gobernar sale mas caro
-    const cost = Math.round(dec.cost.capital * oppositionCostFactor(st.politics.opposition));
+    // no se puede repetir la misma jugada con el mismo pais mes a mes
+    if (cooldownLeft(st.cooldowns, id, target, st.turn) > 0) return;
+
+    // el costo sale del tamano del objetivo y de la relacion, y encima pesa
+    // la oposicion: gobernar con el Congreso en contra sale mas caro
+    const scaled = scaleDecision(dec, st.countries[st.playerCode], target ? st.countries[target] : undefined, st.relations);
+    const cost = Math.round(scaled.cost * oppositionCostFactor(st.politics.opposition));
     const orders = addDecisionOrder(st.orders, id, cost, target, target ? st.countries[target]?.name : undefined);
     if (committedCapital(orders) > st.capital) return;
 
     set({ orders });
     persist();
+  },
+
+  /** Lo que costaria y rendiria esta decision contra este pais, hoy. */
+  quoteDecision: (id, target) => {
+    const st = get();
+    if (!st.started) return null;
+    const dec = DECISIONS.find((d) => d.id === id);
+    if (!dec) return null;
+    const scaled = scaleDecision(
+      dec, st.countries[st.playerCode], target ? st.countries[target] : undefined, st.relations
+    );
+    return {
+      cost: Math.round(scaled.cost * oppositionCostFactor(st.politics.opposition)),
+      size: scaled.size,
+      reason: scaled.reason,
+      cooldown: cooldownLeft(st.cooldowns, id, target, st.turn)
+    };
   },
 
   cancelOrder: (index) => {
@@ -886,8 +934,11 @@ export const useGame = create<GameStore>((set, get) => {
 
     // 5. eventos del turno
     const player = countries[st.playerCode];
+    // el contexto politico es el que el jugador tenia al empezar el turno:
+    // la oposicion de este mes todavia no se recalculo (paso 8)
+    const eventExtra = eventExtraOf({ ...tick.state, politics: st.politics });
     const rolled: GameEvent[] = [
-      ...rollEvents(player, world, turn, blocs, relations, st.recentEventIds),
+      ...rollEvents(player, world, turn, blocs, relations, st.recentEventIds, eventExtra),
       ...crisisEvents(player)
     ];
 
@@ -1022,6 +1073,7 @@ export const useGame = create<GameStore>((set, get) => {
           set({
             turn, world, countries, relations, blocs, disruptions, active, capital,
             politics, election, succession: [], sanctions: run.sanctions, orders: [],
+            cooldowns: run.cooldowns,
             reactions, lastActions: [],
             pending: [...pending],
             recentEventIds: [...rolled.map((e) => e.id), ...st.recentEventIds].slice(0, 8),
@@ -1064,6 +1116,7 @@ export const useGame = create<GameStore>((set, get) => {
       succession,
       sanctions: run.sanctions,
       orders: [],
+      cooldowns: run.cooldowns,
       reactions,
       lastActions: [],
       pending: [...pending],

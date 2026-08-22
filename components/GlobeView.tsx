@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ARC_COLORS, ISO_TO_CODE, useGame } from '@/lib/store';
 import { computeArcs, getRelation, relLabel, REL_COLORS } from '@/lib/engine';
 import { useShallow } from 'zustand/react/shallow';
@@ -101,7 +101,9 @@ export default function GlobeView() {
     return b?.color ?? '#2b3550';
   };
 
-  const capColor = (f: Feature) => {
+  // Los accessors van memoizados: si cambian de identidad en cada render,
+  // three-globe recalcula la capa entera de poligonos y se ve como un parpadeo.
+  const capColor = useCallback((f: Feature) => {
     const code = codeOf(f);
     if (!code) return 'rgba(38, 48, 72, 0.55)';
     if (code === playerCode) return '#f5d76e';
@@ -116,9 +118,10 @@ export default function GlobeView() {
       default:
         return REL_COLORS[relLabel(getRelation(relations, playerCode, code))];
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [countries, relations, blocs, playerCode, mapMode]);
 
-  const label = (f: Feature) => {
+  const label = useCallback((f: Feature) => {
     const code = codeOf(f);
     if (!code) return `<div style="padding:4px 8px;background:#0e1524;border:1px solid #1e293f;border-radius:8px;font-size:12px">${f.properties.ADMIN}</div>`;
     const c = countries[code];
@@ -132,7 +135,8 @@ export default function GlobeView() {
       ${code === playerCode ? '<div style="color:#f5d76e;margin-top:3px">Tu pais</div>'
         : `<div style="margin-top:3px">Relacion: <b>${relLabel(rel)}</b> (${rel})</div>`}
     </div>`;
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [countries, relations, blocs, playerCode]);
 
   const tradeCtx: TradeContext = useMemo(
     () => ({ countries, relations, blocs, sanctions, playerCode, disruptions, turn }),
@@ -240,15 +244,46 @@ export default function GlobeView() {
     [pending, countries]
   );
 
+  const polygonAltitude = useCallback((f: Feature) => {
+    const code = codeOf(f);
+    if (f === hover) return 0.09;
+    if (code && code === selected) return 0.07;
+    if (code === playerCode) return 0.06;
+    return code ? 0.02 : 0.008;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hover, selected, playerCode]);
+
+  const sideColor = useCallback(() => 'rgba(79, 124, 255, 0.15)', []);
+  const strokeColor = useCallback(
+    (f: Feature) => (codeOf(f) ? '#26334f' : 'rgba(38,48,72,0.5)'),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+  const onHover = useCallback((f: Feature | null) => setHover(f), []);
+  const onPolygonClick = useCallback(
+    (f: Feature) => {
+      const code = codeOf(f);
+      if (code) select(code);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [select]
+  );
+
   const setMapMode = useGame((s) => s.setMapMode);
 
-  /** ref del globo + utilidad de debug: window.__globe (ver docs/REGLAS_DE_CODIGO.md) */
-  const setGlobeRef = (instance: GlobeInstance | null) => {
+  /**
+   * Ref del globo + utilidad de debug: window.__globe.
+   *
+   * Va en useCallback con dependencias vacias a proposito: un callback ref que
+   * cambia de identidad hace que React lo llame con null y de nuevo con la
+   * instancia en CADA render. Con esto la referencia es estable.
+   */
+  const setGlobeRef = useCallback((instance: GlobeInstance | null) => {
     globeRef.current = instance;
     if (typeof window !== 'undefined') {
       (window as unknown as { __globe: GlobeInstance | null }).__globe = instance;
     }
-  };
+  }, []);
 
   return (
     <div className="globe-wrap" ref={wrapRef}>
@@ -306,23 +341,16 @@ export default function GlobeView() {
         atmosphereColor="#4f7cff"
         atmosphereAltitude={0.18}
         polygonsData={features}
-        polygonAltitude={(f: Feature) => {
-          const code = codeOf(f);
-          if (f === hover) return 0.09;
-          if (code && code === selected) return 0.07;
-          if (code === playerCode) return 0.06;
-          return code ? 0.02 : 0.008;
-        }}
+        polygonAltitude={polygonAltitude}
         polygonCapColor={capColor}
-        polygonSideColor={() => 'rgba(79, 124, 255, 0.15)'}
-        polygonStrokeColor={(f: Feature) => (codeOf(f) ? '#26334f' : 'rgba(38,48,72,0.5)')}
+        polygonSideColor={sideColor}
+        polygonStrokeColor={strokeColor}
         polygonLabel={label}
-        onPolygonHover={(f: Feature | null) => setHover(f)}
-        onPolygonClick={(f: Feature) => {
-          const code = codeOf(f);
-          if (code) select(code);
-        }}
-        polygonsTransitionDuration={280}
+        onPolygonHover={onHover}
+        onPolygonClick={onPolygonClick}
+        // sin transicion: animar la altitud de 288 poligonos en cada
+        // recoloreo es justo lo que se veia como un parpadeo del mapa
+        polygonsTransitionDuration={0}
         arcsData={arcs}
         arcColor="color"
         arcLabel="label"

@@ -179,6 +179,43 @@ export interface EventContext {
   blocs: Bloc[];
   relationOf: (other: string) => number;
   memberOf: (blocId: string) => boolean;
+  /**
+   * Estado politico para condicionar eventos de oposicion, campana e interna.
+   * Opcional para no romper los eventos que ya existen.
+   *
+   *   when: (c) => (c.politics?.opposition ?? 0) > 60
+   *   when: (c) => (c.politics?.monthsToElection ?? 99) <= 6
+   */
+  politics?: {
+    /** fuerza de la oposicion, 0-100 */
+    opposition: number;
+    /** meses que faltan para la proxima eleccion presidencial */
+    monthsToElection: number;
+    /** meses que faltan para el medio termino, o null si el pais no tiene */
+    monthsToMidterm: number | null;
+    /** intencion de voto proyectada de hoy, 0-100 */
+    poll: number;
+    /** mandatos consecutivos del lider actual */
+    consecutiveTerms: number;
+    /** true si este es su ultimo mandato y despues hay que elegir sucesor */
+    lastTerm: boolean;
+    /** true durante los primeros meses despues de ganar una eleccion */
+    honeymoon: boolean;
+    /** capital politico disponible ahora */
+    capital: number;
+  };
+  /**
+   * Comercio del jugador, para eventos que reaccionen a la economia externa.
+   *   when: (c) => (c.trade?.changeVsStart ?? 0) < -10
+   */
+  trade?: {
+    /** intercambio total en miles de millones de USD */
+    total: number;
+    /** variacion porcentual contra el arranque de la partida */
+    changeVsStart: number;
+    /** codigo del principal socio comercial */
+    topPartner: string;
+  };
 }
 
 export interface ActiveEvent {

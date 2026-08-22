@@ -378,7 +378,9 @@ export function naturalDrift(
 // ============================================================
 
 export function buildCtx(
-  player: Country, world: GlobalState, turn: number, blocs: Bloc[], rel: Record<string, number>
+  player: Country, world: GlobalState, turn: number, blocs: Bloc[], rel: Record<string, number>,
+  /** contexto politico y comercial, para condicionar eventos de oposicion o economia externa */
+  extra?: Pick<EventContext, 'politics' | 'trade'>
 ): EventContext {
   return {
     player,
@@ -386,7 +388,8 @@ export function buildCtx(
     turn,
     blocs,
     relationOf: (other) => getRelation(rel, player.code, other),
-    memberOf: (blocId) => !!blocs.find((b) => b.id === blocId && b.members.includes(player.code))
+    memberOf: (blocId) => !!blocs.find((b) => b.id === blocId && b.members.includes(player.code)),
+    ...extra
   };
 }
 
@@ -398,6 +401,8 @@ export interface EligibilityState {
   relations: Record<string, number>;
   blocs: Bloc[];
   world: GlobalState;
+  /** contexto politico y comercial, si esta disponible */
+  eventExtra?: Pick<EventContext, 'politics' | 'trade'>;
 }
 
 /**
@@ -406,7 +411,7 @@ export interface EligibilityState {
  * desactivan que riesgos.
  */
 export function eligibleEvents(s: EligibilityState): GameEvent[] {
-  const ctx = buildCtx(s.countries[s.playerCode], s.world, s.turn, s.blocs, s.relations);
+  const ctx = buildCtx(s.countries[s.playerCode], s.world, s.turn, s.blocs, s.relations, s.eventExtra);
   return [...WORLD_EVENTS, ...NATIONAL_EVENTS].filter((e) => !e.when || e.when(ctx));
 }
 
@@ -425,9 +430,10 @@ function pick<T>(items: { item: T; weight: number }[]): T | null {
  *  25% mundial, 35% nacional, 15% personal. */
 export function rollEvents(
   player: Country, world: GlobalState, turn: number, blocs: Bloc[],
-  rel: Record<string, number>, recentIds: string[]
+  rel: Record<string, number>, recentIds: string[],
+  extra?: Pick<EventContext, 'politics' | 'trade'>
 ): GameEvent[] {
-  const ctx = buildCtx(player, world, turn, blocs, rel);
+  const ctx = buildCtx(player, world, turn, blocs, rel, extra);
   const out: GameEvent[] = [];
 
   const eligible = (list: GameEvent[], scope?: GameEvent['scope']) =>

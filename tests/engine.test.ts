@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import data from '../lib/data/countries.gen.json';
 import { applySectorShock, canJoin, ratesOf, taxEffects } from '../lib/engine';
-import { bilateralVolume, tradeBaseline, type TradeContext } from '../lib/trade';
+import { bilateralVolume, tradeBaseline, tradeMatrix, volumeFrom, type TradeContext } from '../lib/trade';
 import { deterministicTick, projectDecision, type SimState } from '../lib/simulation';
 import { driftOpposition, defaultPolitics, poll } from '../lib/politics';
 import { BLOCS } from '../lib/blocs';
 import { DECISIONS } from '../lib/decisions';
 import { addDecisionOrder, addTaxOrder, committedCapital } from '../lib/orders';
+import { cooldownLeft, scaleDecision } from '../lib/diplomacy';
 import type { Country, GlobalState } from '../lib/types';
 
 /**
@@ -323,5 +324,64 @@ describe('plan del turno', () => {
     let orders = addDecisionOrder([], 'obra_publica', 8);
     orders = addTaxOrder(orders, 'iva', 4);   // 2 + 4*1.5 = 8
     expect(committedCapital(orders)).toBe(16);
+  });
+});
+
+// ============================================================
+describe('tasador diplomatico', () => {
+  it('la misma decision cuesta segun el tamano del socio', () => {
+    const s = simFor('Argentina');
+    const tlc = DECISIONS.find((d) => d.id === 'tratado_comercial')!;
+    const uy = scaleDecision(tlc, s.countries.Argentina, s.countries.Uruguay, s.relations);
+    const us = scaleDecision(tlc, s.countries.Argentina, s.countries.USA, s.relations);
+    expect(uy.cost).toBeLessThan(us.cost);
+    expect(us.cost).toBeGreaterThan(tlc.cost.capital * 2);
+    expect(uy.cost).toBeLessThan(tlc.cost.capital);
+  });
+
+  it('los efectos escalan igual que el costo', () => {
+    const s = simFor('Argentina');
+    const tlc = DECISIONS.find((d) => d.id === 'tratado_comercial')!;
+    const uy = scaleDecision(tlc, s.countries.Argentina, s.countries.Uruguay, s.relations);
+    const us = scaleDecision(tlc, s.countries.Argentina, s.countries.USA, s.relations);
+    expect(us.effects.gdp_growth!).toBeGreaterThan(uy.effects.gdp_growth!);
+  });
+
+  it('una decision sin objetivo no se toca', () => {
+    const s = simFor('Argentina');
+    const ajuste = DECISIONS.find((d) => d.id === 'ajuste_fiscal')!;
+    const q = scaleDecision(ajuste, s.countries.Argentina, undefined, s.relations);
+    expect(q.cost).toBe(ajuste.cost.capital);
+    expect(q.effects).toEqual(ajuste.effects);
+  });
+
+  it('el cooldown impide repetir la jugada con el mismo pais', () => {
+    const cooldowns = { 'mision_diplomatica|Brazil': 10 };
+    expect(cooldownLeft(cooldowns, 'mision_diplomatica', 'Brazil', 4)).toBe(6);
+    expect(cooldownLeft(cooldowns, 'mision_diplomatica', 'Chile', 4)).toBe(0);
+    expect(cooldownLeft(cooldowns, 'mision_diplomatica', 'Brazil', 12)).toBe(0);
+  });
+});
+
+// ============================================================
+describe('comercio a escala', () => {
+  it('la matriz es simetrica y coincide con el calculo por par', () => {
+    const s = simFor('Argentina');
+    const ctx = ctxOf(s);
+    const m = tradeMatrix(ctx);
+    expect(m.totals.Argentina).toBeGreaterThan(0);
+    const directo = bilateralVolume('Argentina', 'Brazil', ctx);
+    expect(volumeFrom(m, 'Argentina', 'Brazil')).toBe(directo);
+    expect(volumeFrom(m, 'Brazil', 'Argentina')).toBe(directo);
+  });
+
+  it('el total de un pais es la suma de sus pares', () => {
+    const s = simFor('Argentina');
+    const ctx = ctxOf(s);
+    const m = tradeMatrix(ctx);
+    const suma = Object.keys(ctx.countries)
+      .filter((c) => c !== 'Argentina')
+      .reduce((acc, c) => acc + volumeFrom(m, 'Argentina', c), 0);
+    expect(m.totals.Argentina).toBeCloseTo(suma, 0);
   });
 });

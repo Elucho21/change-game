@@ -20,6 +20,19 @@ function Meter({ label, value, max = 100 }: { label: string; value: number; max?
 /** Acciones bilaterales disponibles contra el pais seleccionado. */
 const BILATERAL = DECISIONS.filter((d) => d.needsTarget);
 
+/** Los mismos efectos que aplicara el motor, escalados por el tamano del socio. */
+const SCALABLE = ['gdp_growth', 'inflation', 'unemployment', 'fiscal_balance', 'happiness'] as const;
+
+function scaledEffectsOf(d: (typeof DECISIONS)[number], size: number) {
+  const out = { ...d.effects };
+  for (const k of SCALABLE) {
+    const v = d.effects[k];
+    if (v === undefined) continue;
+    out[k] = Math.round(v * size * 100) / 100;
+  }
+  return out;
+}
+
 export default function CountryPanel() {
   const {
     countries, relations, blocs, playerCode, selected, capital, sanctions,
@@ -27,6 +40,8 @@ export default function CountryPanel() {
   } = useGame();
   const plan = useGame((s) => s.planDecision);
   const available = useGame((s) => s.availableCapital)();
+  const quoteDecision = useGame((s) => s.quoteDecision);
+  const orders = useGame((s) => s.orders);
   const code = selected ?? playerCode;
   const c = countries[code];
   if (!c) return null;
@@ -135,20 +150,41 @@ export default function CountryPanel() {
       {!isPlayer && (
         <div className="section">
           <h3>Acciones bilaterales</h3>
+          <p className="muted" style={{ fontSize: 11, margin: '-4px 0 8px', lineHeight: 1.45 }}>
+            El precio y el resultado dependen de con quien negocies: el tamano de su economia
+            frente a la tuya y como viene la relacion.
+          </p>
+
           {BILATERAL.map((d) => {
-            const afford = available >= d.cost.capital;
+            const quote = quoteDecision(d.id, code);
+            const cost = quote?.cost ?? d.cost.capital;
+            const enfriando = (quote?.cooldown ?? 0) > 0;
+            const afford = available >= cost;
+            const yaEnPlan = orders.some((o) => o.kind === 'decision' && o.id === d.id && o.target === code);
+
             return (
               <button
                 key={d.id}
-                className="decision"
-                disabled={!afford}
+                className={`decision${yaEnPlan ? ' planned' : ''}`}
+                disabled={!afford || enfriando}
                 onClick={() => plan(d.id, code)}
-                title={afford ? '' : 'Capital politico insuficiente'}
+                title={
+                  enfriando ? `Ya lo hiciste hace poco: disponible en ${quote?.cooldown} meses`
+                    : afford ? 'Queda en el plan del turno' : 'Capital politico insuficiente'
+                }
               >
-                <strong>{d.emoji} {d.label} <span className="muted">({d.cost.capital} cap.)</span></strong>
+                <strong>
+                  {d.emoji} {d.label}{yaEnPlan ? ' ✓' : ''}{' '}
+                  <span className={cost > d.cost.capital ? 'warn' : cost < d.cost.capital ? 'good' : 'muted'}>
+                    ({cost} cap.{cost !== d.cost.capital ? ` en vez de ${d.cost.capital}` : ''})
+                  </span>
+                </strong>
                 <small>{d.detail}</small>
+                {enfriando && (
+                  <small className="warn">En enfriamiento: disponible en {quote?.cooldown} meses.</small>
+                )}
                 <span className="preview">
-                  {previewDelta(d.effects).map((p) => (
+                  {previewDelta(quote ? scaledEffectsOf(d, quote.size) : d.effects).map((p) => (
                     <em key={p.key} className={p.tone === 'bueno' ? 'good' : 'bad'}>
                       {p.label} {p.value > 0 ? '+' : ''}{p.value}
                     </em>

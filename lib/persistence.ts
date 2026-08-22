@@ -48,6 +48,8 @@ export interface PersistedState {
   startingGdp?: number;
   /** plan del turno sin ejecutar */
   orders?: PlannedOrder[];
+  /** acciones diplomaticas en enfriamiento */
+  cooldowns?: Record<string, number>;
   gameOver: { title: string; body: string } | null;
 }
 

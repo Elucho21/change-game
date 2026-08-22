@@ -52,6 +52,25 @@ function cachedDistance(a: Country, b: Country): number {
   return d;
 }
 
+/**
+ * Factor de distancia de cada par: K / (km/1000 + 1)^0.6.
+ *
+ * Las capitales no se mueven, asi que este numero es constante para toda la
+ * partida. Guardarlo evita una potencia por par en cada calculo: con 76 paises
+ * son 2.850 `Math.pow` por turno, y el preview simula seis turnos.
+ */
+const gravityCache = new Map<string, number>();
+
+function gravityFactor(a: Country, b: Country): number {
+  const key = a.code < b.code ? `${a.code}|${b.code}` : `${b.code}|${a.code}`;
+  const hit = gravityCache.get(key);
+  if (hit !== undefined) return hit;
+  const dist = cachedDistance(a, b);
+  const f = K / (dist / 1000 + 1) ** 0.6;
+  gravityCache.set(key, f);
+  return f;
+}
+
 export interface TradeContext {
   countries: Record<string, Country>;
   relations: Record<string, number>;
@@ -82,8 +101,7 @@ export function bilateralVolume(a: string, b: string, ctx: TradeContext): number
   if (!ca || !cb || a === b) return 0;
 
   const size = Math.sqrt(ca.economy.gdp_trillion_usd * cb.economy.gdp_trillion_usd);
-  const dist = cachedDistance(ca, cb);
-  const gravity = (size * K) / (dist / 1000 + 1) ** 0.6;
+  const gravity = size * gravityFactor(ca, cb);
 
   const rel = getRelation(ctx.relations, a, b);
   const relMult = 1 + rel / 250;                       // 0.6 .. 1.4
@@ -93,34 +111,142 @@ export function bilateralVolume(a: string, b: string, ctx: TradeContext): number
     (b === ctx.playerCode && ctx.sanctions.includes(a));
 
   // el comercio de larga distancia depende de que las rutas esten abiertas
-  const longHaul = dist > 6000 ? disruptionFactor(ctx.disruptions, ctx.turn) : 1;
+  const longHaul = cachedDistance(ca, cb) > 6000 ? disruptionFactor(ctx.disruptions, ctx.turn) : 1;
 
   const v = gravity * relMult * blocMult * longHaul * (sanctioned ? 0.15 : 1);
   return Math.round(v * 10) / 10;
 }
 
+/**
+ * Matriz de comercio de todo el mundo, cacheada por contexto.
+ *
+ * Con 76 paises hay 2.850 pares. Calcular el total de cada pais por separado
+ * era O(n^2) por pais, o sea O(n^3) para el mundo entero, y cada turno del
+ * preview lo repetia: 12 ms con 24 paises pasaron a 95 ms con 76.
+ *
+ * Aca la matriz se calcula UNA vez por estado del mundo, aprovechando que el
+ * comercio es simetrico (la mitad de las cuentas), y se guarda contra las
+ * partes del contexto que pueden cambiarla. Mientras el mundo no cambie, los
+ * totales salen del cache.
+ */
+interface TradeMatrix {
+  /** volumen por par, clave "A|B" con A < B */
+  pairs: Map<string, number>;
+  /** comercio total por pais */
+  totals: Record<string, number>;
+}
+
+interface CacheEntry {
+  signature: string;
+  rel: unknown;
+  blocs: unknown;
+  disr: unknown;
+  matrix: TradeMatrix;
+}
+
+/**
+ * Cache de varias matrices a la vez.
+ *
+ * Con una sola entrada no alcanzaba: el preview de decisiones corre DOS
+ * simulaciones en paralelo (con la decision y sin ella) y alterna entre las
+ * dos, asi que cada consulta pisaba la del otro estado y se recalculaba todo,
+ * 2.850 pares por vez. Cuatro entradas cubren el patron con memoria trivial.
+ */
+const CACHE_SIZE = 4;
+let cache: CacheEntry[] = [];
+
+/**
+ * Firma barata del estado que afecta al comercio.
+ *
+ * No se serializa el mundo entero: eso costaba mas que la propia matriz. Con
+ * el turno, la suma de los PBI y la identidad de los objetos que el store
+ * reemplaza cuando cambian, alcanza.
+ */
+function signatureOf(ctx: TradeContext): string {
+  let gdpSum = 0;
+  for (const c of Object.values(ctx.countries)) gdpSum += c.economy.gdp_trillion_usd;
+  return `${ctx.turn}|${ctx.playerCode}|${ctx.sanctions.length}|${Math.round(gdpSum * 1000)}`;
+}
+
+export function tradeMatrix(ctx: TradeContext): TradeMatrix {
+  const signature = signatureOf(ctx);
+  const hit = cache.find(
+    (e) => e.signature === signature && e.rel === ctx.relations && e.blocs === ctx.blocs && e.disr === ctx.disruptions
+  );
+  if (hit) return hit.matrix;
+
+  const codes = Object.keys(ctx.countries);
+  const pairs = new Map<string, number>();
+  const totals: Record<string, number> = {};
+  for (const c of codes) totals[c] = 0;
+
+  // el comercio es simetrico: se calcula media matriz
+  for (let i = 0; i < codes.length; i++) {
+    for (let j = i + 1; j < codes.length; j++) {
+      const a = codes[i];
+      const b = codes[j];
+      const v = bilateralVolume(a, b, ctx);
+      if (v <= 0) continue;
+      pairs.set(a < b ? `${a}|${b}` : `${b}|${a}`, v);
+      totals[a] += v;
+      totals[b] += v;
+    }
+  }
+  for (const c of codes) totals[c] = Math.round(totals[c] * 10) / 10;
+
+  const matrix: TradeMatrix = { pairs, totals };
+  cache = [
+    { signature, rel: ctx.relations, blocs: ctx.blocs, disr: ctx.disruptions, matrix },
+    ...cache
+  ].slice(0, CACHE_SIZE);
+  return matrix;
+}
+
+/** Volumen entre dos paises tomandolo de la matriz ya calculada. */
+export const volumeFrom = (m: TradeMatrix, a: string, b: string) =>
+  m.pairs.get(a < b ? `${a}|${b}` : `${b}|${a}`) ?? 0;
+
+/** El socio mas grande de un pais, sin ordenar la lista entera. */
+export function topPartnerOf(code: string, ctx: TradeContext): string {
+  const m = tradeMatrix(ctx);
+  let best = '';
+  let bestV = -1;
+  for (const other of Object.keys(ctx.countries)) {
+    if (other === code) continue;
+    const v = volumeFrom(m, code, other);
+    if (v > bestV) {
+      bestV = v;
+      best = other;
+    }
+  }
+  return best;
+}
+
+/** Vacia el cache. Solo hace falta en tests que reusan objetos mutados. */
+export const clearTradeCache = () => {
+  cache = [];
+};
+
 /** Todos los socios de un pais, ordenados de mayor a menor volumen. */
 export function partnersOf(code: string, ctx: TradeContext): TradeFlow[] {
+  const { pairs } = tradeMatrix(ctx);
   return Object.keys(ctx.countries)
     .filter((other) => other !== code)
     .map((other) => ({
       from: code,
       to: other,
-      volume: bilateralVolume(code, other, ctx),
+      volume: pairs.get(code < other ? `${code}|${other}` : `${other}|${code}`) ?? 0,
       sanctioned: code === ctx.playerCode && ctx.sanctions.includes(other)
     }))
     .sort((x, y) => y.volume - x.volume);
 }
 
 /** Comercio total de un pais (suma de todos sus socios). */
-export const totalTrade = (code: string, ctx: TradeContext) =>
-  partnersOf(code, ctx).reduce((s, f) => s + f.volume, 0);
+export const totalTrade = (code: string, ctx: TradeContext) => tradeMatrix(ctx).totals[code] ?? 0;
 
 /** Comercio total de cada pais: se calcula una vez al empezar la partida y sirve de baseline. */
 export function tradeBaseline(ctx: TradeContext): Record<string, number> {
-  const out: Record<string, number> = {};
-  for (const code of Object.keys(ctx.countries)) out[code] = totalTrade(code, ctx);
-  return out;
+  return { ...tradeMatrix(ctx).totals };
 }
 
 /**

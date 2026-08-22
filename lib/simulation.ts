@@ -7,7 +7,10 @@ import {
   naturalDrift, relLabel, resolveRelationTargets, type TaxRates
 } from './engine';
 import { oilShock } from './routes';
-import { totalTrade, tradeGrowthEffect, type TradeContext } from './trade';
+import { monthsToElection, needsSuccessor, poll } from './politics';
+import { systemOf } from './electoral';
+import { topPartnerOf, totalTrade, tradeMatrix, type TradeContext } from './trade';
+import type { Politics } from './politics';
 import { CAPITAL_PASSIVE_BASE } from './electoral';
 
 /**
@@ -38,11 +41,50 @@ export interface SimState {
   active: ActiveEvent[];
   /** tasas impositivas iniciales de cada pais: la referencia del efecto fiscal */
   taxBase: Record<string, TaxRates>;
+  /** estado politico, para condicionar eventos (opcional en tests) */
+  politics?: Politics;
   /** hasta este turno el pasivo de capital va doble (100 dias / luna de miel) */
   honeymoonUntil?: number;
 }
 
 export const cloneSim = (s: SimState): SimState => JSON.parse(JSON.stringify(s)) as SimState;
+
+/**
+ * Contexto politico y comercial que reciben los eventos en su condicion `when`.
+ * Se arma aca para que sea el mismo en el sorteo real y en el preview.
+ */
+export function eventExtraOf(s: SimState) {
+  const player = s.countries[s.playerCode];
+  if (!s.politics) return undefined;
+
+  const sys = systemOf(s.playerCode);
+  const sinceStart = s.turn - s.politics.termStart;
+  const midterm = sys.midtermMonths
+    ? Math.max(0, sys.midtermMonths - sinceStart)
+    : null;
+
+  const ctx = tradeContextOf(s);
+  const total = totalTrade(s.playerCode, ctx);
+  const base = s.tradeBase[s.playerCode];
+
+  return {
+    politics: {
+      opposition: s.politics.opposition,
+      monthsToElection: monthsToElection(s.politics, s.turn),
+      monthsToMidterm: midterm,
+      poll: poll(player, s.politics, s.capital),
+      consecutiveTerms: s.politics.consecutiveTerms,
+      lastTerm: needsSuccessor(s.politics),
+      honeymoon: (s.honeymoonUntil ?? 0) >= s.turn,
+      capital: s.capital
+    },
+    trade: {
+      total: Math.round(total),
+      changeVsStart: base ? Math.round((total / base - 1) * 1000) / 10 : 0,
+      topPartner: topPartnerOf(s.playerCode, ctx)
+    }
+  };
+}
 
 export const tradeContextOf = (s: SimState): TradeContext => ({
   countries: s.countries,
@@ -54,12 +96,22 @@ export const tradeContextOf = (s: SimState): TradeContext => ({
   turn: s.turn
 });
 
-/** Cuanto empuja el comercio a cada economia en este turno. */
+/**
+ * Cuanto empuja el comercio a cada economia en este turno.
+ * Calcula la matriz UNA vez y saca de ahi los 76 totales, en vez de recorrer
+ * el mundo entero por cada pais.
+ */
 export function tradeEffects(s: SimState): Record<string, number> {
-  const ctx = tradeContextOf(s);
+  const { totals } = tradeMatrix(tradeContextOf(s));
   const out: Record<string, number> = {};
   for (const code of Object.keys(s.countries)) {
-    out[code] = tradeGrowthEffect(code, ctx, s.tradeBase);
+    const base = s.tradeBase[code];
+    if (!base) {
+      out[code] = 0;
+      continue;
+    }
+    const ratio = (totals[code] ?? 0) / base;
+    out[code] = Math.max(-2, Math.min(2, (ratio - 1) * 2));
   }
   return out;
 }
@@ -272,7 +324,7 @@ export function projectDecision(
   for (const k of keys) series[k] = [readMetric(withD, k) - readMetric(base, k)];
 
   const warnings: ProjectionWarning[] = relationWarnings(withD, base);
-  const eventsBefore = new Set(eligibleEvents(base).map((e) => e.id));
+  const eventsBefore = new Set(eligibleEvents({ ...base, eventExtra: eventExtraOf(base) }).map((e) => e.id));
 
   for (let t = 1; t <= horizon; t++) {
     base = deterministicTick(base).state;
@@ -281,7 +333,7 @@ export function projectDecision(
     warnings.push(...collectWarnings(withD, base, t));
   }
 
-  const eventsAfter = eligibleEvents(withD);
+  const eventsAfter = eligibleEvents({ ...withD, eventExtra: eventExtraOf(withD) });
   const afterIds = new Set(eventsAfter.map((e) => e.id));
 
   const unlocks = eventsAfter
@@ -289,7 +341,7 @@ export function projectDecision(
     .slice(0, 4)
     .map((e) => ({ id: e.id, title: e.title, emoji: e.emoji }));
 
-  const defuses = eligibleEvents(base)
+  const defuses = eligibleEvents({ ...base, eventExtra: eventExtraOf(base) })
     .filter((e) => eventsBefore.has(e.id) && !afterIds.has(e.id) && e.scope === 'nacional')
     .slice(0, 4)
     .map((e) => ({ id: e.id, title: e.title, emoji: e.emoji }));
