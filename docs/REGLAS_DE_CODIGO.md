@@ -2,6 +2,8 @@
 
 **Este documento es obligatorio para cualquiera que escriba código acá: Luciano, Claude, Grok o quien venga después.**
 
+> Si volvés después de unos días, leé primero **`docs/CAMBIOS.md`**: tiene lo último que cambió en el motor y qué te habilita, en orden inverso.
+
 El objetivo no es "código lindo". Es que dos agentes trabajando en paralelo, sin verse, produzcan código que encaje sin que nadie tenga que rehacer nada. Todo lo que sigue existe porque su ausencia genera conflictos concretos.
 
 ---

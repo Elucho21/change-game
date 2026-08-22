@@ -10,15 +10,17 @@ Inspirado en Pax Historia y en Power & Revolution, pero jugable en el navegador 
 
 ## Qué tiene hoy
 
-- **Globo 3D**: 24 países jugables, click para seleccionar, cámara que viaja, tooltip con datos completos.
-- **4 modos de mapa**: relaciones, bloques, estabilidad y economía.
+- **Globo 3D**: 76 países jugables sobre los seis continentes, click para seleccionar, cámara que viaja, tooltip con datos completos.
+- **4 modos de mapa** (relaciones, bloques, estabilidad, economía) y capas que se prenden por separado, incluidos puertos, aeropuertos y capitales.
 - **Arcos diplomáticos**: alianzas militares, comercio y aduanas, tensión y sanciones, dibujados sobre el globo y actualizados cada turno.
 - **Flujos comerciales**: comercio bilateral calculado con un modelo de gravedad (tamaño de las economías, distancia, bloques, relación y sanciones). El grosor del arco es el volumen real.
 - **Rutas marítimas y chokepoints**: Ormuz, Malaca, Suez, Panamá y Gibraltar. Cuando un evento cierra un paso, la ruta se dibuja en rojo, el comercio de larga distancia cae y el barril sube.
-- **Capas que se prenden y apagan**: diplomacia, comercio y rutas marítimas.
 - **10 bloques con mecánica real**: OTAN, MERCOSUR, UE, BRICS+, T-MEC, Alianza del Pacífico, CAN, CELAC, Indo-Pacífico, OPEP+. Con cohesión, requisitos de ingreso, rivales y efectos económicos.
-- **38 eventos**: mundiales (shock petrolero, guerra comercial, pandemia, cierre de Ormuz, bloqueo de Suez), nacionales (piquetes, paro general, corrida cambiaria, FMI, juicio político) y de liderazgo.
-- **25 decisiones** en economía, interior, comercio, diplomacia y defensa, con preview de impacto antes de confirmar.
+- **38 eventos**: mundiales (shock petrolero, guerra comercial, pandemia, cierre de Ormuz, bloqueo de Suez), nacionales (piquetes, paro general, corrida cambiaria, FMI, juicio político) y de liderazgo. Los que duran cobran todos los meses.
+- **Ciclo electoral**: mandato, reelección y, cuando se agotan los mandatos, elegís sucesor y tu partido sigue. Sistemas reales por país (ballotage argentino, colegio electoral en EE.UU., sexenio mexicano).
+- **Gabinete de 5 sillas y parlamento**: cada ministro aporta un pasivo y abarata una categoría; sentar a un opositor arma coalición, presta escaños y pasa factura. Sin mayoría, las medidas grandes cuestan 40% más.
+- **57 acciones** en economía, interior, comercio, diplomacia, defensa y **comunicación**, con preview de consecuencias a 3 meses y enfriamiento de 1 a 4 meses cada una.
+- **Plan del turno**: lo que elegís se acumula y se ejecuta al avanzar el mes. Hasta entonces podés probar, comparar y sacar lo que no te cierre.
 - **Capital político** como recurso: gobernar cuesta, y se recupera según cómo te va con la gente.
 - **Puente con Grok**: el motor local resuelve los números; Grok agrega reacciones realistas y la crónica del turno.
 
@@ -42,6 +44,8 @@ Regenera `lib/data/countries.gen.json` desde `engine/countries_mvp.json`. **Corr
 ```bash
 npm run build
 ```
+
+> ¿Sos un agente (Claude, Grok, Codex) y venís a escribir código? Leé **[AGENTS.md](AGENTS.md)** primero, y después **[docs/CAMBIOS.md](docs/CAMBIOS.md)**.
 
 ## Estructura
 
@@ -72,12 +76,16 @@ components/
   GrokBridge.tsx         ← prompt del turno y aplicación de la respuesta de Grok
 AGENTS.md / CLAUDE.md    ← reglas que cargan automaticamente los agentes de IA
 docs/
+  CAMBIOS.md             ← EMPEZA POR ACA si volves despues de unos dias
   REGLAS_DE_CODIGO.md    ← OBLIGATORIO antes de escribir codigo
   ESPECIFICACION.md      ← como funciona todo el sistema
-  PLAN_MEJORAS.md        ← qué se hizo y qué sigue
-  EVENTOS.md             ← catálogo y cómo agregar eventos
-  GROK.md                ← cómo trabajar con Grok sobre este repo
-  PROMPT_MAESTRO.md      ← prompt original del motor de simulación
+  PEDIDOS_A_GROK.md      ← bandeja de Grok (contenido y datos)
+  PEDIDOS_A_OPUS.md      ← bandeja de Opus (motor)
+  PLAN_MEJORAS.md        ← que se hizo y que sigue
+  EVENTOS.md             ← catalogo y como agregar eventos
+  ESCALA_GLOBO.md        ← estudio de escala antes de sumar mas paises
+  GROK.md                ← el puente con Grok durante la partida
+  PROMPT_MAESTRO.md      ← prompt original del motor de simulacion
 ```
 
 ## Cómo se juega
@@ -94,7 +102,8 @@ docs/
 |---|---|
 | Sumar un país | `engine/countries_mvp.json` + su ISO3 y capital en `scripts/build-data.mjs`, después `npm run data` |
 | Sumar un evento | `lib/events/world.ts` o `lib/events/national.ts` (formato en `docs/EVENTOS.md`) |
-| Sumar una decisión | `lib/decisions.ts` |
+| Sumar una decisión | `lib/decisions.ts` (con su `cooldown`) |
+| Sumar un ministro | `lib/cabinet.ts` → array `MINISTERS` |
 | Sumar un bloque o alianza | `lib/blocs.ts` |
 | Cambiar cómo evoluciona la economía | `naturalDrift()` en `lib/engine.ts` |
 | Cambiar cómo reaccionan los países | `aiReactions()` en `lib/engine.ts` |
