@@ -89,8 +89,10 @@ Hubs que estaban sin `country` (Singapur, Rotterdam, Jebel Ali, DXB, Changi) aho
 
 ## Lo que NO hace falta que toques
 
-Estos archivos son zona del motor y los estoy trabajando yo. Si necesitás algo de acá, pedímelo:
+Estos archivos son zona del motor y los trabaja Opus. Si el jugador te pide algo de acá, **no lo codees**: escribiló en `docs/PEDIDOS_A_OPUS.md`.
 
-- `lib/engine.ts`, `lib/trade.ts`, `lib/simulation.ts`, `lib/politics.ts`, `lib/store.ts`, `lib/persistence.ts`
+- `lib/engine.ts`, `lib/trade.ts`, `lib/simulation.ts`, `lib/politics.ts`, `lib/orders.ts`, `lib/store.ts`, `lib/persistence.ts`
 - `lib/points.ts` **salvo los arrays `PORTS` y `AIRPORTS`**
 - `components/*`
+
+Acuerdo completo: `docs/REGLAS_DE_CODIGO.md` sección 7. Siempre rama + PR. No pushees a `main`. No agregues países (76, congelado) hasta que Opus recorte el comercio O(n²).

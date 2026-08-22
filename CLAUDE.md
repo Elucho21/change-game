@@ -1,51 +1,57 @@
 # Instrucciones para agentes (Claude, Grok, Codex, quien sea)
 
-Antes de escribir una sola línea de código en este repo, leé **`docs/REGLAS_DE_CODIGO.md`**. No es opcional: dos agentes trabajan en paralelo acá y ese documento es lo que evita que se pisen.
+Antes de escribir una sola línea de código, leé **`docs/REGLAS_DE_CODIGO.md`**. La **sección 7 es el acuerdo de colaboración**. No es opcional: dos agentes trabajan en paralelo y ese documento es lo que evita que se pisen.
 
-Si sos Opus: el 22/08 Grok mergeó sistemas electorales, 100 días y 76 países **encima de tu Sprint 2**. Leé **`docs/NOTA_PARA_OPUS.md`** antes de tocar `lib/politics.ts`, `lib/simulation.ts` o `lib/store.ts`.
+Después: **`docs/ESPECIFICACION.md`**, **`lib/types.ts`**, y la bandeja que te toca (`docs/PEDIDOS_A_GROK.md` o `docs/PEDIDOS_A_OPUS.md`).
 
-Después, para entender qué hace el sistema: **`docs/ESPECIFICACION.md`** y **`lib/types.ts`**.
+## El acuerdo, en cinco líneas
+
+1. **Opus escribe el motor.** `engine`, `trade`, `simulation`, `politics`, `orders`, `store`, `persistence`, `components`.
+2. **Grok escribe contenido.** Eventos, decisiones, bloques, rutas, `electoral.ts`, arrays de `points.ts`, JSON de países.
+3. **Grok no toca el motor aunque el jugador se lo pida.** Lo escribe en `docs/PEDIDOS_A_OPUS.md` y no lo codea.
+4. **Siempre rama + PR.** Nadie pushea a `main` en caliente.
+5. **76 países, no más**, hasta que Opus recorte el comercio O(n²).
 
 ## Resumen de las reglas que más se rompen
 
-1. **Capas**: datos → motor → interfaz. Nunca al revés. Las reglas del juego viven en `lib/engine.ts` y `lib/trade.ts`, no en los componentes.
+1. **Capas**: datos → motor → interfaz. Nunca al revés.
 2. **`lib/types.ts` no se cambia sin avisar.** Agregar campos *opcionales* sí es seguro.
-3. **`engine/countries_mvp.json` es la fuente de verdad de los países.** Si lo tocás, corré `npm run data`. Nunca edites `lib/data/countries.gen.json` a mano: es generado.
-4. **El estado se modifica solo en `lib/store.ts`**, siempre copiando con `fresh()` antes de mutar.
+3. **`engine/countries_mvp.json` es la fuente de verdad.** Si lo tocás, `npm run data`. Nunca edites `lib/data/countries.gen.json` a mano.
+4. **El estado se modifica solo en `lib/store.ts`**, copiando con `fresh()` antes de mutar. Las acciones del jugador son órdenes (`lib/orders.ts`) y solo tocan el mundo en `runPlan()`.
 5. **Nada de `any`.** TypeScript estricto. La única excepción vive comentada en `components/GlobeView.tsx`.
 6. **Nada de dependencias nuevas** sin justificarlo.
-7. **Contenido de datos sin tildes ni ñ** (`lib/events/*`, `lib/blocs.ts`, `lib/decisions.ts`): ese texto pasa por el motor Python y por consolas de Windows.
-8. **Toda opción de evento tiene un costo y ninguna es obviamente la mejor.** Si hay una respuesta correcta, no es una decisión.
-9. **El jugador planifica, el turno ejecuta.** Las acciones se acumulan como órdenes (`lib/orders.ts`) y solo tocan el mundo en `runPlan()` al avanzar el mes. Al historial entra lo ejecutado, no lo intentado.
-10. **El turno tiene una sola implementación**: `deterministicTick()` en `lib/simulation.ts`, que usan tanto `endTurn` como el preview de consecuencias. No reimplementes la economía en otro lado.
-11. **Si cambiás la forma del estado guardado**, subí `SAVE_VERSION` en `lib/persistence.ts` y agregá la migración. Un campo nuevo *opcional* no necesita versión nueva.
-12. **Si agregás contenido, sumá el caso al test** (`tests/engine.test.ts`).
+7. **Contenido de datos sin tildes ni ñ.**
+8. **Toda opción de evento tiene un costo y ninguna es obviamente la mejor.**
+9. **El turno tiene una sola implementación**: `deterministicTick()`. Preview y turno real.
+10. **`systemOf(code)` decide cómo se gana una elección.** No inlinear `won = vote > 50`.
+11. **Validá costos contra `availableCapital()`**, no contra `capital` crudo.
+12. **Si cambiás la forma del estado guardado**, subí `SAVE_VERSION`. Un campo opcional nuevo no necesita versión.
+13. **Si agregás contenido, sumá el caso al test.**
 
-## Antes de commitear, los tres comandos
+## Antes de commitear
 
 ```bash
 npm run data        # solo si tocaste engine/countries_mvp.json
-npm test            # tests del motor
+npm test
 npx tsc --noEmit
-npm run build
+npm run build       # con el dev server apagado
 ```
 
-⚠️ No corras `npm run build` con `npm run dev` levantado: los dos escriben en `.next` y el dev server queda roto (404 en `main-app.js`). Si pasa: parar dev, `rm -rf .next`, levantar de nuevo.
+## Zonas
 
-## Zonas de trabajo
-
-| Zona | Archivos | Conflicto |
+| Zona | Archivos | Quién |
 |---|---|---|
-| Contenido | `lib/events/*`, `lib/decisions.ts`, `lib/blocs.ts`, `lib/routes.ts` | bajo — ideal para trabajo en paralelo |
-| Datos | `engine/countries_mvp.json`, `scripts/build-data.mjs` | medio |
-| Motor | `lib/engine.ts`, `lib/trade.ts`, `lib/simulation.ts`, `lib/politics.ts`, `lib/orders.ts`, `lib/store.ts`, `lib/persistence.ts` | **alto — una persona por vez** |
-| Datos de puntos | `lib/points.ts` → arrays `PORTS` y `AIRPORTS` | bajo — ver `docs/PEDIDOS_A_GROK.md` |
-| Interfaz | `components/*.tsx`, `app/globals.css` | medio — un componente por persona |
+| Contenido | `lib/events/*`, `lib/decisions.ts`, `lib/blocs.ts`, `lib/routes.ts`, `lib/electoral.ts` | Grok |
+| Datos | `engine/countries_mvp.json`, `scripts/build-data.mjs` | Grok (congelado en 76) |
+| Puntos | `lib/points.ts` → arrays `PORTS` y `AIRPORTS` | Grok |
+| Motor | `lib/engine.ts`, `lib/trade.ts`, `lib/simulation.ts`, `lib/politics.ts`, `lib/orders.ts`, `lib/store.ts`, `lib/persistence.ts` | **Opus, solo** |
+| Interfaz | `components/*.tsx`, `app/globals.css` | Opus |
+| Docs | `docs/*` | ambos, por PR |
 
 ## Depurar en el navegador
 
 ```js
-const S = () => window.__game.getState();   // estado completo del juego
+const S = () => window.__game.getState();
 S().start('Argentina'); S().endTurn(); S().feed.slice(0, 5);
-window.__globe.scene();                      // escena three.js del globo
+window.__globe.scene();
 ```

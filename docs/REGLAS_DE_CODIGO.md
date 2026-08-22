@@ -86,20 +86,23 @@ Inventar una métrica nueva (`corrupcion`, `moral_militar`) implica: agregarla a
 
 Cada tarea vive en una zona. **Dos agentes no trabajan en la misma zona al mismo tiempo.**
 
-| Zona | Archivos | Riesgo de conflicto | Ideal para |
+| Zona | Archivos | Riesgo | Quién |
 |---|---|---|---|
-| **Contenido: eventos** | `lib/events/world.ts`, `lib/events/national.ts` | Bajo | trabajo en volumen, en paralelo |
-| **Contenido: decisiones** | `lib/decisions.ts` | Bajo | ídem |
-| **Contenido: bloques** | `lib/blocs.ts` | Bajo | ídem |
-| **Contenido: rutas** | `lib/routes.ts` | Bajo | ídem |
-| **Datos de países** | `engine/countries_mvp.json` + `scripts/build-data.mjs` | Medio | ampliar el mapa |
-| **Motor** | `lib/engine.ts`, `lib/trade.ts`, `lib/simulation.ts`, `lib/politics.ts`, `lib/orders.ts`, `lib/store.ts`, `lib/persistence.ts` | **Alto** | **una persona por vez** |
-| **Tests** | `tests/*.test.ts` | Bajo | sumar casos al agregar contenido |
-| **Datos de puntos** | `lib/points.ts` (arrays `PORTS` y `AIRPORTS`) | Bajo | cargar puertos y aeropuertos |
-| **Interfaz** | `components/*.tsx`, `app/globals.css` | Medio | un componente por persona |
-| **Docs** | `docs/*`, `README.md` | Bajo | siempre |
+| **Contenido: eventos** | `lib/events/world.ts`, `lib/events/national.ts` | Bajo | Grok |
+| **Contenido: decisiones** | `lib/decisions.ts` | Bajo | Grok |
+| **Contenido: bloques** | `lib/blocs.ts` | Bajo | Grok |
+| **Contenido: rutas** | `lib/routes.ts` | Bajo | Grok |
+| **Contenido: sistemas electorales** | `lib/electoral.ts` | Bajo | Grok (Opus **lee**, no reescribe) |
+| **Datos de países** | `engine/countries_mvp.json` + `scripts/build-data.mjs` | Medio | Grok, **congelado en 76** hasta optimizar comercio |
+| **Datos de puntos** | `lib/points.ts` (arrays `PORTS` y `AIRPORTS`) | Bajo | Grok |
+| **Tests de contenido** | `tests/electoral.test.ts` y casos nuevos en `tests/engine.test.ts` | Bajo | quien agrega el contenido |
+| **Motor** | `lib/engine.ts`, `lib/trade.ts`, `lib/simulation.ts`, `lib/politics.ts`, `lib/orders.ts`, `lib/store.ts`, `lib/persistence.ts` | **Alto** | **Opus, una persona, siempre** |
+| **Interfaz** | `components/*.tsx`, `app/globals.css` | Medio | Opus (un componente por persona si se parte) |
+| **Docs** | `docs/*`, `AGENTS.md`, `CLAUDE.md`, `README.md` | Bajo | ambos |
 
 Regla práctica: **agregar a una lista casi nunca genera conflicto; cambiar una función sí.** Por eso el contenido se reparte y el motor no.
+
+`lib/electoral.ts` es contrato, no motor: Grok carga sistemas (Argentina, Uruguay, EE.UU.…); Opus llama `systemOf(code)` desde `politics.ts`. Volver a `won = vote > 50` rompe tres países.
 
 ---
 
@@ -258,10 +261,15 @@ En `lib/blocs.ts`. Cada bloque necesita `rules: string[]` — dos o tres frases 
 
 ### 4.4 Un país
 
-1. Entrada completa en `engine/countries_mvp.json` (misma forma que las 24 existentes).
+Hoy hay **76**. El comercio es O(n²): con 76 el preview pasó de 12 ms a 95 ms. **No se agregan más países** hasta que Opus recorte esa matriz (cachear por turno, no recalcular pares que la decisión no toca).
+
+Cuando se descongele, el procedimiento sigue siendo:
+
+1. Entrada completa en `engine/countries_mvp.json` (misma forma que los existentes).
 2. ISO3 + capital + bandera en `META` de `scripts/build-data.mjs`. El ISO3 tiene que coincidir con `ADM0_A3` del GeoJSON, no con `ISO_A3` (Francia y Noruega tienen `-99` ahí; es un problema conocido de Natural Earth y por eso usamos `ADM0_A3`).
 3. `npm run data`.
 4. Sumarlo a los bloques que le correspondan en `lib/blocs.ts`.
+5. Si el país tiene sistema electoral propio (no el fallback de 4 años / 50%), agregarlo en `lib/electoral.ts`.
 
 ---
 
@@ -357,48 +365,88 @@ localStorage.getItem('change-game:save');
 
 ## 6. Git: cómo commiteamos
 
-- **Rama por tarea**: `evento/corrida-bancaria`, `motor/ciclo-electoral`, `ui/panel-comercio`. Nada directo a `main` salvo documentación.
+- **Rama por tarea**, siempre: `evento/corrida-bancaria`, `contenido/paises`, `motor/ciclo-electoral`, `docs/acuerdo`.
+- **Nadie pushea a `main` en caliente.** Ni Grok ni Opus. `main` solo se mueve con PR mergeado.
+- **Excepción estrecha: docs de una sola línea** (typo, enlace). Todo lo demás, PR.
 - **Un commit = un cambio con sentido.** No "varios arreglos".
 - **Mensaje en español, imperativo, explicando el porqué**:
 
 ```
 Agrega corrida bancaria como evento nacional
 
-Faltaba un evento que castigue la inflación alta sostenida. Se dispara
-con inflación > 30% y las tres opciones cruzan tasa, reservas y cepo,
-que hasta ahora solo aparecían en decisiones voluntarias.
+Faltaba un evento que castigue la inflacion alta sostenida. Se dispara
+con inflacion > 30% y las tres opciones cruzan tasa, reservas y cepo,
+que hasta ahora solo aparecian en decisiones voluntarias.
 ```
 
-- **Antes de empezar**: `git pull`. **Antes de pedir merge**: los tres comandos de la sección 5.
+- **Antes de empezar**: `git pull`. **Antes de pedir merge**: los comandos de la sección 5.
+- El PR declara la zona en el título: `contenido: …`, `motor: …`, `docs: …`. Si un PR de Grok lista un archivo de motor, Opus no lo mergea: se cierra y se convierte en nota.
 
 ---
 
-## 7. Reparto entre Claude y Grok
+## 7. Acuerdo de colaboración (Opus y Grok)
 
-Los dos leen este documento y `docs/ESPECIFICACION.md` antes de escribir una línea.
+Esto no es un organigrama. Es lo que evita el conflicto del 22/08: Grok tocó `store.ts` / `politics.ts` / `simulation.ts` mientras Opus reescribía el click. Esta vez fueron dos imports; la próxima puede ser el medio de `endTurn`.
 
-| | Claude (Claude Code) | Grok |
+### 7.1 Quién es quién
+
+| | Opus (Claude Code) | Grok |
 |---|---|---|
-| **Fuerte en** | motor, refactors, tipos, integración visual | contenido en volumen, variantes, datos, narrativa |
-| **Zona** | `lib/engine.ts`, `lib/trade.ts`, `lib/store.ts`, `components/*` | `lib/events/*`, `lib/decisions.ts`, `lib/blocs.ts`, `engine/countries_mvp.json` |
-| **Por qué** | son archivos donde dos manos se pisan | son listas: agregar ítems no genera conflictos |
+| **Fuerte en** | motor, refactors, tipos, integración, UI | contenido en volumen, datos, narrativa, sistemas por país |
+| **Escribe** | `lib/engine.ts`, `trade`, `simulation`, `politics`, `orders`, `store`, `persistence`, `components/*` | `lib/events/*`, `decisions.ts`, `blocs.ts`, `routes.ts`, `electoral.ts`, `points.ts` (arrays), `engine/countries_mvp.json` |
+| **No escribe** | catálogos de eventos/decisiones (salvo un caso de prueba) | **ningún archivo de motor, nunca** |
 
-**Durante la partida** el reparto es otro y complementario: el motor local resuelve los números (que tienen que ser consistentes turno a turno) y Grok resuelve las reacciones y la crónica (que tienen que ser variadas y creíbles). Ninguno de los dos hace bien el trabajo del otro: un LLM no mantiene la coherencia numérica en 40 turnos, y un motor determinista escribe reacciones repetidas.
+**Durante la partida** el motor local resuelve los números (consistentes turno a turno) y Grok resuelve reacciones y crónica (variadas y creíbles). Ninguno hace bien el trabajo del otro.
+
+### 7.2 La regla que no se vuelve a romper
+
+> **Grok no toca el motor.** Aunque el jugador se lo pida en el chat.
+
+Si el jugador le pide a Grok un cambio de `store` / `politics` / `simulation` / `orders` / `engine` / `trade` / `persistence`:
+
+1. Grok **no codea**.
+2. Grok escribe el pedido en `docs/PEDIDOS_A_OPUS.md` (qué, por qué, contrato, cómo probarlo).
+3. Grok avisa en el chat: "esto es motor, quedó escrito para Opus".
+4. Opus lo implementa cuando cierre lo que tiene en las manos.
+
+El 22/08 el jugador pidió 100 días y sistemas electorales. Eso **es motor**. Grok lo implementó porque no había otro camino y pisó a Opus. No se repite: ahora `lib/electoral.ts` existe para que el contenido electoral no viva dentro de `politics.ts`.
+
+### 7.3 Git, en la práctica
+
+- Grok trabaja **siempre en rama** y abre PR. No squash-mergea a `main` si el diff toca motor.
+- Opus también trabaja en rama cuando el cambio es grande.
+- Antes de arrancar: `git pull`. Si `main` se movió, rebase. No se resuelve a mano en silencio un conflicto de `store.ts`.
+- Handoff: `docs/NOTA_PARA_OPUS.md` (Grok → Opus) y `docs/PEDIDOS_A_GROK.md` (Opus → Grok). Un pedido por ítem.
+
+### 7.4 Contratos que el otro tiene que respetar
+
+- **`systemOf(code)`** (`lib/electoral.ts`): cómo se gana una elección. Opus no lo inlinea. Volver a `won = vote > 50` rompe Argentina, Uruguay y EE.UU.
+- **`runPlan()`** (`lib/store.ts`): único lugar donde las órdenes tocan el mundo. Una decisión nueva de Grok es una carta en `decisions.ts`; se vuelve orden en `orders.ts`, que es de Opus.
+- **`availableCapital()`**, no `capital` crudo, para validar costos (el plan compromete).
+- **`deterministicTick()`**: única implementación del mes. Preview y turno real.
+- **76 países, no más**, hasta que el comercio deje de ser O(n²) crudo. Irán (`Iran`, ISO `IRN`) está: conectar Ormuz al país es motor, Opus.
+
+### 7.5 Si el jugador pide las dos cosas a la vez
+
+El orden del proyecto es **profundidad de simulación → escala → guerra → presentación**. Si Grok y Opus reciben tareas del mismo sprint: Opus profundidad/motor, Grok el contenido que ese motor ya soporta (`PEDIDOS_A_GROK.md`). Grok no adelanta el motor para destrabar contenido.
 
 ### Prompt de arranque para Grok
 
-> Trabajás sobre el repo `change-game` (github.com/Elucho21/change-game): Next.js 15 + TypeScript estricto + react-globe.gl, juego de geopolítica por turnos.
+> Trabajas sobre el repo `change-game` (github.com/Elucho21/change-game): Next.js 15 + TypeScript estricto + react-globe.gl, juego de geopolitica por turnos.
 >
-> Antes de escribir código leé, en este orden: `docs/REGLAS_DE_CODIGO.md`, `docs/ESPECIFICACION.md` y `lib/types.ts`.
+> Antes de escribir codigo lee, en este orden: `docs/REGLAS_DE_CODIGO.md` (seccion 7 = acuerdo), `docs/PEDIDOS_A_GROK.md`, `docs/ESPECIFICACION.md` y `lib/types.ts`.
 >
-> Reglas que no podés romper:
-> 1. No cambiás `lib/types.ts` ni el formato de `engine/countries_mvp.json` sin avisarme.
-> 2. Trabajás solo en la zona que te asigno (ver tabla de zonas). No tocás `lib/engine.ts`, `lib/trade.ts` ni `lib/store.ts`.
-> 3. Nada de `any`, nada de dependencias nuevas, contenido sin tildes en los strings de datos.
-> 4. Toda opción de evento tiene costo y ninguna es obviamente la mejor.
-> 5. Terminás corriendo `npx tsc --noEmit` y `npm run build`, y me contás en 5 líneas qué cambiaste.
+> Reglas que no podes romper:
+> 1. No tocas el motor: `lib/engine.ts`, `lib/trade.ts`, `lib/simulation.ts`, `lib/politics.ts`, `lib/orders.ts`, `lib/store.ts`, `lib/persistence.ts`. Si el jugador te pide un cambio ahi, lo escribis en `docs/PEDIDOS_A_OPUS.md` y no lo codeas.
+> 2. Siempre rama + PR. No pusheas a `main`.
+> 3. No cambias `lib/types.ts` ni el formato de `engine/countries_mvp.json` sin avisar. Campos opcionales si.
+> 4. Nada de `any`, nada de dependencias nuevas, contenido sin tildes en los strings de datos.
+> 5. Toda opcion de evento tiene costo y ninguna es obviamente la mejor.
+> 6. No agregas paises: estamos en 76 hasta que Opus recorte el comercio O(n^2).
+> 7. Una decision nueva es una carta en `lib/decisions.ts`. No la apliques al mundo: el plan del turno (`runPlan`) es de Opus.
+> 8. Terminas corriendo `npm test && npx tsc --noEmit && npm run build`, y contas en 5 lineas que cambiaste.
 >
-> Tu tarea: [una tarea, de una sola zona].
+> Tu tarea: [una tarea, de una sola zona de contenido].
 
 ---
 
