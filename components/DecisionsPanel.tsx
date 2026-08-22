@@ -19,6 +19,7 @@ export default function DecisionsPanel() {
   const plan = useGame((s) => s.planDecision);
   const preview = useGame((s) => s.previewDecision);
   const available = useGame((s) => s.availableCapital)();
+  const quote = useGame((s) => s.quoteDecision);
   const target = selected && selected !== playerCode ? selected : undefined;
 
   const list = DECISIONS.filter((d) => d.category === cat);
@@ -60,9 +61,12 @@ export default function DecisionsPanel() {
       <div className="section">
         {list.map((d) => {
           const needsTarget = d.needsTarget && !target;
-          const afford = available >= d.cost.capital;
+          const q = quote(d.id, d.needsTarget ? target : undefined);
+          const costo = q?.cost ?? d.cost.capital;
+          const enfriando = (q?.cooldown ?? 0) > 0;
+          const afford = available >= costo;
           const yaEnPlan = orders.some((o) => o.kind === 'decision' && o.id === d.id);
-          const disabled = !afford || needsTarget;
+          const disabled = !afford || needsTarget || enfriando;
           const isOpen = open === d.id;
 
           return (
@@ -71,15 +75,24 @@ export default function DecisionsPanel() {
                 className={`decision${isOpen ? ' open' : ''}${yaEnPlan ? ' planned' : ''}`}
                 disabled={disabled}
                 onClick={() => setOpen(isOpen ? null : d.id)}
-                title={needsTarget ? 'Elegi un pais en el globo primero' : afford ? '' : 'Capital politico insuficiente'}
+                title={
+                  enfriando ? `Ya la usaste: disponible en ${q?.cooldown} ${q?.cooldown === 1 ? 'mes' : 'meses'}`
+                    : needsTarget ? 'Elegi un pais en el globo primero'
+                      : afford ? '' : 'Capital politico insuficiente'
+                }
               >
                 <strong>
                   {d.emoji} {d.label}{yaEnPlan ? ' ✓' : ''}{' '}
-                  <span className="muted">
-                    ({d.cost.capital} cap.{d.cost.fiscal ? ` · ${d.cost.fiscal}% PBI` : ''})
+                  <span className={costo > d.cost.capital ? 'warn' : costo < d.cost.capital ? 'good' : 'muted'}>
+                    ({costo} cap.{d.cost.fiscal ? ` · ${d.cost.fiscal}% PBI` : ''})
                   </span>
                 </strong>
                 <small>{d.detail}</small>
+                {enfriando && (
+                  <small className="warn">
+                    En espera: disponible en {q?.cooldown} {q?.cooldown === 1 ? 'mes' : 'meses'}.
+                  </small>
+                )}
                 {d.needsTarget && (
                   <small className={target ? 'good' : 'warn'}>
                     {target ? `Objetivo: ${countries[target].flag} ${countries[target].name}` : 'Elegi un pais en el globo'}

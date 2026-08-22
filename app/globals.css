@@ -233,3 +233,19 @@ button.link {
 }
 button.link:hover:not(:disabled) { background: none; color: var(--text); }
 button.link.bad { color: var(--bad); text-decoration: none; font-size: 13px; }
+
+/* ---------- grafico al pasar el mouse por un KPI ---------- */
+.stat-pop {
+  position: absolute; top: 100%; left: -8px; margin-top: 6px; z-index: 40;
+  width: 230px; padding: 9px 10px;
+  background: var(--panel); border: 1px solid var(--accent); border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .5);
+}
+.stat-pop-title {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px;
+  color: var(--muted); margin-bottom: 4px;
+}
+.spark-foot {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 11px; font-variant-numeric: tabular-nums; margin-top: 2px;
+}

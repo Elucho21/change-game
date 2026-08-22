@@ -115,7 +115,7 @@ export const systemOfCountry = (c: Country) => systemOf(c.code);
 export const HONEYMOON_MONTHS = 4;
 export const CAPITAL_ON_WIN = 60;
 export const CAPITAL_ON_MIDTERM_WIN = 25;
-export const CAPITAL_PASSIVE_BASE = 4;
+export const CAPITAL_PASSIVE_BASE = 8;
 
 export const grantHoneymoon = (turn: number) => turn + HONEYMOON_MONTHS;
 

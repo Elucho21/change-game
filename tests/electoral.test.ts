@@ -40,13 +40,19 @@ const stub = (code: string, extra: Partial<Country> = {}): Country =>
   }) as Country;
 
 describe('capital pasivo y luna de miel', () => {
-  it('la base es 4, no 6', () => {
-    expect(CAPITAL_PASSIVE_BASE).toBe(4);
-    expect(capitalRegen(60, 60, false)).toBe(64);
+  // El jugador pidio duplicar el capital por ronda: la base paso de 4 a 8.
+  // Con 8 y felicidad neutra (60), el pasivo mensual es 8 y en los 100 dias 16.
+  it('la base es 8', () => {
+    expect(CAPITAL_PASSIVE_BASE).toBe(8);
+    expect(capitalRegen(60, 60, false)).toBe(68);
   });
 
   it('en los 100 dias el pasivo se duplica', () => {
-    expect(capitalRegen(60, 60, true)).toBe(68);
+    expect(capitalRegen(60, 60, true)).toBe(76);
+  });
+
+  it('la felicidad sigue moviendo el pasivo', () => {
+    expect(capitalRegen(50, 80, false)).toBeGreaterThan(capitalRegen(50, 40, false));
   });
 
   it('ganar da 60 y el medio termino 25', () => {

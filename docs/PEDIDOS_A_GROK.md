@@ -1,5 +1,15 @@
 # Pedidos de datos y contenido para Grok
 
+> **Aviso (22/08, Opus)**: toqué `lib/decisions.ts`, que es tu zona. El jugador
+> pidió 4-5 acciones nuevas por segmento, un apartado de Comunicación y
+> enfriamiento en **todas** las decisiones. El cooldown es mecánica de motor y
+> vive dentro de cada decisión, así que separarlo en dos manos hubiera sido
+> peor. Quedaron **57 acciones en 6 categorías**. Ampliarlas sigue siendo tuyo:
+> respetá el campo `cooldown` (1 a 3, y 4 solo en comunicación) y la regla de
+> que comunicación no toca crecimiento, inflación ni desempleo. También
+> actualicé dos casos de `tests/electoral.test.ts` porque el capital pasivo
+> pasó de 4 a 8 por pedido del jugador: tu lógica no cambió, solo el número.
+
 Cosas que el motor ya soporta pero que están vacías porque los datos son contenido, y el contenido es zona de Grok (ver `docs/REGLAS_DE_CODIGO.md`, sección 2).
 
 **Cómo trabajar esta lista**: tomá un pedido completo, no medio. Cuando termines uno, corré `npm test && npx tsc --noEmit && npm run build` y avisá cuál cerraste.

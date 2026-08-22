@@ -200,12 +200,16 @@ El catálogo completo, con condiciones y opciones, está en `docs/EVENTOS.md` y 
 
 ## 8. Decisiones del jugador
 
-25 decisiones en `lib/decisions.ts`, en cinco categorías: **economía** (7), **interior** (6), **comercio** (4), **diplomacia** (5), **defensa** (4). Cada una muestra su impacto antes de confirmar.
+57 decisiones en `lib/decisions.ts`, en seis categorías: **economía** (12), **interior** (11), **comercio** (9), **diplomacia** (10), **defensa** (9) y **comunicación** (6). Cada una muestra su impacto antes de confirmar.
+
+**Comunicación** son actos que no cambian la economía sino cómo se la vive: cadena nacional, acto masivo, gira por el interior, entrevista incómoda, campaña de gestión y pedir disculpas. Suben felicidad, estabilidad y capital político, y tienen 4 meses de espera porque el gesto se gasta si se repite.
+
+**Todas las acciones tienen enfriamiento**: entre 1 y 3 meses según el peso de la medida, 4 en comunicación. En las bilaterales el enfriamiento es por país.
 
 El recurso que las limita es el **capital político** (0–100): se gasta al decidir y se recupera cada turno según
 
 ```
-capital += 6 + (felicidad − 60) / 10
+capital += 8 + (felicidad − 60) / 10        (×2 durante los 100 días)
 ```
 
 Un gobierno con la gente en contra se queda sin margen para gobernar. Esa es la restricción central del juego.

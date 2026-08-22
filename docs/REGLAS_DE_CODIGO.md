@@ -255,6 +255,19 @@ En `lib/decisions.ts`. Misma filosofía, más una regla propia: **el costo en ca
 | 10–15 | medida seria | ajuste parcial, sanciones, tratado |
 | 18–25 | apuesta de gobierno | reforma laboral, movilizar tropas |
 
+**Toda decisión tiene enfriamiento.** Sin eso, la estrategia óptima era repetir la misma jugada todos los meses. La escala es corta a propósito, para que el jugador siempre tenga algo que hacer:
+
+| Meses | Cuándo |
+|---|---|
+| 1 | medidas de rutina |
+| 2 | lo que mueve la aguja (default de casi todas las categorías) |
+| 3 | lo que cuesta capital de verdad, y toda la categoría defensa |
+| 4 | **solo comunicación**: el gesto se gasta si lo repetís |
+
+Si no declarás `cooldown` en la decisión, se usa el default de su categoría (`DEFAULT_COOLDOWN` en `lib/diplomacy.ts`). El enfriamiento de las acciones bilaterales es **por país**: podés mandar una misión a Brasil y otra a Chile el mismo mes, pero no dos a Brasil.
+
+**Categoría `comunicacion`**: actos de gobierno que no cambian la economía, cambian cómo la gente la vive. Regla dura: **no tocan `gdp_growth`, `inflation` ni `unemployment`** — solo felicidad, estabilidad y capital político. Hay un test que lo verifica.
+
 ### 4.3 Un bloque o alianza
 
 En `lib/blocs.ts`. Cada bloque necesita `rules: string[]` — dos o tres frases que le expliquen al jugador **qué gana y qué resigna**. Un bloque sin costo no es una decisión.

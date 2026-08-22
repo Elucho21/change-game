@@ -236,7 +236,7 @@ export interface ActiveEvent {
 
 export interface Decision {
   id: string;
-  category: 'economia' | 'diplomacia' | 'comercio' | 'interior' | 'defensa';
+  category: 'economia' | 'diplomacia' | 'comercio' | 'interior' | 'defensa' | 'comunicacion';
   label: string;
   emoji: string;
   detail: string;
@@ -244,6 +244,12 @@ export interface Decision {
   needsTarget?: boolean;
   effects: Delta;
   relations?: RelationDelta[];
+  /**
+   * Meses que hay que esperar para volver a usarla.
+   * Entre 1 y 3 segun el peso de la medida; los actos de comunicacion usan 4,
+   * porque repetir el gesto todos los meses lo gasta.
+   * Si no se declara, se usa el default de su categoria (lib/diplomacy.ts).
+   */
   cooldown?: number;
   when?: (ctx: EventContext) => boolean;
 }

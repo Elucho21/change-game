@@ -85,26 +85,35 @@ export function scaleDecision(
 }
 
 /**
- * Cooldown de acciones diplomaticas por pais.
- * Sin esto, mandar la misma mision diplomatica cinco veces seguidas era la
- * forma barata de llevar cualquier relacion a aliado.
+ * Enfriamiento de las acciones de gobierno.
+ *
+ * Toda decision tiene un tiempo de espera: sin eso, la estrategia optima era
+ * repetir la misma jugada todos los meses hasta romper el juego (cinco
+ * misiones diplomaticas seguidas convertian a cualquiera en aliado).
+ *
+ * La escala es corta a proposito, para que el jugador siempre tenga algo que
+ * hacer: 1 mes las medidas de rutina, 2 las que mueven la aguja, 3 las que
+ * cuestan capital de verdad. Los actos de comunicacion usan 4: el gesto se
+ * gasta si lo repetis.
  */
-export const COOLDOWNS: Record<string, number> = {
-  mision_diplomatica: 6,
-  ayuda_humanitaria: 6,
-  ejercicios_conjuntos: 8,
-  tratado_comercial: 12,
-  retirar_embajador: 4,
-  sancionar: 6,
-  movilizacion: 12
+export const DEFAULT_COOLDOWN: Record<string, number> = {
+  economia: 2,
+  interior: 2,
+  comercio: 2,
+  diplomacia: 2,
+  defensa: 3,
+  comunicacion: 4
 };
+
+/** Meses de espera de una decision: los suyos, o los de su categoria. */
+export const cooldownOf = (dec: Decision) =>
+  dec.cooldown ?? DEFAULT_COOLDOWN[dec.category] ?? 2;
 
 export const cooldownKey = (decisionId: string, target?: string) =>
   target ? `${decisionId}|${target}` : decisionId;
 
-/** Turno en el que vuelve a estar disponible, o 0 si no tiene cooldown. */
-export const cooldownUntil = (decisionId: string, turn: number) =>
-  COOLDOWNS[decisionId] ? turn + COOLDOWNS[decisionId] : 0;
+/** Turno en el que vuelve a estar disponible. */
+export const cooldownUntil = (dec: Decision, turn: number) => turn + cooldownOf(dec);
 
 /** Cuantos meses faltan para poder repetir esta accion con este pais. */
 export function cooldownLeft(

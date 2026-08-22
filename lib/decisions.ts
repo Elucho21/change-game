@@ -268,6 +268,346 @@ export const DECISIONS: Decision[] = [
     needsTarget: true,
     effects: { global_tension: 10, stability: -2, happiness: -3, fiscal_balance: -0.5 },
     relations: [{ target: 'TARGET', amount: -35 }, { target: 'vecinos', amount: -10 }]
+  },
+  // ---------------- ECONOMIA (ampliacion) ----------------
+  {
+    id: 'blanqueo',
+    category: 'economia',
+    label: 'Blanqueo de capitales',
+    emoji: '🏦',
+    detail: 'Amnistia fiscal para repatriar fondos. Entra plata rapido y el que pago siempre se siente estafado.',
+    cost: { capital: 10 },
+    cooldown: 3,
+    effects: { fiscal_balance: 1.2, gold_reserves_tonnes: 5, happiness: -2 }
+  },
+  {
+    id: 'plan_vivienda',
+    category: 'economia',
+    label: 'Plan nacional de vivienda',
+    emoji: '🏘️',
+    detail: 'Credito y construccion a gran escala. Empleo inmediato, deficit por varios anios.',
+    cost: { capital: 12, fiscal: 1 },
+    cooldown: 3,
+    effects: { fiscal_balance: -1, happiness: 5, unemployment: -0.5, gdp_growth: 0.4 }
+  },
+  {
+    id: 'congelar_precios',
+    category: 'economia',
+    label: 'Congelar precios de la canasta basica',
+    emoji: '🧊',
+    detail: 'Acuerdo forzado con las cadenas. Alivio en la gondola hoy, faltante y remarcacion despues.',
+    cost: { capital: 12 },
+    cooldown: 3,
+    effects: { inflation: -2, happiness: 4, gdp_growth: -0.3 }
+  },
+  {
+    id: 'devaluar',
+    category: 'economia',
+    label: 'Devaluar la moneda',
+    emoji: '📉',
+    detail: 'Mejora la competitividad de un saque y se traslada a precios en semanas.',
+    cost: { capital: 15 },
+    cooldown: 3,
+    effects: { inflation: 3.5, gdp_growth: 0.7, happiness: -5, fiscal_balance: 0.6 }
+  },
+  {
+    id: 'auditoria_gasto',
+    category: 'economia',
+    label: 'Auditoria del gasto publico',
+    emoji: '🔍',
+    detail: 'Revision fina de contratos y subsidios. Recorta sin motosierra y tarda en verse.',
+    cost: { capital: 6 },
+    cooldown: 2,
+    effects: { fiscal_balance: 0.5, stability: 1 }
+  },
+
+  // ---------------- INTERIOR (ampliacion) ----------------
+  {
+    id: 'paritaria_nacional',
+    category: 'interior',
+    label: 'Convocar paritaria nacional',
+    emoji: '🤝',
+    detail: 'Sentas a sindicatos y empresarios a acordar salarios. Baja la conflictividad y empuja precios.',
+    cost: { capital: 8 },
+    cooldown: 3,
+    effects: { happiness: 4, stability: 3, inflation: 0.8 }
+  },
+  {
+    id: 'plan_salud',
+    category: 'interior',
+    label: 'Plan de emergencia sanitaria',
+    emoji: '🏥',
+    detail: 'Insumos, camas y personal. Se nota en la calle y se nota en la caja.',
+    cost: { capital: 8, fiscal: 0.7 },
+    cooldown: 3,
+    effects: { happiness: 5, fiscal_balance: -0.7, stability: 2 }
+  },
+  {
+    id: 'obra_provincias',
+    category: 'interior',
+    label: 'Repartir fondos a las provincias',
+    emoji: '🗺️',
+    detail: 'Plata a los gobernadores. Se compran voluntades que despues hay que sostener.',
+    cost: { capital: 6, fiscal: 0.8 },
+    cooldown: 2,
+    effects: { fiscal_balance: -0.8, stability: 4, capital: 4 }
+  },
+  {
+    id: 'reforma_educativa',
+    category: 'interior',
+    label: 'Reforma educativa',
+    emoji: '🎓',
+    detail: 'Cambio de contenidos y evaluacion docente. Los gremios resisten; el resultado llega en anios.',
+    cost: { capital: 16 },
+    cooldown: 3,
+    effects: { happiness: -3, stability: -2, gdp_growth: 0.2 }
+  },
+  {
+    id: 'estado_emergencia',
+    category: 'interior',
+    label: 'Declarar la emergencia',
+    emoji: '🚨',
+    detail: 'Poderes excepcionales para gobernar por decreto. Rapido, efectivo y caro en legitimidad.',
+    cost: { capital: 20 },
+    cooldown: 3,
+    effects: { stability: 6, happiness: -6, capital: 6 }
+  },
+
+  // ---------------- COMERCIO (ampliacion) ----------------
+  {
+    id: 'zona_franca',
+    category: 'comercio',
+    label: 'Crear zonas francas',
+    emoji: '🏭',
+    detail: 'Beneficios impositivos para exportadores. Atrae inversion y resigna recaudacion.',
+    cost: { capital: 10, fiscal: 0.4 },
+    cooldown: 3,
+    effects: { gdp_growth: 0.5, fiscal_balance: -0.4, unemployment: -0.3 }
+  },
+  {
+    id: 'retenciones_export',
+    category: 'comercio',
+    label: 'Subir retenciones a la exportacion',
+    emoji: '🌾',
+    detail: 'Recaudacion inmediata sobre lo que se vende afuera. El campo lo toma como declaracion de guerra.',
+    cost: { capital: 14 },
+    cooldown: 3,
+    effects: { fiscal_balance: 1.3, happiness: -4, gdp_growth: -0.4 }
+  },
+  {
+    id: 'mision_comercial',
+    category: 'comercio',
+    label: 'Mision comercial al exterior',
+    emoji: '✈️',
+    detail: 'Empresarios y funcionarios a buscar mercados. Barato y de rendimiento lento.',
+    cost: { capital: 5 },
+    cooldown: 2,
+    needsTarget: true,
+    effects: { gdp_growth: 0.2 },
+    relations: [{ target: 'TARGET', amount: 8 }]
+  },
+  {
+    id: 'proteger_industria',
+    category: 'comercio',
+    label: 'Proteger la industria nacional',
+    emoji: '🛡️',
+    detail: 'Cupos y licencias no automaticas. Sostiene empleo y encarece todo lo importado.',
+    cost: { capital: 10 },
+    cooldown: 2,
+    effects: { unemployment: -0.4, inflation: 0.6, gdp_growth: -0.2 },
+    relations: [{ target: 'bloc:aduanera', amount: -6 }]
+  },
+  {
+    id: 'swap_monedas',
+    category: 'comercio',
+    label: 'Acordar un swap de monedas',
+    emoji: '💱',
+    detail: 'Linea de respaldo con otro banco central. Aire para las reservas a cambio de alineamiento.',
+    cost: { capital: 12 },
+    cooldown: 3,
+    needsTarget: true,
+    effects: { gold_reserves_tonnes: 10, inflation: -0.5 },
+    relations: [{ target: 'TARGET', amount: 12 }]
+  },
+
+  // ---------------- DIPLOMACIA (ampliacion) ----------------
+  {
+    id: 'cumbre_bilateral',
+    category: 'diplomacia',
+    label: 'Cumbre bilateral',
+    emoji: '🤵',
+    detail: 'Visita de Estado con agenda amplia. Cuesta preparacion y deja fotos que sirven.',
+    cost: { capital: 8 },
+    cooldown: 3,
+    needsTarget: true,
+    effects: { capital: 2 },
+    relations: [{ target: 'TARGET', amount: 16 }]
+  },
+  {
+    id: 'apoyo_onu',
+    category: 'diplomacia',
+    label: 'Buscar apoyo en Naciones Unidas',
+    emoji: '🕊️',
+    detail: 'Rondas de negociacion para juntar votos en el organismo. Prestigio sin costo material.',
+    cost: { capital: 7 },
+    cooldown: 3,
+    effects: { capital: 3, global_tension: -2 },
+    relations: [{ target: 'todos', amount: 4 }]
+  },
+  {
+    id: 'reconocer_gobierno',
+    category: 'diplomacia',
+    label: 'Reconocer un gobierno en disputa',
+    emoji: '📜',
+    detail: 'Tomas partido en una crisis ajena. Ganas un amigo y te haces un enemigo.',
+    cost: { capital: 10 },
+    cooldown: 3,
+    needsTarget: true,
+    effects: { global_tension: 3 },
+    relations: [{ target: 'TARGET', amount: 20 }, { target: 'vecinos', amount: -6 }]
+  },
+  {
+    id: 'acuerdo_migratorio',
+    category: 'diplomacia',
+    label: 'Firmar acuerdo migratorio',
+    emoji: '🛂',
+    detail: 'Libre circulacion regulada con otro pais. Mano de obra y tension social.',
+    cost: { capital: 8 },
+    cooldown: 3,
+    needsTarget: true,
+    effects: { gdp_growth: 0.2, happiness: -1 },
+    relations: [{ target: 'TARGET', amount: 14 }]
+  },
+  {
+    id: 'expulsar_diplomaticos',
+    category: 'diplomacia',
+    label: 'Expulsar diplomaticos',
+    emoji: '📤',
+    detail: 'Respuesta dura y visible a un agravio. La opinion publica interna lo festeja.',
+    cost: { capital: 6 },
+    cooldown: 2,
+    needsTarget: true,
+    effects: { happiness: 2, global_tension: 4 },
+    relations: [{ target: 'TARGET', amount: -25 }]
+  },
+
+  // ---------------- DEFENSA (ampliacion) ----------------
+  {
+    id: 'modernizar_fuerzas',
+    category: 'defensa',
+    label: 'Modernizar las fuerzas armadas',
+    emoji: '🛩️',
+    detail: 'Compra de equipamiento y capacitacion. Disuasion real, factura larga.',
+    cost: { capital: 12, fiscal: 1 },
+    cooldown: 3,
+    effects: { military_budget_bn: 3, fiscal_balance: -1, stability: 3 }
+  },
+  {
+    id: 'servicio_civico',
+    category: 'defensa',
+    label: 'Crear un servicio civico voluntario',
+    emoji: '🎽',
+    detail: 'Formacion para jovenes sin trabajo. Ocupa manos y divide opiniones.',
+    cost: { capital: 8, fiscal: 0.4 },
+    cooldown: 3,
+    effects: { unemployment: -0.4, stability: 2, happiness: -1, fiscal_balance: -0.4 }
+  },
+  {
+    id: 'ciberdefensa',
+    category: 'defensa',
+    label: 'Crear la agencia de ciberdefensa',
+    emoji: '🖥️',
+    detail: 'Proteccion de infraestructura critica. Invisible hasta el dia que la necesitas.',
+    cost: { capital: 7, fiscal: 0.3 },
+    cooldown: 3,
+    effects: { stability: 2, fiscal_balance: -0.3 }
+  },
+  {
+    id: 'patrullaje_fronteras',
+    category: 'defensa',
+    label: 'Reforzar el patrullaje de fronteras',
+    emoji: '🚁',
+    detail: 'Control sobre contrabando y trafico. Los vecinos lo miran con desconfianza.',
+    cost: { capital: 7, fiscal: 0.3 },
+    cooldown: 2,
+    effects: { stability: 3, fiscal_balance: -0.3 },
+    relations: [{ target: 'vecinos', amount: -4 }]
+  },
+  {
+    id: 'tratado_no_agresion',
+    category: 'defensa',
+    label: 'Firmar tratado de no agresion',
+    emoji: '📄',
+    detail: 'Compromiso formal de no atacarse. Baja la tension y te ata las manos.',
+    cost: { capital: 10 },
+    cooldown: 3,
+    needsTarget: true,
+    effects: { global_tension: -5, stability: 1 },
+    relations: [{ target: 'TARGET', amount: 22 }]
+  },
+
+  // ---------------- COMUNICACION ----------------
+  // Actos de gobierno que no cambian la economia: cambian como la gente la
+  // vive. Enfriamiento de 4 meses en todos: el gesto se gasta si lo repetis.
+  {
+    id: 'cadena_nacional',
+    category: 'comunicacion',
+    label: 'Cadena nacional',
+    emoji: '📺',
+    detail: 'Hablarle al pais de frente. Ordena el relato cuando la situacion todavia se puede explicar.',
+    cost: { capital: 5 },
+    cooldown: 4,
+    effects: { happiness: 4, stability: 2, capital: 3 }
+  },
+  {
+    id: 'acto_masivo',
+    category: 'comunicacion',
+    label: 'Acto masivo con militancia',
+    emoji: '🎪',
+    detail: 'Plaza llena y escenario. Consolida a los propios y le recuerda al resto que estan enfrente.',
+    cost: { capital: 8, fiscal: 0.2 },
+    cooldown: 4,
+    effects: { happiness: 5, stability: -1, capital: 6, fiscal_balance: -0.2 }
+  },
+  {
+    id: 'gira_provincias',
+    category: 'comunicacion',
+    label: 'Gira por el interior',
+    emoji: '🚌',
+    detail: 'Semanas recorriendo pueblos y obras. Rinde despacio y rinde parejo.',
+    cost: { capital: 7 },
+    cooldown: 4,
+    effects: { happiness: 3, stability: 3, capital: 4 }
+  },
+  {
+    id: 'entrevista_incomoda',
+    category: 'comunicacion',
+    label: 'Dar una entrevista incomoda',
+    emoji: '🎤',
+    detail: 'Sentarte con un periodista hostil. Si salis bien parado, ganas respeto hasta del que no te vota.',
+    cost: { capital: 4 },
+    cooldown: 4,
+    effects: { happiness: 3, capital: 5 }
+  },
+  {
+    id: 'campana_logros',
+    category: 'comunicacion',
+    label: 'Campana publicitaria de gestion',
+    emoji: '📰',
+    detail: 'Pauta en todos lados contando lo que se hizo. Funciona si algo se hizo.',
+    cost: { capital: 5, fiscal: 0.4 },
+    cooldown: 4,
+    effects: { happiness: 4, fiscal_balance: -0.4 }
+  },
+  {
+    id: 'pedir_disculpas',
+    category: 'comunicacion',
+    label: 'Pedir disculpas publicamente',
+    emoji: '🙇',
+    detail: 'Reconocer un error de frente. Cuesta orgullo y desactiva mas conflicto del que parece.',
+    cost: { capital: 6 },
+    cooldown: 4,
+    effects: { happiness: 5, stability: 4, capital: -2 }
   }
 ];
 
@@ -279,5 +619,6 @@ export const CATEGORIES: { id: Decision['category']; label: string; emoji: strin
   { id: 'interior', label: 'Interior', emoji: '🏛️' },
   { id: 'comercio', label: 'Comercio', emoji: '🚢' },
   { id: 'diplomacia', label: 'Diplomacia', emoji: '🤝' },
-  { id: 'defensa', label: 'Defensa', emoji: '🎖️' }
+  { id: 'defensa', label: 'Defensa', emoji: '🎖️' },
+  { id: 'comunicacion', label: 'Comunicacion', emoji: '📣' }
 ];

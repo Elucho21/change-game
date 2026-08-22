@@ -57,13 +57,25 @@ export const ALL_COUNTRIES = RAW.countries;
 
 const fresh = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
 
-interface HistoryPoint {
+/**
+ * Foto de los indicadores en cada turno.
+ * Alimenta los graficos que aparecen al pasar el mouse por un KPI: el numero
+ * de hoy dice poco si no se ve de donde viene.
+ */
+export interface HistoryPoint {
   turn: number;
   happiness: number;
   stability: number;
   inflation: number;
   growth: number;
   gdp: number;
+  unemployment: number;
+  fiscal: number;
+  debt: number;
+  capital: number;
+  opposition: number;
+  tension: number;
+  oil: number;
 }
 
 interface GameStore {
@@ -271,9 +283,6 @@ interface PlanRun {
   cabinet: Cabinet;
 }
 
-/** Turnos de enfriamiento de una decision, 0 si no tiene. */
-const COOLDOWN_TURNS = (id: string) => cooldownUntil(id, 0);
-
 /**
  * Ejecuta el plan del turno.
  *
@@ -317,9 +326,7 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
         dec, run.countries[st.playerCode], order.target ? run.countries[order.target] : undefined, run.relations
       );
       applyDelta(run.countries[st.playerCode], scaled.effects, run.world);
-      if (COOLDOWN_TURNS(order.id)) {
-        run.cooldowns[cooldownKey(order.id, order.target)] = cooldownUntil(order.id, st.turn);
-      }
+      run.cooldowns[cooldownKey(order.id, order.target)] = cooldownUntil(dec, st.turn);
 
       for (const rd of dec.relations ?? []) {
         const targets = resolveRelationTargets(rd, {
@@ -670,7 +677,14 @@ export const useGame = create<GameStore>((set, get) => {
           stability: player.population.stability,
           inflation: player.economy.inflation,
           growth: player.economy.gdp_growth,
-          gdp: player.economy.gdp_trillion_usd
+          gdp: player.economy.gdp_trillion_usd,
+          unemployment: player.economy.unemployment,
+          fiscal: player.economy.fiscal_balance,
+          debt: player.economy.debt_to_gdp,
+          capital: s.capital,
+          opposition: defaultPolitics(player, 1).opposition,
+          tension: s.world.global_tension,
+          oil: s.world.oil_price
         }
       ]
     });
@@ -712,7 +726,12 @@ export const useGame = create<GameStore>((set, get) => {
       active: st.active ?? [],
       recentEventIds: st.recentEventIds,
       lastActions: st.lastActions,
-      history: st.history,
+      // un save viejo no trae los indicadores que se agregaron despues:
+      // se completan con cero para que el grafico no rompa
+      history: st.history.map((h) => ({
+        unemployment: 0, fiscal: 0, debt: 0, capital: 0, opposition: 0, tension: 0, oil: 0,
+        ...h
+      })),
       selected: st.selected ?? st.playerCode,
       mapMode: st.mapMode,
       // un save viejo puede no traer las capas nuevas: se completan con los valores por defecto
@@ -1261,7 +1280,14 @@ export const useGame = create<GameStore>((set, get) => {
           stability: p2.population.stability,
           inflation: p2.economy.inflation,
           growth: p2.economy.gdp_growth,
-          gdp: p2.economy.gdp_trillion_usd
+          gdp: p2.economy.gdp_trillion_usd,
+          unemployment: p2.economy.unemployment,
+          fiscal: p2.economy.fiscal_balance,
+          debt: p2.economy.debt_to_gdp,
+          capital,
+          opposition: politics.opposition,
+          tension: world.global_tension,
+          oil: world.oil_price
         }
       ].slice(-60),
       gameOver

@@ -7,9 +7,9 @@ import {
   defaultPolitics, driftOpposition, parliamentCostFactor, poll, seatsFromVote
 } from '../lib/politics';
 import { BLOCS } from '../lib/blocs';
-import { DECISIONS } from '../lib/decisions';
+import { CATEGORIES, DECISIONS } from '../lib/decisions';
 import { addDecisionOrder, addTaxOrder, committedCapital } from '../lib/orders';
-import { cooldownLeft, scaleDecision } from '../lib/diplomacy';
+import { cooldownLeft, cooldownOf, scaleDecision } from '../lib/diplomacy';
 import {
   cabinetCostFactor, cabinetPassive, cabinetVoteBonus, coalitionSeats, hasCoalition
 } from '../lib/cabinet';
@@ -450,5 +450,46 @@ describe('chokepoints con duenio', () => {
 
   it('un paso sin duenio no tiene riesgo politico', () => {
     expect(chokepointClosureRisk('panama', -90, 90)).toBe(0);
+  });
+});
+
+// ============================================================
+describe('acciones de gobierno', () => {
+  it('todas tienen enfriamiento entre 1 y 4 meses', () => {
+    for (const d of DECISIONS) {
+      const cd = cooldownOf(d);
+      expect(cd, `${d.id} tiene un enfriamiento fuera de rango`).toBeGreaterThanOrEqual(1);
+      // 4 es el tope, y solo para los actos de comunicacion
+      expect(cd, `${d.id} tiene un enfriamiento fuera de rango`).toBeLessThanOrEqual(4);
+      if (cd === 4) expect(d.category).toBe('comunicacion');
+    }
+  });
+
+  it('cada segmento tiene al menos ocho opciones', () => {
+    for (const cat of CATEGORIES) {
+      const n = DECISIONS.filter((d) => d.category === cat.id).length;
+      const minimo = cat.id === 'comunicacion' ? 5 : 8;
+      expect(n, `${cat.label} tiene solo ${n} acciones`).toBeGreaterThanOrEqual(minimo);
+    }
+  });
+
+  it('comunicacion sube el animo sin tocar la economia real', () => {
+    const comms = DECISIONS.filter((d) => d.category === 'comunicacion');
+    expect(comms.length).toBeGreaterThan(4);
+    for (const d of comms) {
+      // no mueven crecimiento, inflacion ni desempleo: cambian como se vive la economia
+      expect(d.effects.gdp_growth ?? 0, `${d.id} mueve el crecimiento`).toBe(0);
+      expect(d.effects.inflation ?? 0, `${d.id} mueve la inflacion`).toBe(0);
+      expect(d.effects.unemployment ?? 0, `${d.id} mueve el desempleo`).toBe(0);
+      // y alguna de las tres que si les toca
+      const mueveAnimo = (d.effects.happiness ?? 0) > 0 || (d.effects.stability ?? 0) > 0 || (d.effects.capital ?? 0) > 0;
+      expect(mueveAnimo, `${d.id} no sube animo ni capital`).toBe(true);
+    }
+  });
+
+  it('ninguna accion nueva es gratis', () => {
+    for (const d of DECISIONS) {
+      expect(d.cost.capital, `${d.id} no cuesta capital`).toBeGreaterThan(0);
+    }
   });
 });

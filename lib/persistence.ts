@@ -37,6 +37,9 @@ export interface PersistedState {
   history: {
     turn: number; happiness: number; stability: number;
     inflation: number; growth: number; gdp: number;
+    // agregados despues: los saves viejos no los traen
+    unemployment?: number; fiscal?: number; debt?: number;
+    capital?: number; opposition?: number; tension?: number; oil?: number;
   }[];
   selected: string | null;
   mapMode: MapMode;
