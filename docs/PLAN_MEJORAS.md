@@ -1,0 +1,72 @@
+# Plan de mejoras — Change Game
+
+Documento de trabajo. Estado al 21 de agosto de 2026.
+
+---
+
+## De dónde venimos
+
+El MVP original (carpeta `CHANGE GAME` en OneDrive) era:
+
+| Pieza | Qué hacía | Límite |
+|---|---|---|
+| `countries_mvp.json` | 24 países con economía, población, militar, sectores, relaciones y traits | Relaciones en texto (`amistoso`/`tenso`), sin coordenadas, sin bloques |
+| `game_engine.py` | Turnos, drift económico, 13 eventos, generación de prompts para Grok | Solo CLI, sin estado visual, decisiones por texto libre |
+| `PROMPT_MAESTRO.md` | Grok como motor de realismo y reacciones | Todo el peso narrativo en el LLM, sin números duros |
+
+El diagnóstico: **el juego pensaba bien y se veía nada**. Un turno era leer JSON en una terminal.
+
+## Qué se hizo en esta iteración
+
+Todo sobre los mismos datos: `engine/countries_mvp.json` sigue siendo la fuente de verdad y `scripts/build-data.mjs` la traduce a lo que consume la web.
+
+1. **Globo 3D interactivo** (`react-globe.gl` + Natural Earth 110m). Click en cualquier país, cámara que viaja al país seleccionado, relieve, atmósfera, tooltip con datos.
+2. **4 modos de mapa**: relaciones (verde→rojo según tu vínculo), bloques (color por membresía), estabilidad y economía (mapa de calor).
+3. **Arcos diplomáticos** sobre el globo: alianzas militares (azul), comercio y aduanas (verde), tensión (naranja punteado y animado) y sanciones (rojo). Se recalculan solos cuando cambian las relaciones.
+4. **10 bloques** con mecánica real, no decorativa: OTAN, MERCOSUR, UE, BRICS+, T-MEC, Alianza del Pacífico, CAN, CELAC, Indo-Pacífico y OPEP+. Cada uno con tipo (militar / aduanera / económica / política), cohesión dinámica, reglas visibles y efectos que entran en el cálculo de crecimiento e inflación.
+5. **Ingresar, salir y convocar cumbres**: entrar exige relación mínima con todos los socios y tensa con los rivales del bloque; salir cuesta crecimiento y relaciones.
+6. **32 eventos** (14 mundiales, 15 nacionales, 4 de liderazgo) con condiciones de disparo, opciones de respuesta y riesgo de que la opción salga mal.
+7. **25 decisiones** en 5 categorías, con **preview de impacto** antes de confirmar y costo en capital político.
+8. **Capital político** como recurso central: se gasta en decidir, se recupera según cómo te va con la gente.
+9. **Feed del turno** con eventos, reacciones de otros países, decisiones tomadas y un gráfico de felicidad/estabilidad turno a turno.
+10. **Puente con Grok**: un botón genera el prompt compacto del turno; pegás la respuesta JSON y el juego aplica reacciones, efectos y crónica. El motor local resuelve números, Grok resuelve realismo.
+11. **Fin de partida**: golpe de Estado, renuncia forzada o hiperinflación.
+
+## Próximos pasos
+
+### Fase 1 — Profundidad de simulación (lo siguiente que más se nota)
+
+- [ ] **Comercio bilateral real**: matriz de flujos entre países en vez de un bonus agregado. Permite que una sanción duela distinto según cuánto le vendés a ese país.
+- [ ] **Aranceles como variable jugable**: hoy el arancel externo común es un número del bloque; falta que el jugador fije aranceles por país y por sector.
+- [ ] **Sectores productivos vivos**: `sectors` existe en el JSON pero todavía no reacciona. Que una sequía golpee agricultura y no servicios.
+- [ ] **Ciclo electoral**: mandato con fecha de vencimiento, resultado calculado desde felicidad + economía, y oposición con fuerza parlamentaria propia.
+- [ ] **Guerra limitada**: resolución de combates con los datos militares que ya están cargados (soldados, aviones, submarinos, ojivas).
+
+### Fase 2 — Más interacción
+
+- [ ] **Tratados multilaterales negociados**: proponer un bloque nuevo e invitar países; que acepten o no según intereses.
+- [ ] **Espionaje e inteligencia**: información parcial sobre países hostiles; hoy ves todo de todos.
+- [ ] **Panel de oposición interna**: partidos, gobernadores y sindicatos como actores con demandas propias, no solo eventos sueltos.
+- [ ] **Cadena de consecuencias**: eventos que desbloquean otros eventos (un piquete reprimido habilita un juicio político).
+- [ ] **Timeline navegable**: click en un turno pasado para ver el estado del mundo en ese momento.
+
+### Fase 3 — Presentación
+
+- [ ] **Guardado de partidas** (localStorage primero, cuenta después).
+- [ ] **Modo comparación**: dos países lado a lado.
+- [ ] **Animación de cambio de turno**: que se vea qué polígonos cambiaron de color.
+- [ ] **Sonido y música ambiente** de sala de situación.
+- [ ] **Móvil**: el layout responde, pero el globo pide una vista dedicada.
+
+### Fase 4 — Escala
+
+- [ ] **Ampliar a 60+ países** (India, Turquía, Arabia Saudita, Indonesia, Sudáfrica, Nigeria, Egipto, Israel, Irán, Australia). Solo requiere sumar entradas al JSON y su ISO3 en `scripts/build-data.mjs`.
+- [ ] **Llamada directa a la API de Grok** en vez de copiar y pegar (requiere backend y clave; el puente manual ya deja el contrato definido).
+- [ ] **Multijugador por turnos**: dos personas, dos países, mismo mundo.
+
+## Deuda técnica conocida
+
+- Los datos económicos son aproximaciones de 2025 pensadas para que el juego sea jugable y esté balanceado, no una base estadística.
+- Las relaciones se derivan de las etiquetas del JSON (`amistoso` = +55, `neutral` = 0, `tenso` = −40, `hostil` = −75) y se simetrizan promediando lo que cada país declara del otro.
+- La IA local es heurística (agresividad, relación, membresía de bloque). El realismo fino depende de Grok.
+- No hay tests automatizados todavía; la verificación fue manual sobre el navegador.

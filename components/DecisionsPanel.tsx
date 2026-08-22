@@ -1,0 +1,74 @@
+'use client';
+
+import { useState } from 'react';
+import { CATEGORIES, DECISIONS } from '@/lib/decisions';
+import { previewDelta } from '@/lib/engine';
+import { useGame } from '@/lib/store';
+
+export default function DecisionsPanel() {
+  const [cat, setCat] = useState<(typeof CATEGORIES)[number]['id']>('economia');
+  const { capital, selected, playerCode, countries, lastActions } = useGame();
+  const take = useGame((s) => s.takeDecision);
+  const target = selected && selected !== playerCode ? selected : undefined;
+
+  const list = DECISIONS.filter((d) => d.category === cat);
+
+  return (
+    <div>
+      <div className="section" style={{ position: 'sticky', top: 0, zIndex: 4 }}>
+        <h3>Capital politico disponible: {Math.round(capital)}</h3>
+        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+          {CATEGORIES.map((c) => (
+            <button key={c.id} className={cat === c.id ? 'btn-primary' : ''} onClick={() => setCat(c.id)}>
+              {c.emoji} {c.label}
+            </button>
+          ))}
+        </div>
+        {lastActions.length > 0 && (
+          <p className="muted" style={{ fontSize: 11.5, marginTop: 8 }}>
+            Este turno: {lastActions.join(' · ')}
+          </p>
+        )}
+      </div>
+
+      <div className="section">
+        {list.map((d) => {
+          const needsTarget = d.needsTarget && !target;
+          const afford = capital >= d.cost.capital;
+          const disabled = !afford || needsTarget;
+          return (
+            <button
+              key={d.id}
+              className="decision"
+              disabled={disabled}
+              onClick={() => take(d.id, target)}
+              title={needsTarget ? 'Elegi un pais en el globo primero' : afford ? '' : 'Capital politico insuficiente'}
+            >
+              <strong>
+                {d.emoji} {d.label} <span className="muted">({d.cost.capital} cap.{d.cost.fiscal ? ` · ${d.cost.fiscal}% PBI` : ''})</span>
+              </strong>
+              <small>{d.detail}</small>
+              {d.needsTarget && (
+                <small className={target ? 'good' : 'warn'}>
+                  {target ? `Objetivo: ${countries[target].flag} ${countries[target].name}` : 'Elegi un pais en el globo'}
+                </small>
+              )}
+              <span className="preview">
+                {previewDelta(d.effects).map((p) => (
+                  <em key={p.key} className={p.tone === 'bueno' ? 'good' : 'bad'}>
+                    {p.label} {p.value > 0 ? '+' : ''}{p.value}
+                  </em>
+                ))}
+                {d.relations?.map((r, i) => (
+                  <em key={i} className={r.amount > 0 ? 'good' : 'bad'}>
+                    {r.target === 'TARGET' ? 'Relacion objetivo' : `Relacion ${r.target}`} {r.amount > 0 ? '+' : ''}{r.amount}
+                  </em>
+                ))}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
