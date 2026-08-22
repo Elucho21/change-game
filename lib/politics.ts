@@ -1,5 +1,8 @@
 import type { Country, Delta } from './types';
 import { clamp } from './engine';
+import {
+  CAPITAL_ON_WIN, decideBallotage, decideRound, grantHoneymoon, systemOf
+} from './electoral';
 
 /**
  * Ciclo electoral, oposicion y continuidad del partido.
@@ -26,6 +29,10 @@ export interface Politics {
   electionsWon: number;
   /** turno en que asumio el partido por primera vez */
   powerSince: number;
+  /** hasta este turno (inclusive) el pasivo de capital va doble: los 100 dias */
+  honeymoonUntil: number;
+  /** hay una segunda vuelta pendiente el proximo mes */
+  pendingBallotage: boolean;
 }
 
 export interface Candidate {
@@ -46,6 +53,11 @@ export interface ElectionResult {
   turnout: number;
   headline: string;
   detail: string;
+  /** primera, ballotage o colegio */
+  round: 'primera' | 'ballotage' | 'colegio' | 'medio_termino';
+  electors?: number;
+  /** si true, el store NO cierra el mandato: espera un mes y corre la segunda */
+  ballotage: boolean;
 }
 
 // ------------------------------------------------------------------
@@ -63,17 +75,20 @@ const PARTY_BY_IDEOLOGY: Record<string, string> = {
 
 export function defaultPolitics(country: Country, turn: number): Politics {
   const party = PARTY_BY_IDEOLOGY[country.traits.ideology] ?? 'Frente de Gobierno';
+  const sys = systemOf(country.code);
   return {
     partyName: party,
     leaderName: 'el oficialismo',
     termStart: turn,
-    termLength: 48,
+    termLength: sys.termMonths,
     consecutiveTerms: 1,
-    maxConsecutive: 2,
+    maxConsecutive: sys.maxConsecutive,
     // un pais estable tiene oposicion moderada; uno convulsionado, una feroz
     opposition: clamp(Math.round(100 - country.population.stability), 20, 80),
     electionsWon: 0,
-    powerSince: turn
+    powerSince: turn,
+    honeymoonUntil: grantHoneymoon(turn),
+    pendingBallotage: false
   };
 }
 
@@ -144,28 +159,76 @@ export function poll(country: Country, p: Politics, capital: number, bonus = 0):
   return clamp(Math.round(vote * 10) / 10, 1, 99);
 }
 
+export const isMidtermDue = (p: Politics, turn: number, code: string) => {
+  const m = systemOf(code).midtermMonths;
+  return m > 0 && termsElapsed(p, turn) === m;
+};
+
 /** Resuelve la eleccion. El ruido evita que el resultado sea cantado. */
 export function runElection(
   country: Country, p: Politics, capital: number, candidate?: Candidate
 ): ElectionResult {
+  const sys = systemOf(country.code);
   const base = poll(country, p, capital, candidate?.voteBonus ?? 0);
   const noise = (Math.random() - 0.5) * 6;
   const vote = clamp(Math.round((base + noise) * 10) / 10, 1, 99);
-  const won = vote > 50;
-  const margin = Math.round((vote - 50) * 10) / 10;
   const quien = candidate ? candidate.name : p.leaderName;
+  const turnout = Math.round(clamp(
+    (country.code === 'Uruguay' ? 84 : 62)
+      + (p.opposition - 40) * 0.25
+      + (55 - country.population.happiness) * 0.1,
+    45, 94
+  ));
+
+  if (p.pendingBallotage) {
+    const d = decideBallotage(vote);
+    return {
+      vote, won: d.won, margin: Math.round((vote - 50) * 10) / 10, turnout,
+      round: 'ballotage', ballotage: false,
+      headline: d.won
+        ? `${p.partyName} gana el ballotage con el ${vote}%`
+        : `${p.partyName} pierde el ballotage con el ${vote}%`,
+      detail: d.won
+        ? `${quien} se impone en segunda vuelta.`
+        : `La oposicion da vuelta el resultado. ${quien} entrega el gobierno.`
+    };
+  }
+
+  const d = decideRound(sys, vote);
+  const round: ElectionResult['round'] = sys.win === 'electoral_college' ? 'colegio' : 'primera';
+  const margin = Math.round((vote - 50) * 10) / 10;
+
+  if (d.ballotage) {
+    return {
+      vote, won: false, margin, turnout, round, ballotage: true, electors: d.electors,
+      headline: `${p.partyName} va a ballotage con el ${vote}%`,
+      detail: `${d.label}. Segunda vuelta el mes que viene. ${quien} sigue en carrera.`
+    };
+  }
 
   return {
-    vote,
-    won,
-    margin,
-    turnout: Math.round(clamp(62 + (p.opposition - 40) * 0.25 + (55 - country.population.happiness) * 0.1, 45, 92)),
-    headline: won
+    vote, won: d.won, margin, turnout, round, ballotage: false, electors: d.electors,
+    headline: d.won
       ? `${p.partyName} gana con el ${vote}%`
       : `${p.partyName} pierde el gobierno con el ${vote}%`,
+    detail: d.won
+      ? `${quien} sigue en el poder (${d.label}). Recibe ${CAPITAL_ON_WIN} de capital politico y 4 meses de luna de miel.`
+      : `La oposicion se impone (${d.label}). ${quien} entrega el gobierno.`
+  };
+}
+
+export function runMidterm(country: Country, p: Politics, capital: number): ElectionResult {
+  const vote = poll(country, p, capital);
+  const won = vote >= 48;
+  return {
+    vote, won, margin: Math.round((vote - 50) * 10) / 10,
+    turnout: 58, round: 'medio_termino', ballotage: false,
+    headline: won
+      ? `El oficialismo gana el medio termino con el ${vote}%`
+      : `El oficialismo pierde el medio termino con el ${vote}%`,
     detail: won
-      ? `${quien} sigue en el poder por ${margin} puntos de diferencia.`
-      : `La oposicion se impone por ${Math.abs(margin)} puntos. ${quien} entrega el gobierno.`
+      ? `El Congreso acompana. +${25} de capital politico y 4 meses de pasivo doble.`
+      : 'La oposicion se queda con la Camara. Gobernar se encarece.'
   };
 }
 

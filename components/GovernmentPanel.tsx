@@ -2,6 +2,7 @@
 
 import { useGame } from '@/lib/store';
 import { monthsToElection, needsSuccessor, oppositionCostFactor } from '@/lib/politics';
+import { systemOf } from '@/lib/electoral';
 import { damagedSectors, taxEffects } from '@/lib/engine';
 
 /**
@@ -16,6 +17,8 @@ export default function GovernmentPanel() {
   const country = countries[playerCode];
   const votes = currentPoll();
   const meses = monthsToElection(politics, turn);
+  const sys = systemOf(playerCode);
+  const honeymoonLeft = Math.max(0, (politics.honeymoonUntil ?? 0) - turn + 1);
   const fx = taxEffects(country, taxBase[playerCode]);
   const costFactor = oppositionCostFactor(politics.opposition);
   const danados = damagedSectors(country);
@@ -32,17 +35,33 @@ export default function GovernmentPanel() {
         <h3>Mandato</h3>
         <div className="row"><span>Partido</span><b>{politics.partyName}</b></div>
         <div className="row"><span>Gobierna</span><b>{politics.leaderName}</b></div>
+        <div className="row"><span>Sistema</span><b>{sys.label}</b></div>
         <div className="row">
           <span>Mandato</span>
-          <b>{politics.consecutiveTerms} de {politics.maxConsecutive} consecutivos</b>
+          <b>{politics.consecutiveTerms} de {politics.maxConsecutive} consecutivos · {Math.round(sys.termMonths / 12)} anios</b>
         </div>
         <div className="row">
           <span>Proximas elecciones</span>
           <b className={meses <= 6 ? 'warn' : ''}>
-            {meses === 0 ? 'ahora' : `en ${meses} ${meses === 1 ? 'mes' : 'meses'}`}
+            {politics.pendingBallotage
+              ? 'ballotage este mes'
+              : meses === 0 ? 'ahora' : `en ${meses} ${meses === 1 ? 'mes' : 'meses'}`}
           </b>
         </div>
+        {sys.midtermMonths > 0 && (
+          <div className="row">
+            <span>Medio termino</span>
+            <b>
+              {Math.max(0, sys.midtermMonths - (turn - politics.termStart))} meses
+            </b>
+          </div>
+        )}
         <div className="row"><span>Elecciones ganadas</span><b>{politics.electionsWon}</b></div>
+        {honeymoonLeft > 0 && (
+          <p className="good" style={{ fontSize: 11.5, margin: '6px 0 0' }}>
+            Primeros 100 dias: capital pasivo x2 durante {honeymoonLeft} mes{honeymoonLeft === 1 ? '' : 'es'}.
+          </p>
+        )}
         {needsSuccessor(politics) && (
           <p className="warn" style={{ fontSize: 11.5, margin: '6px 0 0' }}>
             Es tu ultimo mandato: al terminar vas a tener que elegir sucesor para que el partido siga.
@@ -60,7 +79,7 @@ export default function GovernmentPanel() {
           <div style={{ width: `${votes}%`, background: votes > 50 ? 'var(--good)' : 'var(--bad)' }} />
         </div>
         <p className="muted" style={{ fontSize: 11, marginTop: 6 }}>
-          Se necesita mas del 50%. Pesan la felicidad, el crecimiento, la inflacion, el desempleo y la fuerza de la oposicion.
+          {sys.bar}. {sys.notes}
         </p>
       </div>
 

@@ -15,10 +15,13 @@ import { CHOKEPOINTS } from './routes';
 import { tradeBaseline } from './trade';
 import { cloneSim, deterministicTick, projectDecision, type SimState } from './simulation';
 import {
-  defaultPolitics, driftOpposition, isElectionDue, legacy, needsSuccessor,
-  oppositionCostFactor, poll, runElection, successors,
+  defaultPolitics, driftOpposition, isElectionDue, isMidtermDue, legacy, needsSuccessor,
+  oppositionCostFactor, poll, runElection, runMidterm, successors,
   type Candidate, type ElectionResult, type Politics
 } from './politics';
+import {
+  CAPITAL_ON_MIDTERM_WIN, CAPITAL_ON_WIN, grantHoneymoon, systemOf
+} from './electoral';
 import {
   clearGame, loadGame, saveGame, savedSummary,
   type PersistedState, type SavedGame
@@ -154,7 +157,7 @@ const initial = () => ({
   politics: {
     partyName: '', leaderName: '', termStart: 1, termLength: 48,
     consecutiveTerms: 1, maxConsecutive: 2, opposition: 40,
-    electionsWon: 0, powerSince: 1
+    electionsWon: 0, powerSince: 1, honeymoonUntil: 5, pendingBallotage: false
   } as Politics,
   startingGdp: 0,
   election: null as ElectionResult | null,
@@ -198,22 +201,32 @@ function snapshot(st: GameStore): PersistedState {
  */
 function applyElection(st: GameStore, result: ElectionResult, candidate?: Candidate): Partial<GameStore> {
   const country = st.countries[st.playerCode];
+  const sys = systemOf(st.playerCode);
   const feed: FeedItem[] = [
     {
       turn: st.turn,
       date: dateLabel(st.world),
       kind: 'sistema',
-      emoji: result.won ? '🗳️' : '🏛️',
+      emoji: result.ballotage ? '🗳️' : result.won ? '🗳️' : '🏛️',
       title: result.headline,
       body: `${result.detail} Participacion: ${result.turnout}%.`,
-      tone: result.won ? 'bueno' : 'malo'
+      tone: result.ballotage ? 'neutral' : result.won ? 'bueno' : 'malo'
     }
   ];
+
+  if (result.ballotage) {
+    return {
+      election: result,
+      politics: { ...st.politics, pendingBallotage: true },
+      feed: [...feed, ...st.feed]
+    };
+  }
 
   if (!result.won) {
     const balance = legacy(st.politics, st.turn, country, st.startingGdp);
     return {
       election: result,
+      politics: { ...st.politics, pendingBallotage: false },
       feed: [...feed, ...st.feed],
       gameOver: {
         title: 'Tu partido pierde el gobierno',
@@ -225,13 +238,15 @@ function applyElection(st: GameStore, result: ElectionResult, candidate?: Candid
     };
   }
 
+  const years = Math.round((sys.termMonths / 12) * 10) / 10;
   const politics: Politics = {
     ...st.politics,
     termStart: st.turn,
     consecutiveTerms: st.politics.consecutiveTerms + 1,
     electionsWon: st.politics.electionsWon + 1,
-    // ganar una eleccion desinfla a la oposicion, al menos por un tiempo
-    opposition: clamp(st.politics.opposition - 12, 0, 100)
+    opposition: clamp(st.politics.opposition - 12, 0, 100),
+    honeymoonUntil: grantHoneymoon(st.turn),
+    pendingBallotage: false
   };
 
   feed.unshift({
@@ -241,16 +256,45 @@ function applyElection(st: GameStore, result: ElectionResult, candidate?: Candid
     emoji: '🎉',
     title: candidate ? `${candidate.name} asume por ${politics.partyName}` : 'Arranca un nuevo mandato',
     body: candidate
-      ? `${candidate.description} Mandato numero ${politics.electionsWon + 1} del partido.`
-      : `Cuatro anios mas. La oposicion queda en ${politics.opposition}.`,
+      ? `${candidate.description} Mandato numero ${politics.electionsWon} del partido. Luna de miel: 4 meses.`
+      : `${years} anios mas. +${CAPITAL_ON_WIN} de capital. La oposicion queda en ${politics.opposition}.`,
     tone: 'bueno'
   });
 
   return {
     election: result,
     politics,
-    capital: clamp(st.capital + 20, 0, 100),
+    capital: clamp(st.capital + CAPITAL_ON_WIN, 0, 100),
     feed: [...feed, ...st.feed]
+  };
+}
+
+function applyMidterm(st: GameStore, result: ElectionResult): Partial<GameStore> {
+  const feed: FeedItem = {
+    turn: st.turn,
+    date: dateLabel(st.world),
+    kind: 'sistema',
+    emoji: '🗳️',
+    title: result.headline,
+    body: result.detail,
+    tone: result.won ? 'bueno' : 'malo'
+  };
+  if (result.won) {
+    return {
+      election: result,
+      capital: clamp(st.capital + CAPITAL_ON_MIDTERM_WIN, 0, 100),
+      politics: {
+        ...st.politics,
+        honeymoonUntil: grantHoneymoon(st.turn),
+        opposition: clamp(st.politics.opposition - 8, 0, 100)
+      },
+      feed: [feed, ...st.feed]
+    };
+  }
+  return {
+    election: result,
+    politics: { ...st.politics, opposition: clamp(st.politics.opposition + 10, 0, 100) },
+    feed: [feed, ...st.feed]
   };
 }
 
@@ -282,7 +326,8 @@ export const useGame = create<GameStore>((set, get) => {
     disruptions: st.disruptions,
     tradeBase: st.tradeBase,
     active: st.active,
-    taxBase: st.taxBase
+    taxBase: st.taxBase,
+    honeymoonUntil: st.politics.honeymoonUntil
   });
 
   return {
@@ -385,7 +430,14 @@ export const useGame = create<GameStore>((set, get) => {
         Object.values(st.countries).map((c) => [c.code, ratesOf(c)])
       ),
       // saves viejos sin ciclo electoral: se les crea el mandato desde cero
-      politics: st.politics ?? defaultPolitics(st.countries[st.playerCode], st.turn),
+      politics: (() => {
+        const p = st.politics ?? defaultPolitics(st.countries[st.playerCode], st.turn);
+        return {
+          ...p,
+          honeymoonUntil: p.honeymoonUntil ?? 0,
+          pendingBallotage: p.pendingBallotage ?? false
+        };
+      })(),
       startingGdp: st.startingGdp ?? st.countries[st.playerCode].economy.gdp_trillion_usd,
       gameOver: st.gameOver
     });
@@ -791,8 +843,34 @@ export const useGame = create<GameStore>((set, get) => {
     let election: ElectionResult | null = null;
     let succession: Candidate[] = [];
 
-    // 9. se termino el mandato: hay elecciones
-    if (isElectionDue(politics, turn)) {
+    // 9. se termino el mandato, hay ballotage pendiente, o medio termino
+    if (politics.pendingBallotage) {
+      const result = runElection(p2, politics, capital);
+      const after = applyElection(
+        { ...st, turn, world, countries, capital, politics } as GameStore, result
+      );
+      election = after.election ?? null;
+      if (after.politics) politics = after.politics;
+      if (after.capital !== undefined) capital = after.capital;
+      if (after.feed) feed.push(...after.feed.slice(0, 2).reverse());
+      if (after.gameOver) {
+        feed.push({
+          turn, date: dateLabel(world), kind: 'sistema', emoji: '🏁',
+          title: after.gameOver.title, body: after.gameOver.body, tone: 'malo'
+        });
+        set({
+          turn, world, countries, relations, blocs, disruptions, active, capital,
+          politics, election, succession: [],
+          reactions, lastActions: [],
+          pending: [...pending],
+          recentEventIds: [...rolled.map((e) => e.id), ...st.recentEventIds].slice(0, 8),
+          feed: [...feed.reverse(), ...st.feed].slice(0, 200),
+          gameOver: after.gameOver
+        });
+        persist();
+        return;
+      }
+    } else if (isElectionDue(politics, turn)) {
       if (needsSuccessor(politics)) {
         // no podes presentarte otra vez: elegis sucesor y la partida espera
         succession = successors();
@@ -831,6 +909,15 @@ export const useGame = create<GameStore>((set, get) => {
           return;
         }
       }
+    } else if (isMidtermDue(politics, turn, st.playerCode)) {
+      const result = runMidterm(p2, politics, capital);
+      const after = applyMidterm(
+        { ...st, turn, world, countries, capital, politics } as GameStore, result
+      );
+      election = after.election ?? null;
+      if (after.politics) politics = after.politics;
+      if (after.capital !== undefined) capital = after.capital;
+      if (after.feed?.[0]) feed.push(after.feed[0]);
     }
     const gameOver = checkGameOver(p2, turn);
     if (gameOver) {

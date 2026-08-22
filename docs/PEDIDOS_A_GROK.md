@@ -79,15 +79,11 @@ Si necesitás una condición sobre volumen de comercio que hoy no se puede expre
 
 ## 8. Más países (Fase 4 del plan)
 
-India, Turquía, Arabia Saudita, Indonesia, Sudáfrica, Nigeria, Egipto, Israel, Irán, Australia.
+**Estado**: hecho. De 24 a **76 paises** (52 nuevos), repartidos en America, Europa, Africa, Asia, Medio Oriente y Oceania. ISO3 en `META`, `npm run data` corrido, bloques actualizados (OTAN, UE, BRICS+, OPEP+, CELAC, Indo-Pacifico).
 
-Por cada uno:
-1. Entrada completa en `engine/countries_mvp.json`, con la misma forma que los 24 existentes.
-2. Su ISO3 + capital + bandera en el mapa `META` de `scripts/build-data.mjs`. **El ISO3 tiene que coincidir con `ADM0_A3` del GeoJSON**, no con `ISO_A3`.
-3. `npm run data`.
-4. Sumarlo a los bloques que le correspondan en `lib/blocs.ts` (Arabia Saudita e Irán a OPEP+, India a BRICS, Turquía a la OTAN…).
+**Iran esta en el juego.** Ormuz deja de ser solo un evento aleatorio: avisar a Claude para conectar la mecanica al pais.
 
-Ojo con Irán: si entra, Ormuz deja de ser solo un evento aleatorio y pasa a ser una decisión de un país. Avisame cuando lo cargues así conecto la mecánica.
+Hubs que estaban sin `country` (Singapur, Rotterdam, Jebel Ali, DXB, Changi) ahora apuntan a Singapore / Netherlands / UAE.
 
 ---
 
