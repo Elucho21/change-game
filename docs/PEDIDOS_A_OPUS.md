@@ -10,9 +10,65 @@ Ver `docs/REGLAS_DE_CODIGO.md` sección 7.
 
 ## Abiertos (el jugador los pidió, nadie los codeó)
 
-> Cerrados en este pase: tasador diplomático y comercio O(n²). Ver abajo.
+### Impacto profundo de ministros (alineamiento, drift de relaciones, inversión, sindicatos)
 
-(ninguno abierto: la bandeja quedó vacía)
+**Qué**  
+Hoy los ministros solo dan pasivo genérico (Delta + capitalPerTurn) y descuento de categoría. El jugador pidió impacto **directo y diferenciado**:
+
+- Ministro de Exterior: que dependa de su alineamiento cuánto capital diplomático extra genera y cómo se relacionan de forma pasiva con otros países/bloques (EE.UU., China, MERCOSUR).
+- Ministro de Economía pro-mercado: potencia inversiones / crecimiento, pero pierde con sindicatos y humor social.
+- Ministro socialista / sindical: potencia sindicatos y felicidad/empleo, pero pierde inversiones y caja.
+- Lo mismo para el resto de sillas (trade-offs claros).
+
+Grok ya amplió el catálogo en `lib/ministers_extra.ts` (rama `contenido/ministros-impacto`) con 12+ opciones balanceadas y comentarios `// futuro:` que marcan los campos que faltan. La mecánica de esos campos es de motor.
+
+**Por qué**  
+Sin esto el gabinete se siente cosmético después del primer turno. El jugador elige ministros por ideología y espera que el mundo reaccione distinto (relaciones, comercio, presión callejera).
+
+**Contrato propuesto** (campos opcionales en `Minister`, `lib/cabinet.ts` / tipos):
+
+```ts
+export interface Minister {
+  // ... lo que ya existe ...
+
+  /** Alineamiento del canciller (solo Exterior). Define drift pasivo. */
+  alignment?: 'west' | 'east' | 'regional' | 'nonaligned';
+
+  /** Drift de relación por mes. Se aplica en deterministicTick. */
+  relationDrift?: Array<{ target: string; amount: number }>;
+  // target puede ser código de país ('USA', 'China') o 'bloc:mercosur' / 'bloc:otan' etc.
+
+  /** Multiplicador de atracción de inversión extranjera (afecta gdp_growth o trade). */
+  investmentMod?: number;   // ej. +0.2 pro-mercado, -0.2 sindical
+
+  /** Multiplicador de poder sindical / streetPressure. */
+  unionPower?: number;      // ej. +0.3 sindical, -0.15 pro-mercado
+
+  /** % extra de capital político al ejecutar decisiones de categoría diplomacia. */
+  diplomaticCapitalBonus?: number;  // 0.1 = +10%
+}
+```
+
+**Dónde aplicarlo**
+1. `cabinetPassive` o función nueva `cabinetRelationDrift(cabinet, relations, blocs)` → se llama desde `deterministicTick` (simulation.ts).
+2. Al calcular costo/efectos de decisiones de diplomacia: multiplicar capital recuperado o el costo efectivo por `(1 + diplomaticCapitalBonus)`.
+3. En tradeEffects o naturalDrift: aplicar `investmentMod` al crecimiento del jugador.
+4. En streetPressure / moodDrift: sumar `unionPower`.
+
+**Cómo probarlo**
+- Nombrar `ext_atlantista` → tras 6-8 turnos la relación con USA sube ~2-3 puntos y con China baja un poco (sin tocar ninguna decisión).
+- Nombrar `eco_promercado` → gdp_growth tiende un poco más alto y felicidad más baja que con el sindical.
+- Nombrar `eco_socialista` → unemployment baja más rápido, fiscal se deteriora, y si hay streetPressure se nota.
+- Decisión diplomática con `ext_atlantista` sentado: el capital neto de la acción es mejor que con un canciller genérico.
+- Test unitario: `cabinetPassive` + drift no rompe el invariante de capital (0-100) ni relaciones (-100..100).
+
+**Notas de diseño**
+- Los drifts deben ser **chicos** (0.2–0.5 por mes). En un año suman 2-6 puntos, no 20.
+- `relationDrift` con target de bloque: promediar o aplicar a los miembros del bloque del jugador (solo si el jugador es miembro).
+- No hace falta tocar la UI todavía: los campos nuevos se pueden mostrar después en el tooltip del ministro.
+- Grok deja los comentarios `// futuro:` en el catálogo para que el cableado sea obvio.
+
+Cuando lo implementes, marcá este ítem como cerrado y dejá el SHA. El catálogo de contenido ya está listo en la rama `contenido/ministros-impacto`.
 
 ---
 
