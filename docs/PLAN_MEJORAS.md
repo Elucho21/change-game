@@ -1,4 +1,4 @@
-# Plan de mejoras — Change Game
+# Plan de mejoras — Change World Game
 
 Documento de trabajo. Estado al 22 de agosto de 2026.
 

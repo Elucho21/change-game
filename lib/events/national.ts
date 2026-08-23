@@ -20,6 +20,7 @@ export const NATIONAL_EVENTS: GameEvent[] = [
     description:
       'Organizaciones sociales cortan los accesos a la capital y las rutas troncales. La logistica esta paralizada y las camaras empresarias reclaman al gobierno.',
     when: (c) => c.player.population.happiness < 62 || c.player.economy.unemployment > 8,
+    ongoing: { gdp_growth: -0.08, happiness: -0.5 },
     choices: [
       {
         id: 'reprimir',
@@ -133,6 +134,7 @@ export const NATIONAL_EVENTS: GameEvent[] = [
     description:
       'El bloque opositor reune firmas para iniciar un juicio politico. Necesitas votos propios y ajenos para frenarlo.',
     when: (c) => c.player.population.stability < 45,
+    ongoing: { stability: -0.8, happiness: -0.4 },
     choices: [
       {
         id: 'negociar_votos',
@@ -171,6 +173,7 @@ export const NATIONAL_EVENTS: GameEvent[] = [
     duration: 3,
     description:
       'Filtraciones comprometen a funcionarios de primera linea en la obra publica. La oposicion pide comision investigadora.',
+    ongoing: { happiness: -0.6, stability: -0.4 },
     choices: [
       {
         id: 'echar',
@@ -213,6 +216,7 @@ export const NATIONAL_EVENTS: GameEvent[] = [
       c.player.economy.inflation > 20
       || c.player.economy.fiscal_balance < -3.5
       || (c.fx ?? 100) >= 115,
+    ongoing: { inflation: 0.3, happiness: -0.5 },
     choices: [
       {
         id: 'tasa',
@@ -286,6 +290,7 @@ export const NATIONAL_EVENTS: GameEvent[] = [
     description:
       'Se acerca un vencimiento grande con el Fondo. La mision tecnica pide metas fiscales mas duras para liberar el desembolso.',
     when: (c) => c.imf ? c.imf.weight >= 5 : c.player.economy.debt_to_gdp > 60,
+    ongoing: { inflation: 0.15, happiness: -0.3 },
     choices: [
       {
         id: 'acordar',
@@ -338,6 +343,7 @@ export const NATIONAL_EVENTS: GameEvent[] = [
     description:
       'Los precios internacionales de tus principales exportaciones se disparan. Entran dolares frescos.',
     when: (c) => (c.player.sectors?.agriculture ?? 0) >= 5,
+    ongoing: { gdp_growth: 0.15, fiscal_balance: 0.1 },
     choices: [
       {
         id: 'ahorrar',
@@ -371,6 +377,7 @@ export const NATIONAL_EVENTS: GameEvent[] = [
     description:
       'Efectivos policiales se acuartelan y reclaman aumentos. Las calles quedan sin control preventivo.',
     when: (c) => c.player.population.stability < 55 && c.player.economy.inflation > 8,
+    ongoing: { stability: -0.6, happiness: -0.4 },
     choices: [
       {
         id: 'ceder',
@@ -399,7 +406,8 @@ export const NATIONAL_EVENTS: GameEvent[] = [
     duration: 1,
     description:
       'Una falla en la red deja sin energia a millones de personas durante horas. La industria para.',
-    effects: { happiness: -5, gdp_growth: -0.3, stability: -3 }
+    sectorEffects: { industry: -8, services: -6 },
+    effects: { happiness: -5, stability: -3 }
   },
   {
     id: 'inseguridad',
@@ -411,6 +419,7 @@ export const NATIONAL_EVENTS: GameEvent[] = [
     duration: 2,
     description:
       'Una serie de hechos violentos en la principal ciudad portuaria instala la inseguridad como tema numero uno.',
+    ongoing: { happiness: -0.7, stability: -0.5 },
     choices: [
       {
         id: 'mano_dura',
@@ -453,6 +462,7 @@ export const NATIONAL_EVENTS: GameEvent[] = [
     duration: 2,
     description:
       'La crisis de un pais vecino empuja una ola migratoria hacia tus provincias fronterizas.',
+    ongoing: { stability: -0.3, happiness: -0.3 },
     choices: [
       {
         id: 'recibir',
@@ -482,6 +492,7 @@ export const NATIONAL_EVENTS: GameEvent[] = [
     duration: 2,
     description: 'Los gremios docentes no aceptan la oferta salarial y el ciclo lectivo no arranca.',
     when: (c) => c.player.economy.inflation > 6,
+    ongoing: { happiness: -0.5, stability: -0.3 },
     choices: [
       {
         id: 'mejorar_oferta',
@@ -509,6 +520,7 @@ export const NATIONAL_EVENTS: GameEvent[] = [
     duration: 3,
     description: 'Anuncios de nuevas plantas y proyectos energeticos elevan las expectativas del mercado.',
     when: (c) => c.player.population.stability > 55,
+    ongoing: { gdp_growth: 0.15, unemployment: -0.08 },
     effects: { gdp_growth: 0.6, happiness: 2, stability: 2, unemployment: -0.3 }
   },
 
@@ -522,6 +534,7 @@ export const NATIONAL_EVENTS: GameEvent[] = [
     weight: 3,
     duration: 2,
     description: 'Una internacion imprevista dispara rumores sobre la continuidad del gobierno.',
+    ongoing: { stability: -0.4 },
     choices: [
       {
         id: 'transparencia',
@@ -547,6 +560,7 @@ export const NATIONAL_EVENTS: GameEvent[] = [
     weight: 4,
     duration: 2,
     description: 'Renuncias en cadena y filtraciones internas obligan a reorganizar el gobierno.',
+    ongoing: { stability: -0.5 },
     effects: { stability: -4, happiness: -2, capital: -5 }
   },
   {
@@ -570,6 +584,7 @@ export const NATIONAL_EVENTS: GameEvent[] = [
     weight: 3,
     duration: 2,
     description: 'Audios internos del circulo presidencial llegan a la prensa y dominan la agenda por semanas.',
+    ongoing: { happiness: -0.5, stability: -0.4 },
     effects: { happiness: -4, stability: -3, capital: -6 }
   }
 ];

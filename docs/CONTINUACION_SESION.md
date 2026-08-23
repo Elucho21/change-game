@@ -1,4 +1,4 @@
-# Continuación de sesión — Change Game
+# Continuación de sesión — Change World Game
 
 > Generado el 23/08/2026 porque la ventana de contexto de la sesión anterior se llenó.
 > Pegar este archivo (o su ruta) al arrancar una sesión nueva de Claude Code en este repo.

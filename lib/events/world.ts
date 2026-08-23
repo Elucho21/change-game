@@ -22,7 +22,9 @@ export const WORLD_EVENTS: GameEvent[] = [
     duration: 3,
     description:
       'Ataques a instalaciones petroleras sacan del mercado varios millones de barriles diarios. El barril salta 15%.',
-    worldEffects: { inflation: 0.8, gdp_growth: -0.2 },
+    worldEffects: { inflation: 0.8 },
+    worldOngoing: { inflation: 0.2 },
+    sectorEffects: { industry: -12 },
     effects: { oil_price: 12, global_tension: 5 }
   },
   {
@@ -35,7 +37,7 @@ export const WORLD_EVENTS: GameEvent[] = [
     duration: 4,
     description:
       'Las principales economias entran en contraccion al mismo tiempo. Cae el comercio mundial y se secan los mercados de credito.',
-    worldEffects: { gdp_growth: -0.9, unemployment: 0.5, fiscal_balance: -0.4 },
+    worldEffects: { unemployment: 0.5, fiscal_balance: -0.4 },
     // la recesion no es un golpe y listo: cobra todos los meses que dura
     worldOngoing: { gdp_growth: -0.25, unemployment: 0.15 },
     ongoing: { happiness: -1 },
@@ -52,7 +54,7 @@ export const WORLD_EVENTS: GameEvent[] = [
     duration: 4,
     description:
       'Un nuevo virus respiratorio se expande desde Asia. Los mercados descuentan restricciones de movilidad.',
-    worldEffects: { gdp_growth: -0.5, happiness: -3, fiscal_balance: -0.5 },
+    worldEffects: { happiness: -3, fiscal_balance: -0.5 },
     worldOngoing: { happiness: -1.2, fiscal_balance: -0.2 },
     ongoing: { stability: -0.8 },
     sectorEffects: { tourism: -35, services: -10 },
@@ -92,7 +94,9 @@ export const WORLD_EVENTS: GameEvent[] = [
     duration: 4,
     description:
       'Estados Unidos y China se aplican aranceles cruzados. Las cadenas de suministro se reordenan y todos eligen bando.',
-    worldEffects: { gdp_growth: -0.4, inflation: 0.5 },
+    worldEffects: { inflation: 0.5 },
+    worldOngoing: { inflation: 0.12, unemployment: 0.08 },
+    sectorEffects: { commerce: -18, industry: -8 },
     effects: { global_tension: 6 },
     choices: [
       {
@@ -137,6 +141,9 @@ export const WORLD_EVENTS: GameEvent[] = [
     description:
       'Un conflicto armado escala en otra region del mundo. Suben la energia, los granos y el gasto militar global.',
     worldEffects: { inflation: 0.6, military_budget_bn: 0.5 },
+    worldOngoing: { inflation: 0.15, military_budget_bn: 0.1 },
+    ongoing: { happiness: -0.4 },
+    sectorEffects: { industry: -6, agriculture: -8 },
     effects: { global_tension: 12, oil_price: 8 },
     choices: [
       {
@@ -178,7 +185,9 @@ export const WORLD_EVENTS: GameEvent[] = [
     description:
       'Un incidente naval cierra el Estrecho de Ormuz. Una quinta parte del petroleo del mundo deja de pasar y los seguros maritimos se disparan.',
     disrupts: ['ormuz'],
-    worldEffects: { inflation: 1.2, gdp_growth: -0.4 },
+    worldEffects: { inflation: 1.2 },
+    worldOngoing: { inflation: 0.3 },
+    sectorEffects: { industry: -15, commerce: -8 },
     effects: { global_tension: 9, oil_price: 18 }
   },
   {
@@ -192,7 +201,9 @@ export const WORLD_EVENTS: GameEvent[] = [
     description:
       'Un portacontenedores encallado bloquea el canal. Los buques entre Asia y Europa deben rodear Africa: dos semanas mas de viaje.',
     disrupts: ['suez'],
-    worldEffects: { inflation: 0.6, gdp_growth: -0.3 },
+    worldEffects: { inflation: 0.6 },
+    worldOngoing: { inflation: 0.15 },
+    sectorEffects: { commerce: -14 },
     effects: { global_tension: 3 }
   },
   {
@@ -207,6 +218,8 @@ export const WORLD_EVENTS: GameEvent[] = [
       'La bajante de los lagos obliga a limitar el calado y el numero de cruces diarios. Se forma una cola de buques de semanas.',
     disrupts: ['panama'],
     worldEffects: { inflation: 0.4 },
+    worldOngoing: { inflation: 0.1 },
+    sectorEffects: { commerce: -10 },
     effects: { global_tension: 2 }
   },
   {
@@ -220,7 +233,9 @@ export const WORLD_EVENTS: GameEvent[] = [
     description:
       'Ataques a buques mercantes en Malaca frenan el trafico asiatico. Las navieras desvian rutas y suben tarifas.',
     disrupts: ['malaca'],
-    worldEffects: { inflation: 0.7, gdp_growth: -0.3 },
+    worldEffects: { inflation: 0.7 },
+    worldOngoing: { inflation: 0.15 },
+    sectorEffects: { commerce: -12, industry: -6 },
     effects: { global_tension: 6, oil_price: 7 },
     choices: [
       {
@@ -249,7 +264,9 @@ export const WORLD_EVENTS: GameEvent[] = [
     duration: 2,
     description:
       'Una ola coordinada de ataques golpea bancos, puertos y redes electricas en varios paises. Nadie asume la autoria.',
-    worldEffects: { gdp_growth: -0.2, stability: -2 },
+    worldEffects: { stability: -2 },
+    worldOngoing: { stability: -0.4 },
+    sectorEffects: { services: -18, commerce: -8 },
     effects: { global_tension: 5 }
   },
   {
@@ -322,6 +339,8 @@ export const WORLD_EVENTS: GameEvent[] = [
     description:
       'Millones de personas se desplazan por conflictos y sequias. Los paises receptores endurecen sus fronteras.',
     worldEffects: { stability: -2, happiness: -2 },
+    worldOngoing: { stability: -0.5, happiness: -0.5 },
+    ongoing: { stability: -0.4 },
     effects: { global_tension: 4 }
   },
   {
@@ -335,6 +354,7 @@ export const WORLD_EVENTS: GameEvent[] = [
     description:
       'Una nueva generacion de chips cambia el balance productivo. Los paises que invierten se despegan del resto.',
     worldEffects: { gdp_growth: 0.2 },
+    worldOngoing: { gdp_growth: 0.05 },
     effects: { global_tension: 2 },
     choices: [
       {
@@ -369,7 +389,8 @@ export const WORLD_EVENTS: GameEvent[] = [
     duration: 3,
     description:
       'La demanda china se enfria y los precios de metales y granos se derrumban. Los exportadores primarios sufren.',
-    worldEffects: { gdp_growth: -0.3 },
+    worldOngoing: { unemployment: 0.1, fiscal_balance: -0.1 },
+    sectorEffects: { agriculture: -20, industry: -8 },
     effects: { oil_price: -10 }
   },
   {
@@ -382,7 +403,8 @@ export const WORLD_EVENTS: GameEvent[] = [
     duration: 3,
     description:
       'La suba de tasas en el mundo desarrollado dispara defaults en cadena. El credito para emergentes se cierra.',
-    worldEffects: { debt_to_gdp: 2, gdp_growth: -0.3, inflation: 0.4 },
+    worldEffects: { debt_to_gdp: 2, inflation: 0.4 },
+    worldOngoing: { gdp_growth: -0.1, unemployment: 0.1, debt_to_gdp: 0.4 },
     effects: { global_tension: 3 }
   },
   {
@@ -395,7 +417,9 @@ export const WORLD_EVENTS: GameEvent[] = [
     duration: 2,
     description:
       'Huracanes, inundaciones e incendios golpean varias regiones al mismo tiempo. Reconstruccion cara en todas partes.',
-    worldEffects: { fiscal_balance: -0.3, happiness: -2, gdp_growth: -0.2 },
+    worldEffects: { fiscal_balance: -0.3, happiness: -2 },
+    worldOngoing: { fiscal_balance: -0.1, happiness: -0.5 },
+    sectorEffects: { agriculture: -18, tourism: -12 },
     effects: { global_tension: 2 }
   }
 ];

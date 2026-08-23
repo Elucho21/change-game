@@ -1,4 +1,4 @@
-# Especificación técnica — Change Game
+# Especificación técnica — Change World Game
 
 Documento único de referencia del sistema. Fusiona el diseño original (`docs/legacy/PAX_HISTORIA_MVP_COMPLETO.md`) con lo que está efectivamente implementado.
 

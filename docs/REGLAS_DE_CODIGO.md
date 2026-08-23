@@ -1,4 +1,4 @@
-# Reglas de código — Change Game
+# Reglas de código — Change World Game
 
 **Este documento es obligatorio para cualquiera que escriba código acá: Luciano, Claude, Grok o quien venga después.**
 

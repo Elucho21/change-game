@@ -1,4 +1,4 @@
-# 🌍 Change Game
+# 🌍 Change World Game
 
 Juego de geopolítica y gran estrategia para un jugador. Elegís un país, gobernás mes a mes sobre un **globo 3D interactivo**, y el resto del mundo reacciona.
 

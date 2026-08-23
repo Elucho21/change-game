@@ -27,7 +27,7 @@ Cosas que el motor ya soporta pero que están vacías porque los datos son conte
 
 ## 3. Efectos que duran: `ongoing` en los eventos
 
-**Recién implementado.** Hasta ahora `duration` no hacía nada: una recesión de 4 meses pesaba igual que un apagón de un día. Ya funciona, pero solo tres eventos lo usan.
+**Estado**: hecho (23/08, Grok, CHANGE WORLD GAME 1.0). Guerra comercial, regional, Ormuz, Suez, Panama, Malaca, ciberataque, crisis migratoria, deuda emergentes, desastres, shock petrolero, piquete, juicio politico, corrupcion, corrida, motin, inseguridad, ola migratoria, mas extras. Goteo ~1/5 a 1/3 del golpe inicial.
 
 Por cada evento con `duration > 1`, agregá qué duele **todos los meses** mientras dura:
 
@@ -45,6 +45,8 @@ Criterio: `ongoing` tiene que ser bastante más chico que `effects` — es un go
 Candidatos claros: guerra comercial, guerra regional, crisis de deuda en emergentes, crisis migratoria, escándalo de corrupción, juicio político, apagón, ola de inseguridad.
 
 ## 4. Golpes sectoriales: `sectorEffects`
+
+**Estado**: hecho (23/08, Grok). Shock petrolero → industry; guerra comercial → commerce; ciberataque → services; desastres → agriculture; apagon → industry/services. Donde hay `sectorEffects` se saco el `gdp_growth` fijo.
 
 También nuevo. Permite que el mismo evento pegue distinto según la estructura productiva de cada país:
 
@@ -71,9 +73,11 @@ when: (c) => c.politics?.lastTerm === true
 
 Campos: `opposition`, `monthsToElection`, `monthsToMidterm`, `poll`, `consecutiveTerms`, `lastTerm`, `honeymoon`, `capital`.
 
-Faltan los eventos: interna del partido, campaña sucia, promesa incumplida, deserción de legisladores, pacto con un gobernador, escándalo del candidato opositor.
+**Estado**: hecho (en `lib/events/national_extra.ts`). Interna, campana sucia, promesa incumplida, desercion, pacto con gobernador, escandalo opositor. Sumados en v1.0: deflacion leve, trampa de deflacion, informalidad, recaudacion vs PBI, reforma previsional en la calle.
 
 ## 6. Eventos que usen las rutas marítimas
+
+**Estado**: hecho (en `lib/events/world_extra.ts`). Pirateria en Aden (cierra Suez), congestion en puertos del Pacifico, guerra de tarifas navieras, accidente ambiental en un puerto grande.
 
 El motor ya permite que un evento cierre un paso marítimo con `disrupts: ['ormuz']` (ver `docs/EVENTOS.md`). Hoy hay cuatro. Se podrían sumar, por ejemplo:
 
@@ -93,6 +97,8 @@ when: (c) => (c.trade?.changeVsStart ?? 0) < -10
 when: (c) => c.trade?.topPartner === 'China'
 ```
 
+**Estado**: hecho. Socio en recesion, industria contra la apertura, competidor te desplaza en Asia (`competidor_desplaza_asia`).
+
 Campos: `total`, `changeVsStart`, `topPartner`. Ejemplos: socio principal en recesión, industria local contra la apertura, un competidor te desplaza en Asia.
 
 ## 8. Más países (Fase 4 del plan)
@@ -106,6 +112,8 @@ Hubs que estaban sin `country` (Singapur, Rotterdam, Jebel Ali, DXB, Changi) aho
 ---
 
 ## 9. Catálogo de ministros — `lib/cabinet.ts` → `MINISTERS`
+
+**Estado**: hecho (catalogo extra en `lib/ministers_extra.ts`, concatenado a `MINISTERS`). Ampliar sigue abierto si hace falta mas arquetipos.
 
 El gabinete ya funciona: cinco sillas, pasivos mensuales, descuentos por categoría y coalición con la oposición. Dejé dos o tres ministros por silla como referencia; el catálogo es tuyo.
 
@@ -132,9 +140,21 @@ Reglas de balance, para que ninguno sea el obvio:
 
 ## 10. Decisión: cerrar un chokepoint (solo para su dueño)
 
+**Estado**: hecho (`lib/decisions_ormuz.ts`). `cerrar_estrecho_ormuz` (28 de capital, solo Iran) y `reabrir_estrecho_ormuz`. Si al ejecutar no cierra el paso, eso es motor → Opus.
+
 Ormuz ya tiene dueño en el motor (`CHOKEPOINT_OWNER`, `lib/routes.ts`). Si el jugador **es** Irán, no se cierra solo: falta la decisión para que lo haga él.
 
 Necesito una decisión en `lib/decisions.ts`, categoría `defensa`, cara (25-30 de capital), disponible solo para el país dueño (`when` con `c.player.code === 'Iran'`). Lo que hace la mecánica del cierre ya está: alcanza con que la decisión exista y yo la conecto.
+
+## 11. Economia v1.0 — formalizacion y empleo por sector
+
+**Estado**: hecho el contenido (23/08, Grok).
+
+- Tabla: `lib/employment_sectors.ts`
+- Decisiones: `lib/decisions_economia.ts` (aportes temporales, credito fiscal, simplificacion, amnistia, inspeccion, impulso industria/turismo/agro/servicios)
+- Eventos: deflacion, informalidad, recaudacion vs PBI, reforma previsional
+- Diseno: `docs/LOGICAS_ECONOMICAS.md` + Excel
+- Motor pendiente: `docs/PEDIDOS_A_OPUS.md` (deflacion/reservas, tax buoyancy, leer la tabla de empleo, combo de capital politico, feed de UI)
 
 ## Lo que NO hace falta que toques
 

@@ -130,5 +130,208 @@ export const NATIONAL_EVENTS_EXTRA: GameEvent[] = [
       { id: 'proteger', label: 'Subir proteccion temporal', detail: 'Empleo a costa de precios.', cost: { capital: 10 }, effects: { unemployment: -0.3, inflation: 0.5, gdp_growth: -0.1 }, relations: [{ target: 'todos', amount: -4 }] },
       { id: 'mantener', label: 'Mantener la apertura y compensar', detail: 'Reconversion con gasto.', cost: { capital: 9, fiscal: 0.3 }, effects: { fiscal_balance: -0.3, happiness: -2, gdp_growth: 0.15 } }
     ]
+  },
+  {
+    id: 'competidor_desplaza_asia',
+    scope: 'nacional',
+    title: 'Un competidor te desplaza en Asia',
+    emoji: '🧭',
+    tags: ['comercio', 'economia'],
+    weight: 5,
+    duration: 3,
+    description:
+      'Un vecino gana tu cuota en el mercado asiatico con precio y trato preferencial. Tus exportadores piden reaccion.',
+    when: (c) => (c.trade?.changeVsStart ?? 0) < -6 || (c.trade?.topPartner === 'China'),
+    ongoing: { unemployment: 0.08 },
+    sectorEffects: { commerce: -10, industry: -6 },
+    choices: [
+      {
+        id: 'bajar_precio',
+        label: 'Compensar con reintegro exportador',
+        detail: 'Recuperas cuota, la caja sangra.',
+        cost: { capital: 10, fiscal: 0.45 },
+        effects: { fiscal_balance: -0.45, unemployment: -0.15, gdp_growth: 0.1 }
+      },
+      {
+        id: 'tratar_socio',
+        label: 'Pedir trato al socio principal',
+        detail: 'Dependes de su humor. Puede salir bien o como favor caro.',
+        cost: { capital: 8 },
+        effects: { stability: 1 },
+        relations: [{ target: 'todos', amount: 2 }],
+        risk: {
+          chance: 0.4,
+          label: 'El socio te pide alineamiento politico a cambio',
+          effects: { capital: -4, happiness: -2 }
+        }
+      },
+      {
+        id: 'aceptar_cuota',
+        label: 'Aceptar la perdida de cuota',
+        detail: 'Sin costo politico hoy. El empleo industrial se encoge.',
+        effects: { unemployment: 0.25, happiness: -2 }
+      }
+    ]
+  },
+  {
+    id: 'deflacion_leve',
+    scope: 'nacional',
+    title: 'Deflacion leve: el poder de compra sube solo',
+    emoji: '❄️',
+    tags: ['economia', 'deflacion', 'salarios'],
+    weight: 6,
+    duration: 2,
+    description:
+      'Los precios ceden un poco. Si los salarios no caen, la calle lo siente como un aumento. Las reservas se fortalecen solas.',
+    when: (c) => c.player.economy.inflation < 0 && c.player.economy.inflation >= -1.5,
+    effects: { happiness: 3, gold_reserves_tonnes: 2, capital: 4 },
+    ongoing: { happiness: 0.6 }
+  },
+  {
+    id: 'trampa_deflacion',
+    scope: 'nacional',
+    title: 'Trampa suave de deflacion',
+    emoji: '🧊',
+    tags: ['economia', 'deflacion', 'crisis'],
+    weight: 5,
+    duration: 4,
+    description:
+      'Los precios caen de verdad. Familias y empresas postergan gasto a la espera de que sigan bajando. La deuda privada se vuelve mas pesada.',
+    when: (c) => c.player.economy.inflation < -2,
+    ongoing: { gdp_growth: -0.2, unemployment: 0.12, happiness: -0.4 },
+    choices: [
+      {
+        id: 'gastar_contra_deflacion',
+        label: 'Plan de gasto para romper expectativas',
+        detail: 'Calentas demanda. Riesgo de volver a inflacion si te pasas.',
+        cost: { capital: 12, fiscal: 0.8 },
+        effects: { fiscal_balance: -0.8, gdp_growth: 0.4, inflation: 0.8, happiness: 2 }
+      },
+      {
+        id: 'bajar_tasa',
+        label: 'Bajar fuerte la tasa',
+        detail: 'Barato politicamente. Si no hay credito, no pasa nada.',
+        cost: { capital: 6 },
+        effects: { gdp_growth: 0.2, inflation: 0.4, gold_reserves_tonnes: -2 }
+      },
+      {
+        id: 'esperar_deflacion',
+        label: 'Bancarte el ajuste de precios',
+        detail: 'Reservas y superavit se fortalecen. El empleo tarda.',
+        cost: { capital: 10 },
+        effects: { gold_reserves_tonnes: 4, unemployment: 0.3, happiness: -3, fiscal_balance: 0.3 }
+      }
+    ]
+  },
+  {
+    id: 'informalidad_galopante',
+    scope: 'nacional',
+    title: 'La informalidad se come el empleo',
+    emoji: '🛠️',
+    tags: ['empleo', 'economia', 'interior'],
+    weight: 7,
+    duration: 3,
+    description:
+      'El trabajo no desaparece: se va a negro. Cae la cobertura previsional y la recaudacion, aunque el desempleo oficial no explote.',
+    when: (c) => c.player.economy.unemployment > 8 || c.player.economy.gdp_growth < 0.5,
+    ongoing: { fiscal_balance: -0.12, happiness: -0.3 },
+    choices: [
+      {
+        id: 'incentivar',
+        label: 'Incentivar el blanqueo de puestos',
+        detail: 'Costo fiscal ahora, cobertura despues. Si no fiscalizas, se abusa.',
+        cost: { capital: 11, fiscal: 0.5 },
+        effects: { fiscal_balance: -0.5, unemployment: -0.25, happiness: 2 }
+      },
+      {
+        id: 'inspeccionar',
+        label: 'Inspeccion masiva',
+        detail: 'Entra plata y se cierran changas. La calle se calienta.',
+        cost: { capital: 10 },
+        effects: { fiscal_balance: 0.4, unemployment: 0.3, happiness: -4, stability: -2 }
+      },
+      {
+        id: 'mirar_a_otro_lado',
+        label: 'Dejar correr el trabajo en negro',
+        detail: 'Paz social barata. El sistema previsional se ahoga en silencio.',
+        effects: { happiness: 1, fiscal_balance: -0.3, unemployment: -0.1 }
+      }
+    ]
+  },
+  {
+    id: 'recaudacion_cae_pbi',
+    scope: 'nacional',
+    title: 'La recaudacion cae mas que el PBI',
+    emoji: '📉',
+    tags: ['economia', 'impuestos'],
+    weight: 6,
+    duration: 3,
+    description:
+      'La economia se contrae y la caja cae mas que proporcional (elasticidad > 1). El superavit se complica solo.',
+    when: (c) => c.player.economy.gdp_growth < 0,
+    ongoing: { fiscal_balance: -0.2 },
+    choices: [
+      {
+        id: 'subir_tasa_impositiva',
+        label: 'Subir alicuotas para tapar el agujero',
+        detail: 'Caja ya. Actividad y formalizacion despues, para mal.',
+        cost: { capital: 12 },
+        effects: { fiscal_balance: 0.7, gdp_growth: -0.35, happiness: -4, unemployment: 0.2 }
+      },
+      {
+        id: 'bajar_para_crecer',
+        label: 'Bajar impuestos y apostar al rebote',
+        detail: 'Duele 2 a 4 anios. Si no hay credibilidad, solo perdes caja.',
+        cost: { capital: 10 },
+        effects: { fiscal_balance: -0.8, gdp_growth: 0.25, happiness: 3, unemployment: -0.1 }
+      },
+      {
+        id: 'recortar_gasto',
+        label: 'Recortar gasto a la par',
+        detail: 'Cuentas ordenadas, calle enojada.',
+        cost: { capital: 14 },
+        effects: { fiscal_balance: 0.5, happiness: -5, stability: -3, unemployment: 0.25 }
+      }
+    ]
+  },
+  {
+    id: 'reforma_jubilatoria_calle',
+    scope: 'nacional',
+    title: 'La calle sale contra la reforma previsional',
+    emoji: '🧓',
+    tags: ['previsional', 'protesta', 'economia'],
+    weight: 5,
+    duration: 2,
+    description:
+      'Cualquier reforma que alargue edad o baje haber tiene costo politico real. Los gremios y los jubilados llenan la avenida.',
+    when: (c) =>
+      c.player.economy.fiscal_balance < -2
+      || c.player.economy.debt_to_gdp > 70
+      || (c.street?.streetWeight ?? 0) >= 4,
+    ongoing: { stability: -0.5, happiness: -0.4 },
+    choices: [
+      {
+        id: 'suavizar',
+        label: 'Suavizar la reforma y comprar tiempo',
+        detail: 'Baja el conflicto, la caja no se ordena.',
+        cost: { capital: 12 },
+        effects: { happiness: 3, stability: 2, fiscal_balance: -0.3 }
+      },
+      {
+        id: 'sostener_reforma',
+        label: 'Sostener la reforma',
+        detail: 'Sostenibilidad contra capital politico. Nunca es gratis.',
+        cost: { capital: 18 },
+        effects: { fiscal_balance: 0.8, happiness: -6, stability: -4, unemployment: 0.15 }
+      },
+      {
+        id: 'compensar_haberes',
+        label: 'Compensar haberes con bono',
+        detail: 'Parche. La reforma queda a medias y el deficit vuelve.',
+        cost: { capital: 10, fiscal: 0.5 },
+        effects: { fiscal_balance: -0.5, happiness: 2, inflation: 0.3 }
+      }
+    ]
   }
 ];
+
