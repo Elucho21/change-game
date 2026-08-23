@@ -1,5 +1,6 @@
 'use client';
 
+import '@/lib/boot_content';
 import { useEffect } from 'react';
 import { useGame } from '@/lib/store';
 import StartScreen from '@/components/StartScreen';

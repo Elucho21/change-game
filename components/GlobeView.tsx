@@ -10,17 +10,20 @@ import { visibleFlows, type TradeContext } from '@/lib/trade';
 import { POINT_COLORS, visiblePoints } from '@/lib/points';
 import type { Country } from '@/lib/types';
 
-// react-globe.gl toca WebGL: solo puede cargarse en el cliente.
 const Globe = dynamic(() => import('react-globe.gl'), { ssr: false }) as unknown as React.ComponentType<
   Record<string, unknown>
 >;
 
 type Feature = { properties: Record<string, string | number>; geometry: unknown };
 
-/** Lo unico que usamos de la instancia imperativa de react-globe.gl. */
 type GlobeInstance = {
   pointOfView: (v: Record<string, number>, ms?: number) => void;
   scene: () => unknown;
+  controls?: () => {
+    autoRotate: boolean;
+    autoRotateSpeed: number;
+    enableDamping?: boolean;
+  };
 };
 
 const MODES: { id: 'relaciones' | 'bloques' | 'estabilidad' | 'economia'; label: string }[] = [
@@ -31,7 +34,6 @@ const MODES: { id: 'relaciones' | 'bloques' | 'estabilidad' | 'economia'; label:
 ];
 
 const heat = (v: number) => {
-  // 0 = rojo, 100 = verde
   const t = Math.max(0, Math.min(100, v)) / 100;
   const r = Math.round(229 - t * 150);
   const g = Math.round(72 + t * 130);
@@ -47,9 +49,6 @@ export default function GlobeView() {
   const [hover, setHover] = useState<Feature | null>(null);
   const [geoError, setGeoError] = useState(false);
 
-  // Suscripcion selectiva: sin useShallow, `useGame()` devuelve el store entero
-  // y el globo se vuelve a renderizar (y a recalcular arcos, rutas y puntos)
-  // cada vez que cambia CUALQUIER cosa del estado, incluido el feed.
   const {
     countries, relations, blocs, playerCode, selected, mapMode, sanctions, pending,
     layers, disruptions, turn
@@ -90,13 +89,34 @@ export default function GlobeView() {
     return () => ro.disconnect();
   }, []);
 
-  // al elegir pais, la camara viaja hasta el
   useEffect(() => {
+    const g = globeRef.current;
+    if (!g) return;
     const c = selected ? countries[selected] : null;
-    if (c && globeRef.current) {
-      globeRef.current.pointOfView({ lat: c.lat, lng: c.lng, altitude: 2 }, 900);
+    if (c) {
+      g.pointOfView({ lat: c.lat, lng: c.lng, altitude: 1.85 }, 1100);
+      const controls = g.controls?.();
+      if (controls) controls.autoRotate = false;
+      return;
+    }
+    const controls = g.controls?.();
+    if (controls) {
+      controls.autoRotate = true;
+      controls.autoRotateSpeed = 0.35;
+      controls.enableDamping = true;
     }
   }, [selected, countries]);
+
+  useEffect(() => {
+    const g = globeRef.current;
+    if (!g || selected) return;
+    g.pointOfView({ lat: -15, lng: -50, altitude: 2.4 }, 0);
+    const controls = g.controls?.();
+    if (controls) {
+      controls.autoRotate = true;
+      controls.autoRotateSpeed = 0.35;
+    }
+  }, [features.length, selected]);
 
   const codeOf = (f: Feature) => ISO_TO_CODE[String(f.properties.ADM0_A3)];
 
@@ -105,8 +125,6 @@ export default function GlobeView() {
     return b?.color ?? '#2b3550';
   };
 
-  // Los accessors van memoizados: si cambian de identidad en cada render,
-  // three-globe recalcula la capa entera de poligonos y se ve como un parpadeo.
   const capColor = useCallback((f: Feature) => {
     const code = codeOf(f);
     if (!code) return 'rgba(38, 48, 72, 0.55)';
@@ -147,8 +165,6 @@ export default function GlobeView() {
     [countries, relations, blocs, sanctions, playerCode, disruptions, turn]
   );
 
-  // Cada capa se memoiza por separado: prender o apagar el comercio no obliga
-  // a recalcular los arcos diplomaticos, y viceversa.
   const diploArcs = useMemo(() => {
     const out: Record<string, unknown>[] = [];
     if (layers.diplomacia) {
@@ -168,7 +184,6 @@ export default function GlobeView() {
         });
       }
     }
-
     return out;
   }, [layers.diplomacia, countries, relations, blocs, playerCode, sanctions]);
 
@@ -197,91 +212,65 @@ export default function GlobeView() {
         });
       }
     }
-
     return out;
-  }, [layers.comercio, countries, tradeCtx]);
+  }, [layers.comercio, tradeCtx, countries]);
 
   const arcs = useMemo(() => [...diploArcs, ...tradeArcs], [diploArcs, tradeArcs]);
 
-  // rutas maritimas: se apagan visualmente cuando su chokepoint esta cerrado
   const paths = useMemo(() => {
-    if (!layers.rutas) return [];
+    if (!layers.rutas) return [] as Record<string, unknown>[];
     return MARITIME_ROUTES.map((r) => {
-      const down = routeDisrupted(r, disruptions, turn);
-      const intensity = Math.min(r.volume / 500, 1);
+      const closed = routeDisrupted(r, disruptions, turn);
       return {
+        ...r,
         coords: r.coords,
-        name: down ? `${r.name} - INTERRUMPIDA` : r.name,
-        color: down ? '#e5484d' : r.color,
-        stroke: 0.5 + intensity * 1.4,
-        dashLength: down ? 0.1 : 0.28,
-        dashGap: down ? 0.3 : 0.14,
-        dashAnimateTime: down ? 800 : 2400 - intensity * 900
+        color: closed ? ['#e5484d', '#ff6b6b'] : ['#00e5ff', '#7cf0ff'],
+        stroke: closed ? 1.2 : 0.55,
+        dashLength: 0.25,
+        dashGap: 0.12,
+        dashAnimateTime: closed ? 900 : 3200
       };
     });
   }, [layers.rutas, disruptions, turn]);
 
-  // puntos del mapa: chokepoints, capitales, puertos y aeropuertos (lib/points.ts)
-  const points = useMemo(
-    () =>
-      visiblePoints(layers, disruptions, turn).map((pt) => {
-        const closed = pt.kind === 'chokepoint' && pt.name.includes('CERRADO');
-        return {
-          lat: pt.lat,
-          lng: pt.lng,
-          color: closed ? '#e5484d' : POINT_COLORS[pt.kind],
-          radius: 0.22 + (pt.weight ?? 0.4) * 0.4,
-          label: `<div style="padding:6px 9px;background:#0e1524ee;border:1px solid #1e293f;border-radius:8px;font-size:12px;color:#e6ecf7;max-width:220px"><b>${pt.name}</b><div style="color:#8c99b3;margin-top:3px">${pt.description ?? pt.kind}</div></div>`
-        };
-      }),
-    [layers, disruptions, turn]
-  );
+  const points = useMemo(() => {
+    if (!layers.points) return [] as Record<string, unknown>[];
+    return visiblePoints(layers, disruptions, turn).map((pt) => ({
+      ...pt,
+      color: POINT_COLORS[pt.kind] ?? '#fff',
+      radius: pt.kind === 'capital' ? 0.35 : 0.25
+    }));
+  }, [layers, disruptions, turn]);
 
-  // anillos pulsantes donde hay un evento esperando decision
-  const rings = useMemo(
-    () =>
-      pending.map((p) => ({
-        lat: countries[p.target]?.lat ?? 0,
-        lng: countries[p.target]?.lng ?? 0,
-        color: '#f0a742'
-      })),
-    [pending, countries]
-  );
+  const rings = useMemo(() => {
+    const out: Record<string, unknown>[] = [];
+    if (playerCode && countries[playerCode]) {
+      const p = countries[playerCode];
+      out.push({ lat: p.lat, lng: p.lng, color: 'rgba(245, 215, 110, 0.55)' });
+    }
+    for (const c of activeDisruptions(disruptions, turn)) {
+      out.push({ lat: c.lat, lng: c.lng, color: 'rgba(229, 72, 77, 0.55)' });
+    }
+    return out;
+  }, [playerCode, countries, disruptions, turn]);
 
   const polygonAltitude = useCallback((f: Feature) => {
     const code = codeOf(f);
-    if (f === hover) return 0.09;
-    if (code && code === selected) return 0.07;
-    if (code === playerCode) return 0.06;
-    return code ? 0.02 : 0.008;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hover, selected, playerCode]);
+    if (code === playerCode) return 0.03;
+    if (hover && codeOf(hover) === code) return 0.02;
+    return 0.01;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playerCode, hover]);
 
-  const sideColor = useCallback(() => 'rgba(79, 124, 255, 0.15)', []);
-  const strokeColor = useCallback(
-    (f: Feature) => (codeOf(f) ? '#26334f' : 'rgba(38,48,72,0.5)'),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
-  );
+  const sideColor = () => 'rgba(0,0,0,0.2)';
+  const strokeColor = () => 'rgba(255,255,255,0.08)';
   const onHover = useCallback((f: Feature | null) => setHover(f), []);
-  const onPolygonClick = useCallback(
-    (f: Feature) => {
-      const code = codeOf(f);
-      if (code) select(code);
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [select]
-  );
-
+  const onPolygonClick = useCallback((f: Feature) => {
+    const code = codeOf(f);
+    if (code) select(code);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [select]);
   const setMapMode = useGame((s) => s.setMapMode);
-
-  /**
-   * Ref del globo + utilidad de debug: window.__globe.
-   *
-   * Va en useCallback con dependencias vacias a proposito: un callback ref que
-   * cambia de identidad hace que React lo llame con null y de nuevo con la
-   * instancia en CADA render. Con esto la referencia es estable.
-   */
   const setGlobeRef = useCallback((instance: GlobeInstance | null) => {
     globeRef.current = instance;
     if (typeof window !== 'undefined') {
@@ -298,51 +287,20 @@ export default function GlobeView() {
           </button>
         ))}
       </div>
-
       <div className="modes layers">
-        <button className={layers.diplomacia ? 'on' : ''} onClick={() => toggleLayer('diplomacia')}>
-          Diplomacia
-        </button>
-        <button className={layers.comercio ? 'on' : ''} onClick={() => toggleLayer('comercio')}>
-          Comercio
-        </button>
-        <button className={layers.rutas ? 'on' : ''} onClick={() => toggleLayer('rutas')}>
-          Rutas
-        </button>
-        <button className={layers.points ? 'on' : ''} onClick={() => toggleLayer('points')} title="Capa maestra de puntos">
-          Puntos
-        </button>
-        <button
-          className={layers.points && layers.capitals ? 'on' : ''}
-          onClick={() => toggleLayer('capitals')}
-          disabled={!layers.points}
-        >
-          Capitales
-        </button>
-        <button
-          className={layers.points && layers.ports ? 'on' : ''}
-          onClick={() => toggleLayer('ports')}
-          disabled={!layers.points}
-        >
-          Puertos
-        </button>
-        <button
-          className={layers.points && layers.airports ? 'on' : ''}
-          onClick={() => toggleLayer('airports')}
-          disabled={!layers.points}
-        >
-          Aeropuertos
-        </button>
+        <button className={layers.diplomacia ? 'on' : ''} onClick={() => toggleLayer('diplomacia')}>Diplomacia</button>
+        <button className={layers.comercio ? 'on' : ''} onClick={() => toggleLayer('comercio')}>Comercio</button>
+        <button className={layers.rutas ? 'on' : ''} onClick={() => toggleLayer('rutas')}>Rutas</button>
+        <button className={layers.points ? 'on' : ''} onClick={() => toggleLayer('points')} title="Capa maestra de puntos">Puntos</button>
+        <button className={layers.points && layers.capitals ? 'on' : ''} onClick={() => toggleLayer('capitals')} disabled={!layers.points}>Capitales</button>
+        <button className={layers.points && layers.ports ? 'on' : ''} onClick={() => toggleLayer('ports')} disabled={!layers.points}>Puertos</button>
+        <button className={layers.points && layers.airports ? 'on' : ''} onClick={() => toggleLayer('airports')} disabled={!layers.points}>Aeropuertos</button>
       </div>
-
       {features.length === 0 && (
         <div className="globe-loading">
-          {geoError
-            ? '⚠️ No se pudo cargar el mapa mundial. Recarga la pagina.'
-            : '🌍 Cargando el globo...'}
+          {geoError ? '⚠️ No se pudo cargar el mapa mundial. Recarga la pagina.' : '🌍 Cargando el globo...'}
         </div>
       )}
-
       <Globe
         ref={setGlobeRef}
         width={size.w}
@@ -350,8 +308,8 @@ export default function GlobeView() {
         backgroundColor="#04070f"
         globeImageUrl="/earth-night.webp"
         bumpImageUrl="/earth-topology.webp"
-        atmosphereColor="#4f7cff"
-        atmosphereAltitude={0.18}
+        atmosphereColor="#5b8cff"
+        atmosphereAltitude={0.22}
         polygonsData={features}
         polygonAltitude={polygonAltitude}
         polygonCapColor={capColor}
@@ -360,8 +318,6 @@ export default function GlobeView() {
         polygonLabel={label}
         onPolygonHover={onHover}
         onPolygonClick={onPolygonClick}
-        // sin transicion: animar la altitud de 288 poligonos en cada
-        // recoloreo es justo lo que se veia como un parpadeo del mapa
         polygonsTransitionDuration={0}
         arcsData={arcs}
         arcColor="color"
@@ -398,7 +354,6 @@ export default function GlobeView() {
         ringPropagationSpeed={2}
         ringRepeatPeriod={900}
       />
-
       <div className="legend">
         {mapMode === 'relaciones' && (
           <>

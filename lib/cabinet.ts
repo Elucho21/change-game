@@ -1,4 +1,5 @@
 import type { Decision, Delta, GameEvent } from './types';
+import { EXTRA_MINISTERS } from './ministers_extra';
 
 /**
  * Gabinete de cinco sillas.
@@ -184,7 +185,8 @@ export const MINISTERS: Minister[] = [
     passive: { capitalPerTurn: 0.8, stability: 0.3 },
     voteBonus: 4,
     seats: 12
-  }
+  },
+  ...(EXTRA_MINISTERS as unknown as Minister[])
 ];
 
 export type Cabinet = Partial<Record<CabinetSeat, string>>;
