@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import './turn-fx.css';
 import ServiceWorker from '@/components/ServiceWorker';
 
 export const metadata: Metadata = {
