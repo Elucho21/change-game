@@ -133,10 +133,13 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 .bad::before { content: '▼ '; font-size: 0.85em; }
 .warn::before { content: '● '; font-size: 0.85em; }
 /* dentro de una fila/tag ya con icono propio (pill, stat, boton, preview),
-   el signo extra es ruido: se apaga donde el contexto ya distingue solo. */
+   el signo extra es ruido: se apaga donde el contexto ya distingue solo.
+   proj-series ademas es una tabla numerica alineada a la derecha: un
+   prefijo de ancho variable le rompe la alineacion tabular. */
 .pill.good::before, .pill.bad::before, .pill.warn::before,
 .stat b.good::before, .stat b.bad::before, .stat b.warn::before,
 .preview em.good::before, .preview em.bad::before,
+.proj-series em.good::before, .proj-series em.bad::before,
 button.good::before, button.bad::before, button.warn::before { content: none; }
 
 .decision {
@@ -148,8 +151,13 @@ button.good::before, button.bad::before, button.warn::before { content: none; }
 .preview { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
 .preview em {
   font-style: normal; font-size: 10.5px; padding: 1px 6px; border-radius: 5px;
-  background: #101a2e; border: 1px solid var(--line); font-variant-numeric: tabular-nums;
+  background: var(--line); border: 1px solid var(--line); font-variant-numeric: tabular-nums;
 }
+/* fondo tenido segun si conviene o no: ademas de distinguirse del panel
+   que las rodea (antes casi del mismo color, se leian como un solo texto
+   corrido), refuerza el color del texto sin depender solo de el. */
+.preview em.good { background: rgba(55, 201, 138, 0.16); border-color: rgba(55, 201, 138, 0.4); }
+.preview em.bad { background: rgba(229, 72, 77, 0.16); border-color: rgba(229, 72, 77, 0.4); }
 
 .feed-item { padding: 9px 14px; border-bottom: 1px solid var(--line); display: flex; gap: 9px; }
 .feed-item .ico { font-size: 17px; line-height: 1.2; }
@@ -251,8 +259,10 @@ textarea {
 .proj-series { display: flex; gap: 4px; }
 .proj-series em {
   font-style: normal; min-width: 42px; text-align: right; font-variant-numeric: tabular-nums;
-  background: #101a2e; border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px;
+  background: var(--line); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px;
 }
+.proj-series em.good { background: rgba(55, 201, 138, 0.16); border-color: rgba(55, 201, 138, 0.4); }
+.proj-series em.bad { background: rgba(229, 72, 77, 0.16); border-color: rgba(229, 72, 77, 0.4); }
 .proj-warnings { margin: 8px 0 0; padding-left: 4px; list-style: none; line-height: 1.5; }
 .proj-warnings li { margin-bottom: 2px; }
 .proj-events { margin: 6px 0 0; font-size: 11px; line-height: 1.4; }
