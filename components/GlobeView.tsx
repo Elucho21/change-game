@@ -41,7 +41,7 @@ const heat = (v: number) => {
   return `rgb(${r},${g},${b})`;
 };
 
-export default function GlobeView() {
+export default function GlobeView({ turnFx = false }: { turnFx?: boolean }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const globeRef = useRef<GlobeInstance | null>(null);
   const [size, setSize] = useState({ w: 800, h: 600 });
@@ -246,13 +246,20 @@ export default function GlobeView() {
     const out: Record<string, unknown>[] = [];
     if (playerCode && countries[playerCode]) {
       const p = countries[playerCode];
-      out.push({ lat: p.lat, lng: p.lng, color: 'rgba(245, 215, 110, 0.55)' });
+      out.push({
+        lat: p.lat,
+        lng: p.lng,
+        color: turnFx ? 'rgba(245, 215, 110, 0.95)' : 'rgba(245, 215, 110, 0.55)'
+      });
+      if (turnFx) {
+        out.push({ lat: p.lat, lng: p.lng, color: 'rgba(79, 124, 255, 0.55)' });
+      }
     }
     for (const c of activeDisruptions(disruptions, turn)) {
       out.push({ lat: c.lat, lng: c.lng, color: 'rgba(229, 72, 77, 0.55)' });
     }
     return out;
-  }, [playerCode, countries, disruptions, turn]);
+  }, [playerCode, countries, disruptions, turn, turnFx]);
 
   const polygonAltitude = useCallback((f: Feature) => {
     const code = codeOf(f);
@@ -279,7 +286,8 @@ export default function GlobeView() {
   }, []);
 
   return (
-    <div className="globe-wrap" ref={wrapRef}>
+    <div className={`globe-wrap${turnFx ? ' globe-turn-fx' : ''}`} ref={wrapRef}>
+      {turnFx && <div className="globe-turn-flash" aria-hidden />}
       <div className="modes">
         {MODES.map((m) => (
           <button key={m.id} className={mapMode === m.id ? 'on' : ''} onClick={() => setMapMode(m.id)}>
@@ -308,8 +316,8 @@ export default function GlobeView() {
         backgroundColor="#04070f"
         globeImageUrl="/earth-night.webp"
         bumpImageUrl="/earth-topology.webp"
-        atmosphereColor="#5b8cff"
-        atmosphereAltitude={0.22}
+        atmosphereColor={turnFx ? '#9ec0ff' : '#5b8cff'}
+        atmosphereAltitude={turnFx ? 0.28 : 0.22}
         polygonsData={features}
         polygonAltitude={polygonAltitude}
         polygonCapColor={capColor}
@@ -350,9 +358,9 @@ export default function GlobeView() {
         pointsMerge={false}
         ringsData={rings}
         ringColor={(r: { color: string }) => () => r.color}
-        ringMaxRadius={5}
-        ringPropagationSpeed={2}
-        ringRepeatPeriod={900}
+        ringMaxRadius={turnFx ? 8 : 5}
+        ringPropagationSpeed={turnFx ? 4 : 2}
+        ringRepeatPeriod={turnFx ? 450 : 900}
       />
       <div className="legend">
         {mapMode === 'relaciones' && (
