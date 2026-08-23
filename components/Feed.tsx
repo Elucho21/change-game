@@ -6,8 +6,8 @@ import { useGame } from '@/lib/store';
 
 const TONE: Record<string, string> = { bueno: 'good', malo: 'bad', neutral: 'muted' };
 
-export default function Feed() {
-  const { feed, pending, history, capital, orders } = useGame();
+export default function Feed({ turnFx = false }: { turnFx?: boolean }) {
+  const { feed, pending, history, capital, orders, turn } = useGame();
   const planChoice = useGame((s) => s.planEventChoice);
 
   return (
@@ -56,16 +56,23 @@ export default function Feed() {
       {history.length > 2 && <Sparkline />}
 
       <div>
-        {feed.map((f, i) => (
-          <div className="feed-item" key={i}>
-            <span className="ico">{f.emoji}</span>
-            <div style={{ minWidth: 0 }}>
-              <h5 className={TONE[f.tone]}>{f.title}</h5>
-              <p>{f.body}</p>
-              <div className="when">turno {f.turn} · {f.date} · {f.kind}</div>
+        {feed.map((f, i) => {
+          const isFresh = turnFx && f.turn === turn && i < 8;
+          return (
+            <div
+              className={`feed-item${isFresh ? ' feed-item-in' : ''}`}
+              key={`${f.turn}-${f.kind}-${i}-${f.title}`}
+              style={isFresh ? { animationDelay: `${i * 55}ms` } : undefined}
+            >
+              <span className="ico">{f.emoji}</span>
+              <div style={{ minWidth: 0 }}>
+                <h5 className={TONE[f.tone]}>{f.title}</h5>
+                <p>{f.body}</p>
+                <div className="when">turno {f.turn} · {f.date} · {f.kind}</div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
