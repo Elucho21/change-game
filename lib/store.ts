@@ -5,7 +5,8 @@ import data from './data/countries.gen.json';
 import { BLOCS } from './blocs';
 import { DECISIONS } from './decisions';
 import {
-  ARC_COLORS, adjustRelation, aiReactions, applyDelta, applySectorShock, blocEffects,
+  ARC_COLORS, adjustRelation, aiCountryDecisions, aiReactions, aiRoster, applyDelta, applySectorShock,
+  applyWorldShock, blocEffects,
   buildGrokPrompt, canJoin, checkGameOver, clamp, computeArcs, crisisEvents, damagedSectors,
   dateLabel, eligibleEvents, getRelation, previewDelta, relLabel, resolveRelationTargets,
   ratesOf, rollEvents, taxEffects, type TaxRates
@@ -15,10 +16,10 @@ import { CHOKEPOINTS, CHOKEPOINT_OWNER, chokepointClosureRisk } from './routes';
 import { tradeBaseline } from './trade';
 import { cloneSim, deterministicTick, eventExtraOf, projectDecision, type SimState } from './simulation';
 import {
-  defaultPolitics, driftOpposition, isElectionDue, isMidtermDue, legacy, needsSuccessor,
-  oppositionCostFactor, parliamentCostFactor, poll, runElection, runMidterm, seatsFromVote,
-  successors,
-  type Candidate, type ElectionResult, type Politics
+  campaignEvents, defaultPolitics, DIFFICULTY_PRESETS, driftOpposition, isElectionDue, isMidtermDue, legacy,
+  monthsToElection, needsSuccessor, oppositionCostFactor, oppositionSplit, parliamentCostFactor, poll,
+  runElection, runMidterm, seatsFromVote, successors,
+  type Candidate, type Difficulty, type ElectionResult, type Politics
 } from './politics';
 import {
   CAPITAL_ON_MIDTERM_WIN, CAPITAL_ON_WIN, grantHoneymoon, systemOf
@@ -26,7 +27,7 @@ import {
 import {
   addBlocOrder, addCabinetOrder, addDecisionOrder, addEventOrder, addTaxOrder, committedCapital,
   TAX_FIELD, TAX_LABELS,
-  type PlannedOrder, type TaxKind
+  type EventOrder, type PlannedOrder, type TaxKind
 } from './orders';
 import { cooldownKey, cooldownLeft, cooldownUntil, scaleDecision } from './diplomacy';
 import {
@@ -133,7 +134,7 @@ interface GameStore {
   succession: Candidate[];
   gameOver: { title: string; body: string } | null;
 
-  start: (code: string) => void;
+  start: (code: string, difficulty?: Difficulty) => void;
   toggleLayer: (l: keyof Layers) => void;
   /** carga la partida guardada; devuelve false si no habia ninguna */
   loadSaved: () => boolean;
@@ -612,8 +613,7 @@ function applyMidterm(st: GameStore, result: ElectionResult): Partial<GameStore>
 }
 
 export const useGame = create<GameStore>((set, get) => {
-  /** Guarda la partida. Se llama al cerrar cada accion que cambia el mundo. */
-  const persist = () => {
+  const doPersist = () => {
     const st = get();
     if (!st.started || !st.playerCode) return;
     const player = st.countries[st.playerCode];
@@ -625,6 +625,37 @@ export const useGame = create<GameStore>((set, get) => {
       date: dateLabel(st.world)
     });
   };
+
+  // El guardado serializa el estado entero (JSON.stringify + localStorage)
+  // en el hilo principal. Se llama despues de cada accion que cambia el
+  // mundo, y algunas (subir/bajar impuestos en el plan) pueden dispararse
+  // varias veces seguidas: se agrupan en un solo guardado 400ms despues del
+  // ultimo cambio en vez de escribir en cada click. Si el jugador cierra o
+  // esconde la pestana antes de eso, se fuerza el guardado pendiente.
+  let persistTimer: ReturnType<typeof setTimeout> | null = null;
+  const persist = () => {
+    if (typeof window === 'undefined') {
+      doPersist();
+      return;
+    }
+    if (persistTimer) clearTimeout(persistTimer);
+    persistTimer = setTimeout(() => {
+      persistTimer = null;
+      doPersist();
+    }, 400);
+  };
+  if (typeof window !== 'undefined') {
+    const flush = () => {
+      if (!persistTimer) return;
+      clearTimeout(persistTimer);
+      persistTimer = null;
+      doPersist();
+    };
+    window.addEventListener('beforeunload', flush);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') flush();
+    });
+  }
 
   /** Estado que consumen las funciones puras de lib/simulation.ts. */
   const simOf = (st: GameStore): SimState => ({
@@ -648,10 +679,11 @@ export const useGame = create<GameStore>((set, get) => {
   return {
   ...initial(),
 
-  start: (code) => {
+  start: (code, difficulty = 'normal') => {
     const s = initial();
     const player = s.countries[code];
     player.fx = FX_START;
+    const preset = DIFFICULTY_PRESETS[difficulty];
     const baseline = tradeBaseline({
       countries: s.countries,
       relations: s.relations,
@@ -664,6 +696,7 @@ export const useGame = create<GameStore>((set, get) => {
     const taxBase = Object.fromEntries(
       Object.values(s.countries).map((c) => [c.code, ratesOf(c)])
     );
+    const politics = defaultPolitics(player, 1, difficulty);
     set({
       ...s,
       started: true,
@@ -671,7 +704,8 @@ export const useGame = create<GameStore>((set, get) => {
       selected: code,
       tradeBase: baseline,
       taxBase,
-      politics: defaultPolitics(player, 1),
+      politics,
+      capital: preset.capital,
       startingGdp: player.economy.gdp_trillion_usd,
       imf: defaultImf(),
       feed: [
@@ -681,7 +715,7 @@ export const useGame = create<GameStore>((set, get) => {
           kind: 'sistema',
           emoji: player.flag,
           title: `Asumis el gobierno de ${player.name}`,
-          body: `Inflacion ${player.economy.inflation}% - desempleo ${player.economy.unemployment}% - deuda ${player.economy.debt_to_gdp}% del PBI. Tenes ${s.capital} de capital politico y cuatro anios de mandato por delante.`,
+          body: `Inflacion ${player.economy.inflation}% - desempleo ${player.economy.unemployment}% - deuda ${player.economy.debt_to_gdp}% del PBI. Tenes ${preset.capital} de capital politico y cuatro anios de mandato por delante. Dificultad: ${preset.label}.`,
           tone: 'neutral'
         }
       ],
@@ -696,8 +730,8 @@ export const useGame = create<GameStore>((set, get) => {
           unemployment: player.economy.unemployment,
           fiscal: player.economy.fiscal_balance,
           debt: player.economy.debt_to_gdp,
-          capital: s.capital,
-          opposition: defaultPolitics(player, 1).opposition,
+          capital: preset.capital,
+          opposition: politics.opposition,
           tension: s.world.global_tension,
           oil: s.world.oil_price,
           fx: FX_START
@@ -770,7 +804,9 @@ export const useGame = create<GameStore>((set, get) => {
         return {
           ...p,
           honeymoonUntil: p.honeymoonUntil ?? 0,
-          pendingBallotage: p.pendingBallotage ?? false
+          pendingBallotage: p.pendingBallotage ?? false,
+          oppositionParties: p.oppositionParties,
+          coalitionOffered: p.coalitionOffered ?? false
         };
       })(),
       startingGdp: st.startingGdp ?? st.countries[st.playerCode].economy.gdp_trillion_usd,
@@ -1084,6 +1120,19 @@ export const useGame = create<GameStore>((set, get) => {
       });
     }
 
+    // 4.5 el resto del mundo tambien gobierna: un roster de potencias toma
+    // sus propias decisiones cada turno (distinto de aiReactions, que solo
+    // reacciona a lo que haces vos). Ver aiCountryDecisions en lib/engine.ts.
+    const aiMoves = aiCountryDecisions(countries, aiRoster(countries, st.playerCode), world);
+    for (const mv of aiMoves) {
+      feed.push({
+        turn, date: dateLabel(world), kind: 'reaccion', emoji: mv.emoji,
+        title: countries[mv.country]?.name ?? mv.country,
+        body: mv.action,
+        tone: 'neutral'
+      });
+    }
+
     // 5. eventos del turno
     const player = countries[st.playerCode];
     // el contexto politico es el que el jugador tenia al empezar el turno:
@@ -1091,7 +1140,10 @@ export const useGame = create<GameStore>((set, get) => {
     const eventExtra = eventExtraOf({ ...tick.state, politics: st.politics });
     const rolled: GameEvent[] = [
       ...rollEvents(player, world, turn, blocs, relations, st.recentEventIds, eventExtra),
-      ...crisisEvents(player)
+      ...crisisEvents(player),
+      // agenda electoral: oferta de coalicion a 3 meses, discurso de cierre
+      // a 1 mes. No son aleatorios (weight 0), los dispara el calendario.
+      ...campaignEvents(st.politics, turn)
     ];
 
     // el socio de coalicion pasa factura cada tanto
@@ -1127,7 +1179,19 @@ export const useGame = create<GameStore>((set, get) => {
       const key = `${ev.id}-${turn}`;
       for (const cp of ev.disrupts ?? []) disruptions[cp] = turn + ev.duration;
       if (ev.worldEffects) {
-        for (const c of Object.values(countries)) applyDelta(c, ev.worldEffects, undefined);
+        // un evento mundial no pega igual en todos lados: las potencias
+        // absorben mejor el golpe que las economias chicas (worldShockMultiplier).
+        // Si la diferencia es clara, se narra quien la paso mejor y peor.
+        const spread = applyWorldShock(countries, ev.worldEffects, aiRoster(countries, st.playerCode, 10));
+        if (spread && Math.abs(spread.bestGrowth - spread.worstGrowth) > 0.5) {
+          feed.push({
+            turn, date: dateLabel(world), kind: 'evento', emoji: ev.emoji,
+            title: `${ev.title}: no le pega igual a todos`,
+            body: `${countries[spread.best]?.name} lo absorbe mejor (crecimiento ${spread.bestGrowth}%) mientras `
+              + `${countries[spread.worst]?.name} lo sufre mas (crecimiento ${spread.worstGrowth}%).`,
+            tone: 'neutral'
+          });
+        }
       }
 
       // golpe sectorial: el mismo evento pega distinto segun la estructura
@@ -1198,8 +1262,34 @@ export const useGame = create<GameStore>((set, get) => {
     let politics: Politics = {
       ...st.politics,
       opposition: driftOpposition(st.politics, p2),
-      pollHistory: [...(st.politics.pollHistory ?? []), { turn, value: encuesta }].slice(-60)
+      pollHistory: [...(st.politics.pollHistory ?? []), { turn, value: encuesta }].slice(-60),
+      // la agenda electoral (campaignEvents) oferto coalicion este turno: no
+      // se vuelve a ofertar en el mismo mandato, elija lo que elija el jugador
+      coalitionOffered: st.politics.coalitionOffered || monthsToElection(st.politics, turn) === 3
     };
+
+    // el jugador eligio con que partido opositor negociar (o no negociar):
+    // se resuelve aca porque "cuanto le resta a la oposicion" no es un
+    // Delta de economia/humor, es especifico del ciclo electoral.
+    const coalitionOrder = st.orders.find(
+      (o): o is EventOrder => o.kind === 'event' && o.eventKey.startsWith('oferta_coalicion-')
+    );
+    if (coalitionOrder?.choiceId === 'partyA' || coalitionOrder?.choiceId === 'partyB') {
+      const [partyA, partyB] = politics.oppositionParties ?? ['la oposicion mayor', 'la oposicion menor'];
+      const [shareA, shareB] = oppositionSplit(politics.opposition);
+      // no se lleva TODO el peso del partido a tu coalicion, solo una parte:
+      // negociar peina votos y legisladores sueltos, no borra al partido.
+      const cut = Math.round((coalitionOrder.choiceId === 'partyA' ? shareA : shareB) * 0.5 * 10) / 10;
+      const name = coalitionOrder.choiceId === 'partyA' ? partyA : partyB;
+      politics = { ...politics, opposition: clamp(politics.opposition - cut, 5, 100) };
+      feed.push({
+        turn, date: dateLabel(world), kind: 'sistema', emoji: '🤝',
+        title: `${name} se suma a tu coalicion`,
+        body: `La oposicion pierde ${cut} puntos de fuerza parlamentaria y de calle.`,
+        tone: 'bueno'
+      });
+    }
+
     let election: ElectionResult | null = null;
     let succession: Candidate[] = [];
 
@@ -1422,7 +1512,7 @@ export const useGame = create<GameStore>((set, get) => {
         });
       }
 
-      set({ countries, relations, world, feed: [...feed.reverse(), ...st.feed] });
+      set({ countries, relations, world, feed: [...feed.reverse(), ...st.feed].slice(0, 200) });
       persist();
       return `Aplicado: ${parsed.reactions?.length ?? 0} reacciones, ${parsed.internal_extra_effects?.length ?? 0} efectos internos.`;
     } catch (err) {

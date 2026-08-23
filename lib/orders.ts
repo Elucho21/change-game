@@ -1,6 +1,7 @@
-import type { Bloc, Country, GameEvent } from './types';
+import type { Bloc, Country, Delta, GameEvent } from './types';
 import { DECISIONS } from './decisions';
 import { APPOINT_COST, DISMISS_COST, ministerById, SEAT_LABEL, type CabinetSeat } from './cabinet';
+import { ratesOf, taxEffects, type TaxRates } from './engine';
 
 /**
  * Plan del turno: lo que el jugador decidio hacer, todavia sin ejecutar.
@@ -207,6 +208,62 @@ export function addCabinetOrder(
 /** Que opcion quedo elegida para un evento, si hay alguna. */
 export const chosenFor = (orders: PlannedOrder[], eventKey: string) =>
   orders.find((o): o is EventOrder => o.kind === 'event' && o.eventKey === eventKey)?.choiceId;
+
+const DELTA_KEYS: (keyof Delta)[] = [
+  'happiness', 'stability', 'gdp_growth', 'inflation', 'unemployment',
+  'fiscal_balance', 'debt_to_gdp', 'military_budget_bn', 'gold_reserves_tonnes',
+  'capital', 'global_tension', 'oil_price'
+];
+
+function addDelta(acc: Delta, delta: Delta) {
+  for (const k of DELTA_KEYS) {
+    const v = delta[k];
+    if (v === undefined) continue;
+    acc[k] = Math.round(((acc[k] ?? 0) + v) * 100) / 100;
+  }
+}
+
+/**
+ * Efecto combinado estimado de lo que hay planeado para este turno: suma los
+ * `effects` de las decisiones planeadas y el efecto de recaudacion/inflacion/
+ * crecimiento/humor de los cambios de impuestos planeados (via `taxEffects`).
+ *
+ * No suma bloques, gabinete ni eventos: esos son cambios de relaciones o
+ * personas, no numeros de economia/humor comparables en la misma tabla. Es
+ * una estimacion del "grueso" del turno, no el resultado exacto: eventos que
+ * disparen despues de ejecutar el plan pueden mover las cosas igual.
+ */
+export function estimatedTurnEffects(orders: PlannedOrder[], country: Country): Delta {
+  const acc: Delta = {};
+
+  for (const o of orders) {
+    if (o.kind === 'decision') {
+      const dec = DECISIONS.find((d) => d.id === o.id);
+      if (dec) addDelta(acc, dec.effects);
+    }
+  }
+
+  const taxOrders = orders.filter((o): o is TaxOrder => o.kind === 'tax');
+  if (taxOrders.length) {
+    const baseline: TaxRates = ratesOf(country);
+    const projected: Country = {
+      ...country,
+      economy: { ...country.economy }
+    };
+    for (const o of taxOrders) {
+      projected.economy[TAX_FIELD[o.rate]] = country.economy[TAX_FIELD[o.rate]] + o.delta;
+    }
+    const tax = taxEffects(projected, baseline);
+    addDelta(acc, {
+      fiscal_balance: tax.fiscal,
+      inflation: tax.inflation,
+      gdp_growth: tax.growth,
+      happiness: tax.happiness
+    });
+  }
+
+  return acc;
+}
 
 /** Cambio de alicuota planificado, para mostrar el valor futuro junto al actual. */
 export function plannedTaxRate(orders: PlannedOrder[], rate: TaxKind, country: Country): number | null {

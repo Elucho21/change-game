@@ -45,6 +45,7 @@ export default function GlobeView() {
   const [size, setSize] = useState({ w: 800, h: 600 });
   const [features, setFeatures] = useState<Feature[]>([]);
   const [hover, setHover] = useState<Feature | null>(null);
+  const [geoError, setGeoError] = useState(false);
 
   // Suscripcion selectiva: sin useShallow, `useGame()` devuelve el store entero
   // y el globo se vuelve a renderizar (y a recalcular arcos, rutas y puntos)
@@ -74,7 +75,10 @@ export default function GlobeView() {
     fetch('/countries.geojson')
       .then((r) => r.json())
       .then((g: { features: Feature[] }) => setFeatures(g.features))
-      .catch(() => setFeatures([]));
+      .catch(() => {
+        setFeatures([]);
+        setGeoError(true);
+      });
   }, []);
 
   useEffect(() => {
@@ -331,13 +335,21 @@ export default function GlobeView() {
         </button>
       </div>
 
+      {features.length === 0 && (
+        <div className="globe-loading">
+          {geoError
+            ? '⚠️ No se pudo cargar el mapa mundial. Recarga la pagina.'
+            : '🌍 Cargando el globo...'}
+        </div>
+      )}
+
       <Globe
         ref={setGlobeRef}
         width={size.w}
         height={size.h}
         backgroundColor="#04070f"
-        globeImageUrl="/earth-night.jpg"
-        bumpImageUrl="/earth-topology.png"
+        globeImageUrl="/earth-night.webp"
+        bumpImageUrl="/earth-topology.webp"
         atmosphereColor="#4f7cff"
         atmosphereAltitude={0.18}
         polygonsData={features}

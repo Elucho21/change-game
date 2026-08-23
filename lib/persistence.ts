@@ -79,12 +79,44 @@ export interface SavedGame {
 const hasStorage = () => typeof window !== 'undefined' && !!window.localStorage;
 
 /**
- * Migra un save viejo al formato actual. Hoy solo acepta la version corriente;
- * cuando exista la v2, aca va el `if (raw.version === 1) { ... }`.
+ * Migra un save viejo al formato actual.
+ *
+ * Patron para cuando exista la v2: agregar un caso `if (raw.version === 1)`
+ * que devuelva `{ ...raw, version: 2, state: { ...raw.state, campoNuevo: X } }`
+ * en vez de descartarlo. Hoy solo hay v1, asi que no hay nada que migrar
+ * todavia, pero la funcion ya tiene la forma que va a necesitar.
  */
 function migrate(raw: SavedGame): SavedGame | null {
   if (raw.version === SAVE_VERSION) return raw;
   return null;
+}
+
+/**
+ * Chequeo minimo de forma antes de aceptar un save. No es una validacion
+ * exhaustiva de todos los campos (serian decenas), pero cubre lo que
+ * rompe el juego en runtime si falta: un save con forma invalida (editado
+ * a mano en devtools, truncado, de otra version que paso el chequeo de
+ * `version` por casualidad) se descarta en vez de reventar mas adelante
+ * con un `undefined.algo` en medio de una partida.
+ */
+function isPlausibleSave(raw: unknown): raw is SavedGame {
+  if (!raw || typeof raw !== 'object') return false;
+  const r = raw as Partial<SavedGame>;
+  if (typeof r.version !== 'number') return false;
+  if (typeof r.savedAt !== 'string') return false;
+  if (!r.summary || typeof r.summary !== 'object') return false;
+  if (!r.state || typeof r.state !== 'object') return false;
+
+  const s = r.state as Partial<PersistedState>;
+  if (typeof s.playerCode !== 'string' || !s.playerCode) return false;
+  if (typeof s.turn !== 'number') return false;
+  if (!s.countries || typeof s.countries !== 'object') return false;
+
+  const player = s.countries[s.playerCode];
+  if (!player || typeof player !== 'object') return false;
+  if (!player.economy || typeof player.economy.tax_iva !== 'number') return false;
+
+  return true;
 }
 
 export function saveGame(state: PersistedState, summary: SavedGame['summary']): boolean {
@@ -109,7 +141,11 @@ export function loadGame(): SavedGame | null {
   try {
     const raw = window.localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as SavedGame;
+    const parsed = JSON.parse(raw) as unknown;
+    if (!isPlausibleSave(parsed)) {
+      clearGame();
+      return null;
+    }
     const migrated = migrate(parsed);
     if (!migrated) {
       clearGame();
@@ -133,5 +169,66 @@ export function clearGame(): void {
     window.localStorage.removeItem(SAVE_KEY);
   } catch {
     // nada que hacer: si no se puede borrar, la proxima partida lo sobreescribe
+  }
+}
+
+/**
+ * Baja la partida guardada como archivo .json. Es la unica forma de no
+ * perderla si se borra el navegador o se cambia de maquina: localStorage
+ * no viaja con vos, un archivo si.
+ */
+export function exportSave(): boolean {
+  if (!hasStorage()) return false;
+  const raw = window.localStorage.getItem(SAVE_KEY);
+  if (!raw) return false;
+
+  const summary = savedSummary();
+  const name = summary
+    ? `change-game-${summary.playerCode}-turno${summary.turn}.json`
+    : 'change-game-save.json';
+
+  const blob = new Blob([raw], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(url);
+  return true;
+}
+
+/**
+ * Carga una partida desde un archivo exportado con `exportSave`. Pasa por
+ * el mismo chequeo de forma que un save de localStorage: un archivo
+ * cualquiera (o de otro juego) se rechaza en vez de reventar la partida.
+ */
+export async function importSave(file: File): Promise<{ ok: boolean; error?: string }> {
+  if (!hasStorage()) return { ok: false, error: 'localStorage no disponible' };
+  let text: string;
+  try {
+    text = await file.text();
+  } catch {
+    return { ok: false, error: 'No se pudo leer el archivo' };
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return { ok: false, error: 'El archivo no es un JSON valido' };
+  }
+
+  if (!isPlausibleSave(parsed)) {
+    return { ok: false, error: 'El archivo no tiene la forma de una partida de Change Game' };
+  }
+  if (!migrate(parsed)) {
+    return { ok: false, error: `Version de save no soportada (v${parsed.version})` };
+  }
+
+  try {
+    window.localStorage.setItem(SAVE_KEY, text);
+    return { ok: true };
+  } catch {
+    return { ok: false, error: 'No se pudo guardar (localStorage lleno o modo privado)' };
   }
 }

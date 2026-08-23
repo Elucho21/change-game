@@ -294,6 +294,45 @@ export function resolveRelationTargets(
 // DRIFT NATURAL (mismo criterio que engine/game_engine.py)
 // ============================================================
 
+/**
+ * Cuanto empuja el humor social este turno, antes de aplicarlo a `happiness`.
+ * Separada de `naturalDrift` porque es la parte con mas logica de tuneo
+ * (ver comentario historico mas abajo sobre por que el castigo es logaritmico
+ * y no plano) y la que mas vale poder testear sola, sin tener que armar un
+ * `Country` completo y mutarlo para probar un caso.
+ */
+export function moodDrift(input: {
+  taxHappiness: number;
+  inflation: number;
+  prevInflation: number;
+  unemployment: number;
+  gdpGrowth: number;
+  debtToGdp: number;
+}): number {
+  const { taxHappiness, inflation, prevInflation, unemployment, gdpGrowth, debtToGdp } = input;
+
+  // El castigo por inflacion es logaritmico y esta acotado, y ademas cuenta
+  // la TENDENCIA: la gente no reacciona al nivel de precios sino a si la
+  // cosa mejora o empeora. Con el castigo plano anterior (-2 fijo con
+  // inflacion > 25) la felicidad tendia matematicamente a cero y paises como
+  // Argentina, que arrancan con 140%, eran imposibles de gobernar: no habia
+  // ningun equilibrio estable por encima de 0.
+  const trend = prevInflation - inflation; // positivo = la inflacion esta bajando
+
+  let mood = taxHappiness;
+  if (inflation > 10) mood -= Math.min(2, Math.log10(Math.max(inflation, 10) / 10) * 1.1);
+  if (trend > 0.5) mood += Math.min(1.2, trend * 0.15);       // desinflacionar se nota y se premia
+  else if (trend < -0.5) mood -= Math.min(1.2, -trend * 0.2); // que se dispare, tambien
+
+  if (unemployment > 12) mood -= 1.5;
+  else if (unemployment < 5) mood += 0.5;
+  if (gdpGrowth > 3) mood += 1;
+  else if (gdpGrowth < 0) mood -= 1.2;
+  if (debtToGdp > 110) mood -= 0.5;
+
+  return mood;
+}
+
 export function naturalDrift(
   countries: Record<string, Country>,
   blocs: Bloc[],
@@ -348,30 +387,15 @@ export function naturalDrift(
     // los sectores golpeados se recuperan solos
     recoverSectors(c);
 
-    // Presiones sobre el humor social.
-    //
-    // El castigo por inflacion es logaritmico y esta acotado, y ademas cuenta
-    // la TENDENCIA: la gente no reacciona al nivel de precios sino a si la
-    // cosa mejora o empeora. Con el castigo plano anterior (-2 fijo con
-    // inflacion > 25) la felicidad tendia matematicamente a cero y paises como
-    // Argentina, que arrancan con 140%, eran imposibles de gobernar: no habia
-    // ningun equilibrio estable por encima de 0.
-    const prev = c.prevInflation ?? e.inflation;
-    const trend = prev - e.inflation;          // positivo = la inflacion esta bajando
-
-    let mood = tax.happiness;
-    if (e.inflation > 10) {
-      mood -= Math.min(2, Math.log10(Math.max(e.inflation, 10) / 10) * 1.1);
-    }
-    if (trend > 0.5) mood += Math.min(1.2, trend * 0.15);      // desinflacionar se nota y se premia
-    else if (trend < -0.5) mood -= Math.min(1.2, -trend * 0.2); // que se dispare, tambien
-
-    if (e.unemployment > 12) mood -= 1.5;
-    else if (e.unemployment < 5) mood += 0.5;
-    if (e.gdp_growth > 3) mood += 1;
-    else if (e.gdp_growth < 0) mood -= 1.2;
-    if (e.debt_to_gdp > 110) mood -= 0.5;
-
+    // Presiones sobre el humor social (calculo puro en moodDrift, arriba).
+    const mood = moodDrift({
+      taxHappiness: tax.happiness,
+      inflation: e.inflation,
+      prevInflation: c.prevInflation ?? e.inflation,
+      unemployment: e.unemployment,
+      gdpGrowth: e.gdp_growth,
+      debtToGdp: e.debt_to_gdp
+    });
     c.prevInflation = e.inflation;
 
     p.happiness = round(clamp(p.happiness * 0.97 + 60 * 0.03 + mood, 0, 100), 1);
@@ -436,8 +460,12 @@ function pick<T>(items: { item: T; weight: number }[]): T | null {
   return items[items.length - 1].item;
 }
 
-/** Sortea los eventos del turno. Mismas probabilidades que el motor Python:
- *  25% mundial, 35% nacional, 15% personal. */
+/**
+ * Sortea los eventos del turno. El motor Python usa 25% mundial / 35%
+ * nacional / 15% personal; aca el mundial se subio a 40% a proposito: el
+ * resto del mundo tiene que sentirse presente, no como ruido de fondo que
+ * aparece una vez cada cuatro turnos.
+ */
 export function rollEvents(
   player: Country, world: GlobalState, turn: number, blocs: Bloc[],
   rel: Record<string, number>, recentIds: string[],
@@ -451,7 +479,7 @@ export function rollEvents(
       .filter((e) => (!scope || e.scope === scope) && (!e.when || e.when(ctx)) && !recentIds.includes(e.id))
       .map((e) => ({ item: e, weight: e.weight }));
 
-  if (Math.random() < 0.25) {
+  if (Math.random() < 0.4) {
     const e = pick(eligible(WORLD_EVENTS));
     if (e) out.push(e);
   }
@@ -557,6 +585,127 @@ export function aiReactions(
     if (out.length >= 4) break;
   }
   return out;
+}
+
+/**
+ * Roster de paises con IA activa: los de mayor PBI que no sean el jugador.
+ * Se recalcula cada turno (no cuesta nada y el PBI se mueve solo) y cubre
+ * a las potencias sea cual sea el pais que eligio el jugador. `size` de
+ * al menos 10 para que el resto del mundo se sienta vivo, no solo dos o
+ * tres vecinos reaccionando.
+ */
+export function aiRoster(countries: Record<string, Country>, player: string, size = 12): string[] {
+  return Object.values(countries)
+    .filter((c) => c.code !== player && c.playable)
+    .sort((a, b) => b.economy.gdp_trillion_usd - a.economy.gdp_trillion_usd)
+    .slice(0, size)
+    .map((c) => c.code);
+}
+
+export interface AiMove {
+  country: string;
+  emoji: string;
+  action: string;
+}
+
+/**
+ * Cada pais del roster evalua su propia situacion y, si hace falta, toma UNA
+ * decision propia por turno. No pasa por el motor de decisiones del jugador
+ * (ese cobra capital politico, tiene cooldowns y el jugador lo elige a mano):
+ * es una heuristica simple para que el resto del mundo se mueva solo, no
+ * para simular su politica interna con el mismo detalle que la del jugador.
+ *
+ * Es DISTINTA de `aiReactions`: esa reacciona a lo que hace el jugador
+ * (relaciones bilaterales). Esta actua sobre la economia propia del pais,
+ * pase lo que pase con el jugador.
+ */
+export function aiCountryDecisions(
+  countries: Record<string, Country>, roster: string[], world: GlobalState
+): AiMove[] {
+  const moves: AiMove[] = [];
+
+  for (const code of roster) {
+    const c = countries[code];
+    if (!c) continue;
+    const e = c.economy;
+
+    // no todos los paises activos hacen algo notorio cada mes: si no, el
+    // feed se llena de ruido y deja de comunicar nada.
+    if (Math.random() > 0.4) continue;
+
+    if (e.fiscal_balance < -6 && e.tax_iva < 32) {
+      e.tax_iva = round(Math.min(35, e.tax_iva + 2));
+      moves.push({ country: code, emoji: '📈', action: `${c.name} sube el IVA para frenar el deficit fiscal` });
+    } else if (e.unemployment > 12 && e.fiscal_balance > -4) {
+      applyDelta(c, { gdp_growth: 0.4, unemployment: -0.3, fiscal_balance: -0.6 }, world);
+      moves.push({ country: code, emoji: '💵', action: `${c.name} lanza un plan de estimulo contra el desempleo` });
+    } else if (e.inflation > 30) {
+      applyDelta(c, { inflation: -1.5, gdp_growth: -0.3 }, world);
+      moves.push({ country: code, emoji: '🏦', action: `${c.name} endurece la politica monetaria para frenar la inflacion` });
+    } else if (c.population.stability < 40) {
+      applyDelta(c, { stability: 2, happiness: 1 }, world);
+      moves.push({ country: code, emoji: '🕊️', action: `${c.name} lanza un plan social para calmar la calle` });
+    } else if (c.traits.priorities.includes('regional_influence') && Math.random() < 0.3) {
+      applyDelta(c, { global_tension: 1 }, world);
+      moves.push({ country: code, emoji: '🎖️', action: `${c.name} refuerza su presencia militar en la region` });
+    }
+  }
+
+  return moves;
+}
+
+/**
+ * Cuanto absorbe un pais un shock mundial segun el tamano de su economia.
+ * Una economia grande y diversificada amortigua mejor una recesion o un
+ * shock de petroleo que una chica y concentrada: mismo evento, golpe
+ * distinto. No es un ajuste cosmetico: multiplica el Delta que le toca a
+ * cada pais antes de aplicarlo.
+ */
+export function worldShockMultiplier(country: Country): number {
+  const gdp = country.economy.gdp_trillion_usd;
+  if (gdp >= 5) return 0.7;   // potencias: absorben mejor el golpe
+  if (gdp <= 0.5) return 1.35; // economias chicas: lo sienten mas fuerte
+  return 1.0;
+}
+
+/**
+ * Aplica el efecto mundial de un evento pais por pais, escalado por
+ * `worldShockMultiplier`, y devuelve quien lo paso mejor y quien peor
+ * (por variacion de crecimiento) para narrarlo en el feed. Sin esto, un
+ * evento mundial le pegaba lo mismo a todos y el jugador nunca veia que
+ * el resto del mundo tambien gana o pierde con lo que pasa afuera.
+ */
+export function applyWorldShock(
+  countries: Record<string, Country>, effects: Delta, roster: string[]
+): { best: string; worst: string; bestGrowth: number; worstGrowth: number } | null {
+  const before: Record<string, number> = {};
+  for (const code of roster) before[code] = countries[code]?.economy.gdp_growth ?? 0;
+
+  for (const c of Object.values(countries)) {
+    const mult = worldShockMultiplier(c);
+    const scaled: Delta = {};
+    for (const [k, v] of Object.entries(effects) as [keyof Delta, number][]) {
+      scaled[k] = v * mult;
+    }
+    applyDelta(c, scaled, undefined);
+  }
+
+  if (roster.length < 2) return null;
+  let best = roster[0];
+  let worst = roster[0];
+  for (const code of roster) {
+    const d = (countries[code]?.economy.gdp_growth ?? 0) - before[code];
+    const dBest = (countries[best]?.economy.gdp_growth ?? 0) - before[best];
+    const dWorst = (countries[worst]?.economy.gdp_growth ?? 0) - before[worst];
+    if (d > dBest) best = code;
+    if (d < dWorst) worst = code;
+  }
+  if (best === worst) return null;
+  return {
+    best, worst,
+    bestGrowth: countries[best].economy.gdp_growth,
+    worstGrowth: countries[worst].economy.gdp_growth
+  };
 }
 
 // ============================================================

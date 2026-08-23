@@ -1,4 +1,4 @@
-import type { Country, Delta } from './types';
+import type { Country, Delta, GameEvent } from './types';
 import { clamp } from './engine';
 import {
   CAPITAL_ON_WIN, decideBallotage, decideRound, grantHoneymoon, systemOf
@@ -37,6 +37,14 @@ export interface Politics {
   honeymoonUntil: number;
   /** hay una segunda vuelta pendiente el proximo mes */
   pendingBallotage: boolean;
+  /**
+   * Los dos partidos que componen la oposicion, de mayor a menor peso.
+   * Opcional: los saves viejos no lo traen (ver `oppositionSplit` para
+   * completarlo al vuelo sin romper compatibilidad).
+   */
+  oppositionParties?: [string, string];
+  /** true si ya se le oferto una coalicion a la oposicion este mandato */
+  coalitionOffered?: boolean;
 }
 
 export interface Candidate {
@@ -77,9 +85,53 @@ const PARTY_BY_IDEOLOGY: Record<string, string> = {
   monarchy: 'Union Constitucional'
 };
 
-export function defaultPolitics(country: Country, turn: number): Politics {
+/** Nombres de partidos opositores: los dos que le tocan a cada partida se
+ *  sortean de aca, evitando repetir el nombre del oficialismo. */
+const OPPOSITION_POOL = [
+  'Alianza Ciudadana', 'Union por el Cambio', 'Bloque Federal', 'Coalicion Civica',
+  'Nuevo Espacio', 'Frente Amplio', 'Partido Justicialista', 'Convergencia Nacional',
+  'Movimiento Progresista', 'Union Democratica'
+];
+
+function pickOppositionParties(exclude: string): [string, string] {
+  const pool = OPPOSITION_POOL.filter((n) => n !== exclude);
+  const a = pool[Math.floor(Math.random() * pool.length)];
+  const rest = pool.filter((n) => n !== a);
+  const b = rest[Math.floor(Math.random() * rest.length)];
+  return [a, b];
+}
+
+export type Difficulty = 'facil' | 'normal' | 'dificil';
+
+/** Solo mueve el punto de partida (capital politico y fuerza de la oposicion
+ *  al asumir): no toca ninguna formula de la simulacion turno a turno, asi
+ *  que gobernar bien o mal sigue dependiendo 100% de las decisiones del
+ *  jugador, no de un multiplicador escondido corriendo por detras. */
+export const DIFFICULTY_PRESETS: Record<Difficulty, { label: string; detail: string; capital: number; oppositionDelta: number }> = {
+  facil: {
+    label: 'Facil',
+    detail: 'Mas capital politico para arrancar y una oposicion mas debil.',
+    capital: 75,
+    oppositionDelta: -15
+  },
+  normal: {
+    label: 'Normal',
+    detail: 'Como viene el pais en el escenario base, sin ventajas ni penas.',
+    capital: 60,
+    oppositionDelta: 0
+  },
+  dificil: {
+    label: 'Dificil',
+    detail: 'Menos capital politico y una oposicion fuerte desde el primer dia.',
+    capital: 45,
+    oppositionDelta: 15
+  }
+};
+
+export function defaultPolitics(country: Country, turn: number, difficulty: Difficulty = 'normal'): Politics {
   const party = PARTY_BY_IDEOLOGY[country.traits.ideology] ?? 'Frente de Gobierno';
   const sys = systemOf(country.code);
+  const oppositionDelta = DIFFICULTY_PRESETS[difficulty].oppositionDelta;
   return {
     partyName: party,
     leaderName: 'el oficialismo',
@@ -88,15 +140,25 @@ export function defaultPolitics(country: Country, turn: number): Politics {
     consecutiveTerms: 1,
     maxConsecutive: sys.maxConsecutive,
     // un pais estable tiene oposicion moderada; uno convulsionado, una feroz
-    opposition: clamp(Math.round(100 - country.population.stability), 20, 80),
+    opposition: clamp(Math.round(100 - country.population.stability) + oppositionDelta, 15, 90),
     electionsWon: 0,
     powerSince: turn,
     // el oficialismo arranca con una mayoria ajustada, no comoda
     seats: clamp(Math.round(48 + (country.population.stability - 50) * 0.2), 30, 62),
     pollHistory: [],
     honeymoonUntil: grantHoneymoon(turn),
-    pendingBallotage: false
+    pendingBallotage: false,
+    oppositionParties: pickOppositionParties(party),
+    coalitionOffered: false
   };
+}
+
+/** Reparto de la fuerza total de oposicion entre sus dos partidos: el
+ *  primero se lleva la mayoria, no es un 50/50 parejo. Solo para mostrar
+ *  y para calcular cuanto resta si uno de los dos se suma a una coalicion. */
+export function oppositionSplit(opposition: number): [number, number] {
+  const a = Math.round(opposition * 0.58 * 10) / 10;
+  return [a, Math.round((opposition - a) * 10) / 10];
 }
 
 // ------------------------------------------------------------------
@@ -272,6 +334,123 @@ export function runMidterm(country: Country, p: Politics, capital: number): Elec
       ? `El Congreso acompana. +${25} de capital politico y 4 meses de pasivo doble.`
       : 'La oposicion se queda con la Camara. Gobernar se encarece.'
   };
+}
+
+// ------------------------------------------------------------------
+// Campaña: coalicion pre-electoral y discurso de cierre
+// ------------------------------------------------------------------
+
+/**
+ * Eventos forzados de campaña, no aleatorios: se disparan por la agenda
+ * electoral, no por sorteo (weight: 0, no compiten con el resto).
+ *
+ *  - A 3 meses de la eleccion: uno de los dos partidos opositores puede
+ *    sumarse a tu coalicion a cambio de un costo politico. Reduce la
+ *    oposicion de forma directa y permanente, no como el drift normal.
+ *  - A 1 mes (el turno inmediato anterior): 5 discursos de cierre para
+ *    elegir. Se resuelven ANTES de la eleccion (al planificar la eleccion
+ *    ya corrio ese mismo turno con el efecto del discurso adentro), asi
+ *    que el discurso que elegis define con que numeros llegas a la boleta.
+ */
+export function campaignEvents(p: Politics, turn: number): GameEvent[] {
+  const out: GameEvent[] = [];
+  const meses = monthsToElection(p, turn);
+  const [partyA, partyB] = p.oppositionParties ?? ['la oposicion mayor', 'la oposicion menor'];
+  const [shareA, shareB] = oppositionSplit(p.opposition);
+
+  if (meses === 3 && !p.coalitionOffered) {
+    out.push({
+      id: 'oferta_coalicion',
+      scope: 'nacional',
+      title: 'Se abre la campaña: la oposicion no es un bloque unico',
+      emoji: '🤝',
+      tags: ['politica', 'eleccion'],
+      weight: 0,
+      duration: 1,
+      description:
+        `A 3 meses de la eleccion, ${partyA} (${shareA} pts) y ${partyB} (${shareB} pts) no van tan juntos como parecen. `
+        + 'Alguno de los dos podria sumarse a tu coalicion a cambio de lugares en el gobierno.',
+      choices: [
+        {
+          id: 'partyA',
+          label: `Negociar con ${partyA}`,
+          detail: 'El mas grande de los dos: pesa mas en la oposicion, pero pide mas para cruzar.',
+          cost: { capital: 15 },
+          effects: { stability: -1 },
+          relations: []
+        },
+        {
+          id: 'partyB',
+          label: `Negociar con ${partyB}`,
+          detail: 'El mas chico: cede menos oposicion, pero sale mas barato.',
+          cost: { capital: 8 },
+          effects: {},
+          relations: []
+        },
+        {
+          id: 'no_negociar',
+          label: 'No negociar: ir solo a la campaña',
+          detail: 'Cero costo, cero riesgo de que te acusen de "pacto con la casta". La oposicion sigue entera.',
+          effects: {}
+        }
+      ]
+    });
+  }
+
+  if (meses === 1) {
+    out.push({
+      id: 'discurso_cierre',
+      scope: 'nacional',
+      title: 'Discurso de cierre de campaña',
+      emoji: '🎤',
+      tags: ['politica', 'eleccion'],
+      weight: 0,
+      duration: 1,
+      description:
+        'La eleccion es el mes que viene. Este es tu ultimo acto de campaña antes de que se cuenten los votos: '
+        + 'lo que digas hoy pesa en el resultado.',
+      choices: [
+        {
+          id: 'unidad',
+          label: 'Discurso de unidad y esperanza',
+          detail: 'Convocas a todos, sin marcar enemigos. Suma parejo, entusiasma poco.',
+          effects: { happiness: 3, capital: 4 }
+        },
+        {
+          id: 'mano_dura',
+          label: 'Discurso de mano dura contra la oposicion',
+          detail: 'Consolidas tu base a los gritos. Energiza tambien al que se te opone.',
+          effects: { stability: 2, capital: 6, happiness: -2 },
+          relations: []
+        },
+        {
+          id: 'tecnico',
+          label: 'Discurso tecnico, con numeros y plan de gobierno',
+          detail: 'Serio y sin sorpresas. No entusiasma, pero tampoco falla.',
+          effects: { capital: 3, stability: 1 }
+        },
+        {
+          id: 'emotivo',
+          label: 'Discurso emotivo, apelando al corazon',
+          detail: 'Alto impacto si prende. Si se lee como demagogia, te sale caro.',
+          effects: { happiness: 5, capital: 8 },
+          risk: {
+            chance: 0.35,
+            label: 'Se lee como demagogia vacia y el efecto se da vuelta',
+            effects: { happiness: -4, capital: -6 }
+          }
+        },
+        {
+          id: 'bajo_perfil',
+          label: 'No dar discurso de cierre: bajo perfil',
+          detail: 'Cero riesgo. Tambien cero oportunidad.',
+          effects: {}
+        }
+      ]
+    });
+  }
+
+  return out;
 }
 
 // ------------------------------------------------------------------

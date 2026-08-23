@@ -6,6 +6,11 @@ import { useGame } from '@/lib/store';
 /**
  * Puente con Grok: genera el prompt compacto del turno (formato PROMPT_MAESTRO.md),
  * lo copias, lo pegas en Grok, y volves con el JSON de reacciones para aplicarlo.
+ *
+ * Es manual a proposito: no hay fetch a ninguna API externa aca, asi que no
+ * hay ninguna clave que exponer. Si algun dia esto se automatiza (llamar a
+ * la API de Grok directo), esa llamada tiene que salir de una API route
+ * server-side, nunca de este componente 'use client' con la key en el bundle.
  */
 export default function GrokBridge({ onClose }: { onClose: () => void }) {
   const prompt = useGame((s) => s.grokPrompt)();

@@ -1,10 +1,63 @@
 'use client';
 
 import { getRelation, relLabel, useGame } from '@/lib/store';
+import type { HistoryPoint } from '@/lib/store';
 import { REL_COLORS } from '@/lib/engine';
 import { partnersOf, totalTrade, type TradeContext } from '@/lib/trade';
 import { DECISIONS } from '@/lib/decisions';
 import { previewDelta } from '@/lib/engine';
+
+/** Tendencias del mandato: varios indicadores juntos, cada uno normalizado a
+ * su propio rango (si no, la inflacion de Argentina tapa todo lo demas). */
+const TREND_SERIES: { key: keyof HistoryPoint; label: string; color: string }[] = [
+  { key: 'growth', label: 'Crecimiento', color: '#37c98a' },
+  { key: 'inflation', label: 'Inflacion', color: '#e5484d' },
+  { key: 'unemployment', label: 'Desempleo', color: '#f0a742' },
+  { key: 'fiscal', label: 'Balance fiscal', color: '#4f7cff' },
+  { key: 'happiness', label: 'Felicidad', color: '#f5d76e' }
+];
+
+function TrendChart({ history }: { history: HistoryPoint[] }) {
+  const pts = history.slice(-48);
+  if (pts.length < 2) {
+    return <p className="muted" style={{ fontSize: 11.5 }}>Todavia no hay suficiente historial.</p>;
+  }
+  const W = 300;
+  const H = 90;
+
+  return (
+    <div>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} preserveAspectRatio="none">
+        <line x1={0} y1={H / 2} x2={W} y2={H / 2} stroke="#1e293f" strokeWidth={1} />
+        {TREND_SERIES.map((s) => {
+          const values = pts.map((p) => Number(p[s.key] ?? 0));
+          const min = Math.min(...values);
+          const max = Math.max(...values);
+          const span = max - min || 1;
+          const d = values
+            .map((v, i) => {
+              const x = (i / (values.length - 1)) * W;
+              const y = H - ((v - min) / span) * H;
+              return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
+            })
+            .join(' ');
+          return <path key={s.key} d={d} fill="none" stroke={s.color} strokeWidth={1.6} />;
+        })}
+      </svg>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 4 }}>
+        {TREND_SERIES.map((s) => (
+          <span key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10.5, color: 'var(--muted)' }}>
+            <i style={{ width: 10, height: 2, background: s.color, display: 'inline-block' }} /> {s.label}
+          </span>
+        ))}
+      </div>
+      <p className="muted" style={{ fontSize: 10, marginTop: 4 }}>
+        Ultimos {pts.length} meses. Cada linea esta escalada a su propio rango, asi que compara forma
+        (sube/baja), no magnitud entre lineas.
+      </p>
+    </div>
+  );
+}
 
 function Meter({ label, value, max = 100 }: { label: string; value: number; max?: number }) {
   const pct = Math.max(0, Math.min(100, (value / max) * 100));
@@ -36,7 +89,7 @@ function scaledEffectsOf(d: (typeof DECISIONS)[number], size: number) {
 export default function CountryPanel() {
   const {
     countries, relations, blocs, playerCode, selected, capital, sanctions,
-    disruptions, turn, tradeBase
+    disruptions, turn, tradeBase, history
   } = useGame();
   const plan = useGame((s) => s.planDecision);
   const available = useGame((s) => s.availableCapital)();
@@ -91,6 +144,13 @@ export default function CountryPanel() {
         <div className="row"><span>Reservas de oro</span><b>{c.economy.gold_reserves_tonnes} t</b></div>
         <div className="row"><span>Poblacion</span><b>{c.population.total_millions} M</b></div>
       </div>
+
+      {isPlayer && (
+        <div className="section">
+          <h3>Tendencias</h3>
+          <TrendChart history={history} />
+        </div>
+      )}
 
       <div className="section">
         <h3>Comercio</h3>

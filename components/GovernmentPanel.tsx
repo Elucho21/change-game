@@ -5,6 +5,7 @@ import { monthsToElection, needsSuccessor, oppositionCostFactor } from '@/lib/po
 import { systemOf } from '@/lib/electoral';
 import { damagedSectors, taxEffects } from '@/lib/engine';
 import { plannedTaxRate } from '@/lib/orders';
+import { oppositionSplit } from '@/lib/politics';
 
 /**
  * Panel de gobierno: mandato, oposicion, encuesta y politica impositiva.
@@ -91,7 +92,7 @@ export default function GovernmentPanel() {
       <div className="section">
         <h3>Oposicion</h3>
         <div className="row">
-          <span>Fuerza</span>
+          <span>Fuerza total</span>
           <b className={politics.opposition > 60 ? 'bad' : politics.opposition < 35 ? 'good' : 'warn'}>
             {politics.opposition}
           </b>
@@ -99,9 +100,22 @@ export default function GovernmentPanel() {
         <div className="bar">
           <div style={{ width: `${politics.opposition}%`, background: 'var(--bad)' }} />
         </div>
+
+        {politics.oppositionParties && (() => {
+          const [partyA, partyB] = politics.oppositionParties;
+          const [shareA, shareB] = oppositionSplit(politics.opposition);
+          return (
+            <div style={{ marginTop: 8 }}>
+              <div className="row"><span>{partyA}</span><b>{shareA}</b></div>
+              <div className="row"><span>{partyB}</span><b>{shareB}</b></div>
+            </div>
+          );
+        })()}
+
         <p className="muted" style={{ fontSize: 11.5, marginTop: 6 }}>
           Cada decision te cuesta <b className={costFactor > 1 ? 'bad' : 'good'}>{costFactor}x</b> capital politico.
           {politics.opposition > 60 && ' Con esta oposicion, gobernar se vuelve caro: convoca al dialogo o mejora el humor social.'}
+          {' '}A 3 meses de la eleccion podes ofrecerle una coalicion a alguno de los dos, y a 1 mes elegis tu discurso de cierre.
         </p>
       </div>
 

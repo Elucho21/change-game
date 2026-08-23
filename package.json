@@ -5,9 +5,11 @@
   "scripts": {
     "dev": "next dev -p 3010",
     "build": "next build",
+    "analyze": "cross-env ANALYZE=true next build",
     "start": "next start -p 3010",
-    "lint": "next lint",
+    "lint": "eslint .",
     "data": "node scripts/build-data.mjs",
+    "textures": "node scripts/optimize-textures.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -20,9 +22,15 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.6",
+    "@next/bundle-analyzer": "^16.3.2",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "cross-env": "^10.1.0",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^15.5.23",
+    "sharp": "^0.34.5",
     "typescript": "^5.7.0",
     "vitest": "^4.1.11"
   },

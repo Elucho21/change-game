@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import data from '../lib/data/countries.gen.json';
-import { applySectorShock, canJoin, ratesOf, taxEffects } from '../lib/engine';
+import {
+  aiCountryDecisions, aiRoster, applySectorShock, applyWorldShock, canJoin, ratesOf, taxEffects,
+  worldShockMultiplier
+} from '../lib/engine';
 import { bilateralVolume, tradeBaseline, tradeMatrix, volumeFrom, type TradeContext } from '../lib/trade';
 import { deterministicTick, projectDecision, type SimState } from '../lib/simulation';
 import {
@@ -491,5 +494,71 @@ describe('acciones de gobierno', () => {
     for (const d of DECISIONS) {
       expect(d.cost.capital, `${d.id} no cuesta capital`).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('IA de paises rivales', () => {
+  it('el roster tiene al menos 10 paises y nunca incluye al jugador', () => {
+    const countries = fresh(RAW.countries);
+    const roster = aiRoster(countries, 'Argentina');
+    expect(roster.length).toBeGreaterThanOrEqual(10);
+    expect(roster).not.toContain('Argentina');
+  });
+
+  it('ordena el roster de mayor a menor PBI', () => {
+    const countries = fresh(RAW.countries);
+    const roster = aiRoster(countries, 'Argentina');
+    const gdps = roster.map((code) => countries[code].economy.gdp_trillion_usd);
+    for (let i = 1; i < gdps.length; i++) expect(gdps[i]).toBeLessThanOrEqual(gdps[i - 1]);
+  });
+
+  it('un pais con deficit muy negativo sube el IVA cuando le toca actuar', () => {
+    const countries = fresh(RAW.countries);
+    countries.Brazil.economy.fiscal_balance = -10;
+    countries.Brazil.economy.tax_iva = 20;
+    const before = countries.Brazil.economy.tax_iva;
+
+    const originalRandom = Math.random;
+    Math.random = () => 0; // fuerza a que el pais actue este turno
+    try {
+      aiCountryDecisions(countries, ['Brazil'], fresh(RAW.global));
+    } finally {
+      Math.random = originalRandom;
+    }
+
+    expect(countries.Brazil.economy.tax_iva).toBeGreaterThan(before);
+  });
+
+  it('nunca mueve al pais del jugador si no esta en el roster que se le pasa', () => {
+    const countries = fresh(RAW.countries);
+    const before = JSON.stringify(countries.Argentina);
+    aiCountryDecisions(countries, aiRoster(countries, 'Argentina'), fresh(RAW.global));
+    expect(JSON.stringify(countries.Argentina)).toBe(before);
+  });
+});
+
+describe('shock mundial diferenciado', () => {
+  it('una potencia absorbe mejor el golpe que una economia chica', () => {
+    const countries = fresh(RAW.countries);
+    expect(worldShockMultiplier(countries.USA)).toBeLessThan(worldShockMultiplier(countries.Bolivia));
+  });
+
+  it('aplica el mismo shock con distinta intensidad segun el pais', () => {
+    const countries = fresh(RAW.countries);
+    countries.USA.economy.gdp_growth = 2;
+    countries.Bolivia.economy.gdp_growth = 2;
+    applyWorldShock(countries, { gdp_growth: -1 }, []);
+    // USA (grande, multiplicador 0.7) cae menos que Bolivia (chica, 1.35)
+    expect(countries.USA.economy.gdp_growth).toBeGreaterThan(countries.Bolivia.economy.gdp_growth);
+  });
+
+  it('devuelve quien lo paso mejor y peor dentro del roster', () => {
+    const countries = fresh(RAW.countries);
+    const roster = ['USA', 'Bolivia'];
+    for (const code of roster) countries[code].economy.gdp_growth = 2;
+    const spread = applyWorldShock(countries, { gdp_growth: -1 }, roster);
+    expect(spread).not.toBeNull();
+    expect(spread!.best).toBe('USA');
+    expect(spread!.worst).toBe('Bolivia');
   });
 });

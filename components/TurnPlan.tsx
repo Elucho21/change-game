@@ -1,7 +1,8 @@
 'use client';
 
 import { useGame } from '@/lib/store';
-import { committedCapital } from '@/lib/orders';
+import { committedCapital, estimatedTurnEffects } from '@/lib/orders';
+import { previewDelta } from '@/lib/engine';
 
 /**
  * Plan del turno: lo que decidiste hacer y todavia no paso.
@@ -12,6 +13,8 @@ export default function TurnPlan() {
   const capital = useGame((s) => s.capital);
   const cancelOrder = useGame((s) => s.cancelOrder);
   const clearOrders = useGame((s) => s.clearOrders);
+  const countries = useGame((s) => s.countries);
+  const playerCode = useGame((s) => s.playerCode);
 
   if (orders.length === 0) {
     return (
@@ -27,6 +30,7 @@ export default function TurnPlan() {
 
   const comprometido = committedCapital(orders);
   const disponible = Math.round((capital - comprometido) * 10) / 10;
+  const estimado = previewDelta(estimatedTurnEffects(orders, countries[playerCode]));
 
   return (
     <div className="section plan">
@@ -34,6 +38,22 @@ export default function TurnPlan() {
         Plan del turno ({orders.length}){' '}
         <button className="link" onClick={clearOrders} title="Vaciar el plan">vaciar</button>
       </h3>
+
+      {estimado.length > 0 && (
+        <div className="card" style={{ marginBottom: 8 }}>
+          <h4 style={{ fontSize: 11.5 }}>Efecto combinado estimado</h4>
+          <span className="preview">
+            {estimado.map((d) => (
+              <em key={d.key} className={d.tone === 'bueno' ? 'good' : 'bad'}>
+                {d.label} {d.value > 0 ? '+' : ''}{d.value}
+              </em>
+            ))}
+          </span>
+          <p className="muted" style={{ fontSize: 10.5, margin: '6px 0 0' }}>
+            Solo decisiones e impuestos planeados. Bloques, gabinete y eventos no suman aca.
+          </p>
+        </div>
+      )}
 
       {orders.map((o, i) => (
         <div className="plan-item" key={`${o.kind}-${i}`}>

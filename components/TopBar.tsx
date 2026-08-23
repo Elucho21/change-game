@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { dateLabel, useGame } from '@/lib/store';
+import { exportSave } from '@/lib/persistence';
 import type { HistoryPoint } from '@/lib/store';
 import { monthsToElection } from '@/lib/politics';
 
@@ -68,6 +69,19 @@ function Stat({
   const [open, setOpen] = useState(false);
   const puedeGraficar = !!metric && !!history;
 
+  // flash breve cuando el numero cambia: asi ejecutar el turno se siente
+  // como que algo paso de verdad, no solo un texto que cambia sin mas.
+  const [flash, setFlash] = useState(false);
+  const prevValue = useRef(value);
+  useEffect(() => {
+    if (prevValue.current !== value) {
+      prevValue.current = value;
+      setFlash(true);
+      const t = setTimeout(() => setFlash(false), 500);
+      return () => clearTimeout(t);
+    }
+  }, [value]);
+
   return (
     <div
       className="stat"
@@ -75,7 +89,7 @@ function Stat({
       onMouseEnter={() => puedeGraficar && setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
-      <b className={tone}>{value}</b>
+      <b className={`${tone ?? ''}${flash ? ' stat-flash' : ''}`}>{value}</b>
       <span>{label}{puedeGraficar ? ' ·' : ''}</span>
       {open && metric && history && (
         <div className="stat-pop">
@@ -95,6 +109,19 @@ export default function TopBar({ onGrok }: { onGrok: () => void }) {
   const newGame = useGame((s) => s.newGame);
   const p = countries[playerCode];
   const e = p.economy;
+
+  // endTurn es sincronico (no hay ningun await de por medio), asi que dos
+  // clicks rapidos no compiten por el mismo estado: cada uno se procesa
+  // entero antes del siguiente. El problema es otro: un doble click sin
+  // querer avanza dos meses de una sin que el jugador lo pida. Se bloquea
+  // el boton un instante despues de cada click para que eso no pase.
+  const [busy, setBusy] = useState(false);
+  const handleEndTurn = () => {
+    if (busy) return;
+    setBusy(true);
+    endTurn();
+    setTimeout(() => setBusy(false), 350);
+  };
 
   return (
     <div className="topbar">
@@ -154,6 +181,9 @@ export default function TopBar({ onGrok }: { onGrok: () => void }) {
 
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <button onClick={onGrok} title="Genera el prompt del turno para pegar en Grok">🤖 Grok</button>
+        <button onClick={() => exportSave()} title="Descarga la partida como archivo .json (no se pierde aunque se borre el navegador)">
+          💾
+        </button>
         <button
           onClick={() => {
             if (confirm('Se borra la partida guardada y volves a elegir pais. Seguro?')) newGame();
@@ -164,7 +194,8 @@ export default function TopBar({ onGrok }: { onGrok: () => void }) {
         </button>
         <button
           className="btn-primary"
-          onClick={endTurn}
+          onClick={handleEndTurn}
+          disabled={busy}
           title={orders.length ? 'Ejecuta el plan y avanza el mes' : 'Avanza el mes sin tomar decisiones'}
         >
           {orders.length

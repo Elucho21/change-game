@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useGame } from '@/lib/store';
+import { damagedSectors } from '@/lib/engine';
 import GlobeView from './GlobeView';
 import TopBar from './TopBar';
 import CountryPanel from './CountryPanel';
@@ -14,6 +15,7 @@ import ElectionModal from './ElectionModal';
 import TurnPlan from './TurnPlan';
 import Feed from './Feed';
 import GrokBridge from './GrokBridge';
+import Onboarding from './Onboarding';
 
 type Tab = 'pais' | 'gobierno' | 'gabinete' | 'decisiones' | 'bloques' | 'eventos';
 
@@ -31,6 +33,15 @@ export default function GameShell() {
   const [grok, setGrok] = useState(false);
   const gameOver = useGame((s) => s.gameOver);
   const newGame = useGame((s) => s.newGame);
+  const pendingCount = useGame((s) => s.pending.length);
+  const damagedCount = useGame((s) => damagedSectors(s.countries[s.playerCode]).length);
+
+  // Cuantos avisos tiene cada pestana que no es la activa: para notar que
+  // paso algo en otro lado sin tener que ir clickeando las seis a ver.
+  const BADGES: Partial<Record<Tab, number>> = {
+    decisiones: pendingCount,
+    pais: damagedCount
+  };
 
   return (
     <div className="app">
@@ -39,11 +50,15 @@ export default function GameShell() {
       <div className="stage">
         <div className="col">
           <div className="tabs">
-            {TABS.map((t) => (
-              <button key={t.id} className={tab === t.id ? 'on' : ''} onClick={() => setTab(t.id)}>
-                {t.label}
-              </button>
-            ))}
+            {TABS.map((t) => {
+              const badge = BADGES[t.id];
+              return (
+                <button key={t.id} className={tab === t.id ? 'on' : ''} onClick={() => setTab(t.id)}>
+                  {t.label}
+                  {!!badge && tab !== t.id && <span className="tab-badge">{badge}</span>}
+                </button>
+              );
+            })}
           </div>
           {tab === 'pais' && <CountryPanel />}
           {tab === 'gobierno' && <GovernmentPanel />}
@@ -62,6 +77,8 @@ export default function GameShell() {
       </div>
 
       {grok && <GrokBridge onClose={() => setGrok(false)} />}
+
+      <Onboarding />
 
       <ElectionModal />
 
