@@ -16,6 +16,40 @@ type MetricKey = keyof Omit<HistoryPoint, 'turn'>;
 /** Metricas donde subir es malo, para pintar la linea del color correcto. */
 const BAD_UP: MetricKey[] = ['inflation', 'unemployment', 'debt', 'opposition', 'tension', 'oil', 'fx'];
 
+/**
+ * Explicacion de "por que" detras de cada numero. No son solo datos: son la
+ * relacion entre metricas que el jugador no ve en ningun otro lado. La mas
+ * importante es deuda/fiscal: mejorar el balance fiscal sin llegar a 0 sigue
+ * dejando que la deuda suba (mas lento, pero sube), y eso se siente como que
+ * "se pierde lo conseguido" cuando en realidad el balance fiscal no se movio.
+ */
+function statInsight(
+  metric: MetricKey,
+  ctx: { fiscal: number; debt: number; opposition: number; happiness: number }
+): string | null {
+  switch (metric) {
+    case 'debt':
+      if (ctx.fiscal >= 0) return 'Balance fiscal en positivo: la deuda ya deberia estar bajando.';
+      return `Sube mientras el balance fiscal sea negativo (ahora ${ctx.fiscal}%), aunque haya mejorado. `
+        + 'Para que empiece a bajar hace falta llegar a 0% o mas, no solo mejorar.'
+        + (ctx.debt > 110 ? ' Ademas, arriba de 110% del PBI la deuda resta humor social todos los meses.' : '');
+    case 'fiscal':
+      return ctx.fiscal >= 0
+        ? 'En superavit: cada mes que se sostiene, la deuda baja.'
+        : 'Mientras sea negativo la deuda sigue subiendo, aunque el numero haya mejorado. El objetivo real es cruzar a 0.';
+    case 'happiness':
+      return ctx.debt > 110
+        ? 'Ademas de inflacion, desempleo y crecimiento, una deuda arriba de 110% del PBI resta humor social todos los meses por si sola.'
+        : null;
+    case 'opposition':
+      return ctx.opposition > 60
+        ? 'Con oposicion alta, las decisiones grandes cuestan mas capital politico (ver Gobierno).'
+        : null;
+    default:
+      return null;
+  }
+}
+
 function Sparkline({ points, metric }: { points: HistoryPoint[]; metric: MetricKey }) {
   const pts = points.slice(-24);
   if (pts.length < 2) {
@@ -58,16 +92,27 @@ function Sparkline({ points, metric }: { points: HistoryPoint[]; metric: MetricK
 }
 
 function Stat({
-  label, value, tone, metric, history
+  label, value, tone, metric, history, insight
 }: {
   label: string;
   value: string;
   tone?: string;
   metric?: MetricKey;
   history?: HistoryPoint[];
+  insight?: string | null;
 }) {
   const [open, setOpen] = useState(false);
-  const puedeGraficar = !!metric && !!history;
+  const puedeExpandir = !!metric && !!history;
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClickOutside = (ev: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(ev.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, [open]);
 
   // flash breve cuando el numero cambia: asi ejecutar el turno se siente
   // como que algo paso de verdad, no solo un texto que cambia sin mas.
@@ -83,18 +128,22 @@ function Stat({
   }, [value]);
 
   return (
-    <div
-      className="stat"
-      style={puedeGraficar ? { cursor: 'help', position: 'relative' } : undefined}
-      onMouseEnter={() => puedeGraficar && setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-    >
-      <b className={`${tone ?? ''}${flash ? ' stat-flash' : ''}`}>{value}</b>
-      <span>{label}{puedeGraficar ? ' ·' : ''}</span>
+    <div className="stat" style={{ position: 'relative' }} ref={wrapRef}>
+      <button
+        type="button"
+        className="stat-trigger"
+        disabled={!puedeExpandir}
+        onClick={() => setOpen((o) => !o)}
+        title={puedeExpandir ? (open ? 'Ver menos' : 'Ver evolucion y detalle') : undefined}
+      >
+        <b className={`${tone ?? ''}${flash ? ' stat-flash' : ''}`}>{value}</b>
+        <span>{label}{puedeExpandir ? (open ? ' ▲' : ' ▾') : ''}</span>
+      </button>
       {open && metric && history && (
         <div className="stat-pop">
           <div className="stat-pop-title">{label}</div>
           <Sparkline points={history} metric={metric} />
+          {insight && <p className="muted stat-pop-insight">{insight}</p>}
         </div>
       )}
     </div>
@@ -109,6 +158,9 @@ export default function TopBar({ onGrok }: { onGrok: () => void }) {
   const newGame = useGame((s) => s.newGame);
   const p = countries[playerCode];
   const e = p.economy;
+  const insightCtx = {
+    fiscal: e.fiscal_balance, debt: e.debt_to_gdp, opposition: politics.opposition, happiness: p.population.happiness
+  };
 
   // endTurn es sincronico (no hay ningun await de por medio), asi que dos
   // clicks rapidos no compiten por el mismo estado: cada uno se procesa
@@ -137,7 +189,8 @@ export default function TopBar({ onGrok }: { onGrok: () => void }) {
         <Stat label="Capital politico" value={`${Math.round(capital)}`} metric="capital" history={history}
           tone={capital < 20 ? 'bad' : capital > 60 ? 'good' : 'warn'} />
         <Stat label="Felicidad" value={`${p.population.happiness}`} metric="happiness" history={history}
-          tone={p.population.happiness < 40 ? 'bad' : p.population.happiness > 65 ? 'good' : ''} />
+          tone={p.population.happiness < 40 ? 'bad' : p.population.happiness > 65 ? 'good' : ''}
+          insight={statInsight('happiness', insightCtx)} />
         <Stat label="Estabilidad" value={`${p.population.stability}`} metric="stability" history={history}
           tone={p.population.stability < 40 ? 'bad' : p.population.stability > 65 ? 'good' : ''} />
         <Stat label="Crecimiento" value={`${e.gdp_growth}%`} metric="growth" history={history}
@@ -147,9 +200,11 @@ export default function TopBar({ onGrok }: { onGrok: () => void }) {
         <Stat label="Desempleo" value={`${e.unemployment}%`} metric="unemployment" history={history}
           tone={e.unemployment > 10 ? 'bad' : ''} />
         <Stat label="Fiscal" value={`${e.fiscal_balance}%`} metric="fiscal" history={history}
-          tone={e.fiscal_balance < -3 ? 'bad' : e.fiscal_balance > 0 ? 'good' : 'warn'} />
+          tone={e.fiscal_balance < -3 ? 'bad' : e.fiscal_balance > 0 ? 'good' : 'warn'}
+          insight={statInsight('fiscal', insightCtx)} />
         <Stat label="Deuda/PBI" value={`${e.debt_to_gdp}%`} metric="debt" history={history}
-          tone={e.debt_to_gdp > 90 ? 'bad' : ''} />
+          tone={e.debt_to_gdp > 90 ? 'bad' : ''}
+          insight={statInsight('debt', insightCtx)} />
         <Stat
           label="Tipo de cambio"
           value={`${p.fx ?? 100}`}
@@ -166,7 +221,8 @@ export default function TopBar({ onGrok }: { onGrok: () => void }) {
           tone={monthsToElection(politics, turn) <= 6 ? 'warn' : ''}
         />
         <Stat label="Oposicion" value={`${politics.opposition}`} metric="opposition" history={history}
-          tone={politics.opposition > 60 ? 'bad' : politics.opposition < 35 ? 'good' : ''} />
+          tone={politics.opposition > 60 ? 'bad' : politics.opposition < 35 ? 'good' : ''}
+          insight={statInsight('opposition', insightCtx)} />
       </div>
 
       {active.length > 0 && (

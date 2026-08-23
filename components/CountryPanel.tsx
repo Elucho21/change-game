@@ -6,6 +6,7 @@ import { REL_COLORS } from '@/lib/engine';
 import { partnersOf, totalTrade, type TradeContext } from '@/lib/trade';
 import { DECISIONS } from '@/lib/decisions';
 import { previewDelta } from '@/lib/engine';
+import Collapsible from './Collapsible';
 
 /** Tendencias del mandato: varios indicadores juntos, cada uno normalizado a
  * su propio rango (si no, la inflacion de Argentina tapa todo lo demas). */
@@ -146,14 +147,12 @@ export default function CountryPanel() {
       </div>
 
       {isPlayer && (
-        <div className="section">
-          <h3>Tendencias</h3>
+        <Collapsible title="Tendencias">
           <TrendChart history={history} />
-        </div>
+        </Collapsible>
       )}
 
-      <div className="section">
-        <h3>Comercio</h3>
+      <Collapsible title="Comercio">
         <div className="row">
           <span>Intercambio total</span>
           <b>{Math.round(total)} mil M USD</b>
@@ -173,19 +172,17 @@ export default function CountryPanel() {
             <b className={f.sanctioned ? 'bad' : ''}>{Math.round(f.volume)}</b>
           </div>
         ))}
-      </div>
+      </Collapsible>
 
-      <div className="section">
-        <h3>Militar</h3>
+      <Collapsible title="Militar" defaultOpen={false}>
         <div className="row"><span>Presupuesto</span><b>{c.military.military_budget_bn} B USD</b></div>
         <div className="row"><span>Efectivos</span><b>{c.military.active_soldiers.toLocaleString('es')}</b></div>
         <div className="row"><span>Aviones / tanques</span><b>{c.military.aircraft} / {c.military.tanks}</b></div>
         <div className="row"><span>Submarinos / buques</span><b>{c.military.submarines} / {c.military.naval_ships}</b></div>
         <div className="row"><span>Ojivas nucleares</span><b className={c.military.nuclear_warheads > 0 ? 'warn' : ''}>{c.military.nuclear_warheads}</b></div>
-      </div>
+      </Collapsible>
 
-      <div className="section">
-        <h3>Perfil</h3>
+      <Collapsible title="Perfil" defaultOpen={false}>
         <div className="row"><span>Ideologia</span><b>{c.traits.ideology}</b></div>
         <div className="row"><span>Agresividad</span><b>{c.traits.aggression}</b></div>
         <div className="row"><span>Tolerancia al riesgo</span><b>{c.traits.risk_tolerance}</b></div>
@@ -193,10 +190,9 @@ export default function CountryPanel() {
         <p className="muted" style={{ fontSize: 11.5, marginTop: 6 }}>
           Prioridades: {c.traits.priorities.join(', ')}
         </p>
-      </div>
+      </Collapsible>
 
-      <div className="section">
-        <h3>Bloques</h3>
+      <Collapsible title="Bloques">
         {memberships.length === 0 && <p className="muted" style={{ fontSize: 12 }}>Sin membresias.</p>}
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {memberships.map((b) => (
@@ -205,11 +201,10 @@ export default function CountryPanel() {
             </span>
           ))}
         </div>
-      </div>
+      </Collapsible>
 
       {!isPlayer && (
-        <div className="section">
-          <h3>Acciones bilaterales</h3>
+        <Collapsible title="Acciones bilaterales">
           <p className="muted" style={{ fontSize: 11, margin: '-4px 0 8px', lineHeight: 1.45 }}>
             El precio y el resultado dependen de con quien negocies: el tamano de su economia
             frente a la tuya y como viene la relacion.
@@ -258,7 +253,7 @@ export default function CountryPanel() {
               </button>
             );
           })}
-        </div>
+        </Collapsible>
       )}
     </div>
   );

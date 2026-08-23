@@ -6,6 +6,7 @@ import { systemOf } from '@/lib/electoral';
 import { damagedSectors, taxEffects } from '@/lib/engine';
 import { plannedTaxRate } from '@/lib/orders';
 import { oppositionSplit } from '@/lib/politics';
+import Collapsible from './Collapsible';
 
 /**
  * Panel de gobierno: mandato, oposicion, encuesta y politica impositiva.
@@ -34,8 +35,7 @@ export default function GovernmentPanel() {
 
   return (
     <div>
-      <div className="section">
-        <h3>Mandato</h3>
+      <Collapsible title="Mandato">
         <div className="row"><span>Partido</span><b>{politics.partyName}</b></div>
         <div className="row"><span>Gobierna</span><b>{politics.leaderName}</b></div>
         <div className="row"><span>Sistema</span><b>{sys.label}</b></div>
@@ -70,10 +70,9 @@ export default function GovernmentPanel() {
             Es tu ultimo mandato: al terminar vas a tener que elegir sucesor para que el partido siga.
           </p>
         )}
-      </div>
+      </Collapsible>
 
-      <div className="section">
-        <h3>Intencion de voto</h3>
+      <Collapsible title="Intencion de voto">
         <div className="row">
           <span>Si las elecciones fueran hoy</span>
           <b className={votes > 50 ? 'good' : 'bad'}>{votes}%</b>
@@ -87,10 +86,9 @@ export default function GovernmentPanel() {
         <p className="muted" style={{ fontSize: 11, marginTop: 6 }}>
           {sys.bar}. {sys.notes}
         </p>
-      </div>
+      </Collapsible>
 
-      <div className="section">
-        <h3>Oposicion</h3>
+      <Collapsible title="Oposicion">
         <div className="row">
           <span>Fuerza total</span>
           <b className={politics.opposition > 60 ? 'bad' : politics.opposition < 35 ? 'good' : 'warn'}>
@@ -117,10 +115,9 @@ export default function GovernmentPanel() {
           {politics.opposition > 60 && ' Con esta oposicion, gobernar se vuelve caro: convoca al dialogo o mejora el humor social.'}
           {' '}A 3 meses de la eleccion podes ofrecerle una coalicion a alguno de los dos, y a 1 mes elegis tu discurso de cierre.
         </p>
-      </div>
+      </Collapsible>
 
-      <div className="section">
-        <h3>Politica impositiva</h3>
+      <Collapsible title="Politica impositiva">
         {TAXES.map((t) => {
           const planeado = plannedTaxRate(orders, t.kind, country);
           return (
@@ -159,11 +156,23 @@ export default function GovernmentPanel() {
           <div className="row"><span>Crecimiento</span><b className={fx.growth >= 0 ? 'good' : 'bad'}>{fx.growth >= 0 ? '+' : ''}{fx.growth}</b></div>
           <div className="row"><span>Humor social</span><b className={fx.happiness >= 0 ? 'good' : 'bad'}>{fx.happiness >= 0 ? '+' : ''}{fx.happiness}/turno</b></div>
         </div>
-      </div>
+
+        <div className="row" style={{ marginTop: 10 }}>
+          <span>Balance fiscal actual</span>
+          <b className={country.economy.fiscal_balance >= 0 ? 'good' : 'warn'}>{country.economy.fiscal_balance}%</b>
+        </div>
+        <p className="muted" style={{ fontSize: 11, marginTop: 4, lineHeight: 1.4 }}>
+          {country.economy.fiscal_balance >= 0
+            ? 'En superavit: la deuda esta bajando.'
+            : `Mientras el balance fiscal siga negativo, la deuda sigue subiendo aunque mejores el numero — necesitas
+               llegar a 0% para frenarla del todo. Hoy la deuda esta en ${country.economy.debt_to_gdp}%${
+              country.economy.debt_to_gdp > 110 ? ', y arriba de 110% del PBI resta humor social todos los meses por si sola.' : '.'
+            }`}
+        </p>
+      </Collapsible>
 
       {(danados.length > 0 || active.length > 0) && (
-        <div className="section">
-          <h3>Situacion</h3>
+        <Collapsible title="Situacion">
           {active.map((a) => (
             <div className="row" key={a.key}>
               <span>{a.event.emoji} {a.event.title}</span>
@@ -179,7 +188,7 @@ export default function GovernmentPanel() {
               <div className="bar"><div style={{ width: `${d.health}%`, background: 'var(--bad)' }} /></div>
             </div>
           ))}
-        </div>
+        </Collapsible>
       )}
     </div>
   );
