@@ -6,12 +6,9 @@
  * - discount 0.75–0.95. Menos de 0.75 vuelve gratis la categoría.
  * - Opositores/aliados: 6–14 escaños y voteBonus 2–5 (pasan factura cada 7 meses).
  *
- * Campos futuros (pedido a Opus en PEDIDOS_A_OPUS.md):
- *   alignment?: 'west' | 'east' | 'regional' | 'nonaligned'
- *   relationDrift?: { target: string; amount: number }
- *   investmentMod?: number
- *   unionPower?: number
- *   diplomaticCapitalBonus?: number
+ * Impacto ideologico (pedido cerrado en PEDIDOS_A_OPUS.md, cableado en
+ * lib/cabinet.ts + lib/simulation.ts + lib/store.ts):
+ *   alignment, relationDrift, investmentMod, unionPower, diplomaticCapitalBonus
  */
 export const EXTRA_MINISTERS = [
   // ---------------------------------------------------------- economia
@@ -25,8 +22,9 @@ export const EXTRA_MINISTERS = [
     passive: { happiness: 0.35, unemployment: -0.08, fiscal_balance: -0.1, gdp_growth: -0.05 },
     discount: { category: 'interior' as const, factor: 0.9 },
     voteBonus: 2,
-    seats: 7
-    // futuro: unionPower: 0.3, investmentMod: -0.15
+    seats: 7,
+    unionPower: 0.3,
+    investmentMod: -0.15
   },
   {
     id: 'eco_liberal',
@@ -37,8 +35,9 @@ export const EXTRA_MINISTERS = [
     description: 'Quiere superavit y reglas. Premia la caja y castiga el gasto facil.',
     passive: { fiscal_balance: 0.12, inflation: -0.2, happiness: -0.25 },
     discount: { category: 'economia' as const, factor: 0.82 },
-    voteBonus: -2
-    // futuro: investmentMod: 0.12, unionPower: -0.1
+    voteBonus: -2,
+    investmentMod: 0.12,
+    unionPower: -0.1
   },
   {
     id: 'eco_promercado',
@@ -49,8 +48,9 @@ export const EXTRA_MINISTERS = [
     description: 'Atrae inversion y ordena precios. La calle y los sindicatos lo odian.',
     passive: { gdp_growth: 0.15, inflation: -0.15, fiscal_balance: 0.08, happiness: -0.35, unemployment: 0.05 },
     discount: { category: 'economia' as const, factor: 0.78 },
-    voteBonus: -3
-    // futuro: investmentMod: 0.25, unionPower: -0.2
+    voteBonus: -3,
+    investmentMod: 0.25,
+    unionPower: -0.2
   },
   {
     id: 'eco_socialista',
@@ -62,8 +62,9 @@ export const EXTRA_MINISTERS = [
     passive: { happiness: 0.4, unemployment: -0.1, fiscal_balance: -0.15, gdp_growth: -0.1, inflation: 0.15 },
     discount: { category: 'interior' as const, factor: 0.85 },
     voteBonus: 3,
-    seats: 8
-    // futuro: unionPower: 0.4, investmentMod: -0.25
+    seats: 8,
+    unionPower: 0.4,
+    investmentMod: -0.25
   },
   {
     id: 'eco_desarrollista_extra',
@@ -119,8 +120,8 @@ export const EXTRA_MINISTERS = [
     passive: { happiness: 0.35, stability: 0.2, fiscal_balance: -0.08, gdp_growth: -0.05 },
     discount: { category: 'interior' as const, factor: 0.82 },
     voteBonus: 2,
-    seats: 6
-    // futuro: unionPower: 0.35
+    seats: 6,
+    unionPower: 0.35
   },
 
   // ---------------------------------------------------------- exterior
@@ -133,8 +134,9 @@ export const EXTRA_MINISTERS = [
     description: 'Habla fuerte afuera. Gana prestigio con aliados duros y tensa con el resto.',
     passive: { capitalPerTurn: 0.3 },
     discount: { category: 'defensa' as const, factor: 0.9 },
-    voteBonus: 1
-    // futuro: alignment: 'west', diplomaticCapitalBonus: 0.1
+    voteBonus: 1,
+    alignment: 'west' as const,
+    diplomaticCapitalBonus: 0.1
   },
   {
     id: 'ext_atlantista',
@@ -145,10 +147,10 @@ export const EXTRA_MINISTERS = [
     description: 'Prioriza EE.UU., OTAN y el G7. Las puertas del Norte se abren; el Sur y China se enfrian.',
     passive: { capitalPerTurn: 0.5, gdp_growth: 0.05 },
     discount: { category: 'diplomacia' as const, factor: 0.75 },
-    voteBonus: 1
-    // futuro: alignment: 'west',
-    //         relationDrift: [{ target: 'USA', amount: 0.4 }, { target: 'China', amount: -0.25 }],
-    //         diplomaticCapitalBonus: 0.2
+    voteBonus: 1,
+    alignment: 'west' as const,
+    relationDrift: [{ target: 'USA', amount: 0.4 }, { target: 'China', amount: -0.25 }],
+    diplomaticCapitalBonus: 0.2
   },
   {
     id: 'ext_multipolar',
@@ -159,10 +161,10 @@ export const EXTRA_MINISTERS = [
     description: 'Mira a China, BRICS y el Sur Global. Comercio e infraestructura; los mercados occidentales miran de reojo.',
     passive: { gdp_growth: 0.12, capitalPerTurn: 0.2 },
     discount: { category: 'comercio' as const, factor: 0.8 },
-    seats: 5
-    // futuro: alignment: 'east',
-    //         relationDrift: [{ target: 'China', amount: 0.4 }, { target: 'USA', amount: -0.2 }],
-    //         diplomaticCapitalBonus: 0.1
+    seats: 5,
+    alignment: 'east' as const,
+    relationDrift: [{ target: 'China', amount: 0.4 }, { target: 'USA', amount: -0.2 }],
+    diplomaticCapitalBonus: 0.1
   },
   {
     id: 'ext_regional',
@@ -173,10 +175,10 @@ export const EXTRA_MINISTERS = [
     description: 'MERCOSUR, CELAC y la vecindad primero. Integra la region; el Norte queda en segundo plano.',
     passive: { stability: 0.15, capitalPerTurn: 0.35 },
     discount: { category: 'comercio' as const, factor: 0.78 },
-    voteBonus: 1
-    // futuro: alignment: 'regional',
-    //         relationDrift: [{ target: 'bloc:mercosur', amount: 0.3 }],
-    //         diplomaticCapitalBonus: 0.15
+    voteBonus: 1,
+    alignment: 'regional' as const,
+    relationDrift: [{ target: 'bloc:mercosur', amount: 0.3 }],
+    diplomaticCapitalBonus: 0.15
   },
   {
     id: 'ext_noalineado',
@@ -186,8 +188,9 @@ export const EXTRA_MINISTERS = [
     title: 'El no alineado',
     description: 'Equilibrio entre potencias. Menos regalos, menos enemigos. Capital diplomatico estable.',
     passive: { capitalPerTurn: 0.4, stability: 0.1 },
-    discount: { category: 'diplomacia' as const, factor: 0.85 }
-    // futuro: alignment: 'nonaligned', diplomaticCapitalBonus: 0.08
+    discount: { category: 'diplomacia' as const, factor: 0.85 },
+    alignment: 'nonaligned' as const,
+    diplomaticCapitalBonus: 0.08
   },
 
   // ---------------------------------------------------------- defensa

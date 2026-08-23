@@ -31,8 +31,8 @@ import {
 } from './orders';
 import { cooldownKey, cooldownLeft, cooldownUntil, scaleDecision } from './diplomacy';
 import {
-  cabinetCostFactor, cabinetVoteBonus, coalitionDemand, coalitionPartners, coalitionSeats,
-  DEMAND_EVERY, factionsOf, ministerById, SEAT_LABEL, type Cabinet, type CabinetSeat
+  cabinetCostFactor, cabinetDiplomaticBonus, cabinetVoteBonus, coalitionDemand, coalitionPartners,
+  coalitionSeats, DEMAND_EVERY, factionsOf, ministerById, SEAT_LABEL, type Cabinet, type CabinetSeat
 } from './cabinet';
 import { factionCostFactor, policyKindOf } from './factions';
 import {
@@ -277,11 +277,13 @@ function snapshot(st: GameStore): PersistedState {
  */
 function decisionCost(st: GameStore, dec: Decision, baseCost: number): number {
   const seats = coalitionSeats(st.cabinet);
-  const factor =
+  let factor =
     oppositionCostFactor(st.politics.opposition)
     * parliamentCostFactor(st.politics, baseCost, seats)
     * cabinetCostFactor(st.cabinet, dec.category)
     * factionCostFactor(factionsOf(st.cabinet), policyKindOf(dec.id));
+  // el canciller abarata la diplomacia segun su alineamiento (docs/PEDIDOS_A_OPUS.md)
+  if (dec.category === 'diplomacia') factor *= 1 - cabinetDiplomaticBonus(st.cabinet);
   return Math.max(1, Math.round(baseCost * factor));
 }
 
@@ -363,7 +365,11 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
         const c = run.countries[st.playerCode];
         c.fx = applyFx(c.fx ?? FX_START, DEVALUE_JUMP);
       }
-      run.capital = clamp(run.capital + (dec.effects.capital ?? 0), 0, 100);
+      // el canciller tambien mejora el capital que rinden las jugadas diplomaticas
+      const capitalGain = dec.category === 'diplomacia' && dec.effects.capital
+        ? Math.round(dec.effects.capital * (1 + cabinetDiplomaticBonus(run.cabinet)) * 100) / 100
+        : (dec.effects.capital ?? 0);
+      run.capital = clamp(run.capital + capitalGain, 0, 100);
       log(dec.emoji, order.label, dec.detail);
       continue;
     }

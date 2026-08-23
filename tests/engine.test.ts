@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import data from '../lib/data/countries.gen.json';
 import {
-  aiCountryDecisions, aiRoster, applySectorShock, applyWorldShock, canJoin, ratesOf, taxEffects,
-  worldShockMultiplier
+  aiCountryDecisions, aiRoster, applySectorShock, applyWorldShock, canJoin, getRelation, ratesOf,
+  resolveDriftTarget, taxEffects, worldShockMultiplier
 } from '../lib/engine';
 import { bilateralVolume, tradeBaseline, tradeMatrix, volumeFrom, type TradeContext } from '../lib/trade';
 import { deterministicTick, eventExtraOf, projectDecision, type SimState } from '../lib/simulation';
@@ -16,8 +16,9 @@ import {
 } from '../lib/orders';
 import { cooldownLeft, cooldownOf, scaleDecision } from '../lib/diplomacy';
 import {
-  cabinetCostFactor, cabinetPassive, cabinetVoteBonus, coalitionDemand, coalitionSeats, factionsOf,
-  hasCoalition, ministerById
+  cabinetCostFactor, cabinetDiplomaticBonus, cabinetInvestmentMod, cabinetPassive,
+  cabinetRelationDrift, cabinetUnionPower, cabinetVoteBonus, coalitionDemand, coalitionSeats,
+  factionsOf, hasCoalition, ministerById
 } from '../lib/cabinet';
 import { factionCostFactor } from '../lib/factions';
 import { chokepointClosureRisk } from '../lib/routes';
@@ -489,6 +490,67 @@ describe('gabinete y parlamento', () => {
       expect(coalitionDemand(sindical, 1).choices?.[0].id).toBe('obra');
       expect(coalitionDemand(liberal, 1).choices?.[0].id).toBe('superavit');
     }
+  });
+});
+
+// ============================================================
+describe('impacto ideologico de ministros (docs/PEDIDOS_A_OPUS.md)', () => {
+  it('investmentMod y unionPower del gabinete se suman con signo', () => {
+    const promercado = { economia: 'eco_promercado' };
+    const sindical = { economia: 'eco_sindical' };
+    expect(cabinetInvestmentMod(promercado)).toBeGreaterThan(0);
+    expect(cabinetUnionPower(promercado)).toBeLessThan(0);
+    expect(cabinetInvestmentMod(sindical)).toBeLessThan(0);
+    expect(cabinetUnionPower(sindical)).toBeGreaterThan(0);
+    expect(cabinetInvestmentMod({})).toBe(0);
+  });
+
+  it('diplomaticCapitalBonus solo lo aporta el canciller correspondiente', () => {
+    expect(cabinetDiplomaticBonus({ exterior: 'ext_atlantista' })).toBeCloseTo(0.2);
+    expect(cabinetDiplomaticBonus({ economia: 'eco_promercado' })).toBe(0);
+  });
+
+  it('cabinetRelationDrift junta el drift de todos los ministros por target', () => {
+    const drift = cabinetRelationDrift({ exterior: 'ext_atlantista' });
+    const usa = drift.find((d) => d.target === 'USA');
+    const china = drift.find((d) => d.target === 'China');
+    expect(usa?.amount).toBeCloseTo(0.4);
+    expect(china?.amount).toBeCloseTo(-0.25);
+  });
+
+  it('resolveDriftTarget resuelve pais directo y bloque solo si el jugador es miembro', () => {
+    expect(resolveDriftTarget('USA', { player: 'Argentina', countries: RAW.countries, blocs: BLOCS }))
+      .toEqual(['USA']);
+    expect(resolveDriftTarget('PaisInventado', { player: 'Argentina', countries: RAW.countries, blocs: BLOCS }))
+      .toEqual([]);
+    // Argentina es miembro de mercosur
+    const mercosur = resolveDriftTarget('bloc:mercosur', { player: 'Argentina', countries: RAW.countries, blocs: BLOCS });
+    expect(mercosur.length).toBeGreaterThan(0);
+    expect(mercosur).not.toContain('Argentina');
+    // USA no es miembro de mercosur
+    expect(resolveDriftTarget('bloc:mercosur', { player: 'USA', countries: RAW.countries, blocs: BLOCS }))
+      .toEqual([]);
+  });
+
+  it('en deterministicTick, la atlantista acerca a USA y aleja a China mes a mes', () => {
+    let s = simFor('Argentina');
+    s.cabinet = { exterior: 'ext_atlantista' };
+    const relUsaBefore = getRelation(s.relations, 'Argentina', 'USA');
+    const relChinaBefore = getRelation(s.relations, 'Argentina', 'China');
+    for (let i = 0; i < 3; i++) s = deterministicTick(s).state;
+    expect(getRelation(s.relations, 'Argentina', 'USA')).toBeGreaterThan(relUsaBefore);
+    expect(getRelation(s.relations, 'Argentina', 'China')).toBeLessThan(relChinaBefore);
+  });
+
+  it('en deterministicTick, un ministro sindical alimenta streetWeight y uno pro-mercado lo enfria', () => {
+    let conSindical = simFor('Argentina');
+    conSindical.cabinet = { economia: 'eco_sindical' };
+    let sinCabinet = simFor('Argentina');
+    for (let i = 0; i < 2; i++) {
+      conSindical = deterministicTick(conSindical).state;
+      sinCabinet = deterministicTick(sinCabinet).state;
+    }
+    expect(conSindical.street!.streetWeight).toBeGreaterThanOrEqual(sinCabinet.street!.streetWeight);
   });
 });
 

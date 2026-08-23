@@ -38,6 +38,16 @@ export interface Minister {
   voteBonus?: number;
   /** escanos que aporta si viene de otro partido */
   seats?: number;
+  /** alineamiento del canciller (solo exterior). Hoy es descriptivo: el numero real vive en relationDrift/diplomaticCapitalBonus */
+  alignment?: 'west' | 'east' | 'regional' | 'nonaligned';
+  /** drift de relacion pasivo por mes. target: codigo de pais ('USA') o 'bloc:<id>' (solo si el jugador es miembro) */
+  relationDrift?: { target: string; amount: number }[];
+  /** empuja gdp_growth cada mes, aparte del passive (inversion que atrae o espanta) */
+  investmentMod?: number;
+  /** suma a streetWeight cada mes: cuanto alimenta o calma la presion sindical/callejera */
+  unionPower?: number;
+  /** % extra de capital politico en decisiones de categoria diplomacia (0.1 = +10%) */
+  diplomaticCapitalBonus?: number;
 }
 
 export const SEATS: { id: CabinetSeat; label: string; hint: string }[] = [
@@ -221,6 +231,34 @@ export function cabinetPassive(cabinet: Cabinet): Delta & { capitalPerTurn: numb
     }
   }
   return out;
+}
+
+/**
+ * Impacto ideologico del gabinete (pedido formal en docs/PEDIDOS_A_OPUS.md):
+ * cada ministro pega distinto segun su perfil, mas alla del passive generico.
+ */
+
+/** Cuanto suma el gabinete a gdp_growth por atraer (o espantar) inversion. */
+export const cabinetInvestmentMod = (cabinet: Cabinet) =>
+  Math.round(seatedMinisters(cabinet).reduce((s, m) => s + (m.investmentMod ?? 0), 0) * 100) / 100;
+
+/** Cuanto suma el gabinete a la presion de calle (lib/streetPressure.ts). */
+export const cabinetUnionPower = (cabinet: Cabinet) =>
+  Math.round(seatedMinisters(cabinet).reduce((s, m) => s + (m.unionPower ?? 0), 0) * 100) / 100;
+
+/** % extra de capital politico en decisiones de categoria diplomacia. */
+export const cabinetDiplomaticBonus = (cabinet: Cabinet) =>
+  Math.round(seatedMinisters(cabinet).reduce((s, m) => s + (m.diplomaticCapitalBonus ?? 0), 0) * 100) / 100;
+
+/** Drift de relacion pasivo del gabinete, sumado por target (por si dos ministros pegan al mismo). */
+export function cabinetRelationDrift(cabinet: Cabinet): { target: string; amount: number }[] {
+  const out: Record<string, number> = {};
+  for (const m of seatedMinisters(cabinet)) {
+    for (const rd of m.relationDrift ?? []) {
+      out[rd.target] = Math.round(((out[rd.target] ?? 0) + rd.amount) * 100) / 100;
+    }
+  }
+  return Object.entries(out).map(([target, amount]) => ({ target, amount }));
 }
 
 /** Multiplicador de costo para una categoria de decisiones. */

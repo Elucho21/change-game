@@ -290,6 +290,25 @@ export function resolveRelationTargets(
   return countries[t] ? [t] : [];
 }
 
+/**
+ * Resuelve el target de un relationDrift de ministro (lib/cabinet.ts).
+ * A diferencia de resolveRelationTargets, 'bloc:x' aca es el ID del bloque
+ * (ej. 'bloc:mercosur'), no su tipo, y solo pega si el jugador es miembro.
+ */
+export function resolveDriftTarget(
+  target: string,
+  ctx: { player: string; countries: Record<string, Country>; blocs: Bloc[] }
+): string[] {
+  const { player, countries, blocs } = ctx;
+  if (target.startsWith('bloc:')) {
+    const id = target.slice('bloc:'.length);
+    const bloc = blocs.find((b) => b.id === id);
+    if (!bloc || !bloc.members.includes(player)) return [];
+    return bloc.members.filter((m) => m !== player);
+  }
+  return countries[target] ? [target] : [];
+}
+
 // ============================================================
 // DRIFT NATURAL (mismo criterio que engine/game_engine.py)
 // ============================================================

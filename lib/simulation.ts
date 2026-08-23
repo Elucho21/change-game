@@ -4,14 +4,17 @@ import type {
 } from './types';
 import {
   adjustRelation, advanceMonth, applyDelta, clamp, eligibleEvents, getRelation,
-  naturalDrift, relLabel, resolveRelationTargets, type TaxRates
+  naturalDrift, relLabel, resolveDriftTarget, resolveRelationTargets, type TaxRates
 } from './engine';
 import { oilShock } from './routes';
 import { monthsToElection, needsSuccessor, poll } from './politics';
 import { systemOf } from './electoral';
 import { topPartnerOf, totalTrade, tradeMatrix, type TradeContext } from './trade';
 import type { Politics } from './politics';
-import { cabinetPassive, coalitionPartners as coalitionPartnersOf, type Cabinet } from './cabinet';
+import {
+  cabinetInvestmentMod, cabinetPassive, cabinetRelationDrift, cabinetUnionPower,
+  coalitionPartners as coalitionPartnersOf, type Cabinet
+} from './cabinet';
 import { CAPITAL_PASSIVE_BASE } from './electoral';
 import { defaultImf, tickImf, type ImfState } from './imf';
 import { applyFx, FX_START, fxInflationPassthrough, fxPressure, DEVALUE_JUMP } from './fx';
@@ -196,6 +199,18 @@ export function deterministicTick(s: SimState): TickResult {
     const { capitalPerTurn, ...delta } = passive;
     if (Object.keys(delta).length) applyDelta(s.countries[s.playerCode], delta, s.world);
     if (capitalPerTurn) s.capital = clamp(s.capital + capitalPerTurn, 0, 100);
+
+    // impacto ideologico: inversion que el gabinete atrae o espanta, y el
+    // drift de relaciones del canciller segun su alineamiento (docs/PEDIDOS_A_OPUS.md)
+    const investmentMod = cabinetInvestmentMod(s.cabinet);
+    if (investmentMod) applyDelta(s.countries[s.playerCode], { gdp_growth: investmentMod }, s.world);
+
+    for (const rd of cabinetRelationDrift(s.cabinet)) {
+      const targets = resolveDriftTarget(rd.target, {
+        player: s.playerCode, countries: s.countries, blocs: s.blocs
+      });
+      targets.forEach((t) => adjustRelation(s.relations, s.playerCode, t, rd.amount));
+    }
   }
 
   const playerBefore = s.countries[s.playerCode];
@@ -211,6 +226,11 @@ export function deterministicTick(s: SimState): TickResult {
   s.street = tickStreetPressure(
     s.street ?? defaultStreet(), streetPlayer.economy.inflation, streetPlayer.economy.unemployment
   );
+  // un ministro sindical alimenta la mecha; uno pro-mercado la enfria
+  const unionPower = s.cabinet ? cabinetUnionPower(s.cabinet) : 0;
+  if (unionPower) {
+    s.street = { ...s.street, streetWeight: clamp(s.street.streetWeight + unionPower, 0, 12) };
+  }
   if (s.street.streetWeight >= 4) {
     applyDelta(streetPlayer, streetDrip(s.street.streetWeight), s.world);
   }
