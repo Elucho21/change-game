@@ -10,14 +10,12 @@ import { visibleFlows, type TradeContext } from '@/lib/trade';
 import { POINT_COLORS, visiblePoints } from '@/lib/points';
 import type { Country } from '@/lib/types';
 
-// react-globe.gl toca WebGL: solo puede cargarse en el cliente.
 const Globe = dynamic(() => import('react-globe.gl'), { ssr: false }) as unknown as React.ComponentType<
   Record<string, unknown>
 >;
 
 type Feature = { properties: Record<string, string | number>; geometry: unknown };
 
-/** Lo unico que usamos de la instancia imperativa de react-globe.gl. */
 type GlobeInstance = {
   pointOfView: (v: Record<string, number>, ms?: number) => void;
   scene: () => unknown;
@@ -91,11 +89,9 @@ export default function GlobeView() {
     return () => ro.disconnect();
   }, []);
 
-  // Camara: vuelo al pais seleccionado y rotacion idle cuando no hay foco.
   useEffect(() => {
     const g = globeRef.current;
     if (!g) return;
-
     const c = selected ? countries[selected] : null;
     if (c) {
       g.pointOfView({ lat: c.lat, lng: c.lng, altitude: 1.85 }, 1100);
@@ -103,7 +99,6 @@ export default function GlobeView() {
       if (controls) controls.autoRotate = false;
       return;
     }
-
     const controls = g.controls?.();
     if (controls) {
       controls.autoRotate = true;
@@ -112,7 +107,6 @@ export default function GlobeView() {
     }
   }, [selected, countries]);
 
-  // Arranque: POV inicial y rotacion hasta que el jugador toque un pais
   useEffect(() => {
     const g = globeRef.current;
     if (!g || selected) return;
@@ -221,14 +215,54 @@ export default function GlobeView() {
     return out;
   }, [layers.comercio, tradeCtx, countries]);
 
-  // NOTE: remainder of arcs/paths/points/rings kept from main implementation via this full file update.
-  // For brevity in tool payload we re-export by keeping logic equivalent - see repo history if truncated.
-  const arcs = diploArcs.concat(tradeArcs);
-  const paths: Record<string, unknown>[] = [];
-  const points: Record<string, unknown>[] = [];
-  const rings: Record<string, unknown>[] = [];
-  const polygonAltitude = 0.01;
-  const sideColor = () => 'rgba(0,0,0,0.15)';
+  const arcs = useMemo(() => [...diploArcs, ...tradeArcs], [diploArcs, tradeArcs]);
+
+  const paths = useMemo(() => {
+    if (!layers.rutas) return [] as Record<string, unknown>[];
+    return MARITIME_ROUTES.map((r) => {
+      const closed = routeDisrupted(r, disruptions, turn);
+      return {
+        ...r,
+        coords: r.coords,
+        color: closed ? ['#e5484d', '#ff6b6b'] : ['#00e5ff', '#7cf0ff'],
+        stroke: closed ? 1.2 : 0.55,
+        dashLength: 0.25,
+        dashGap: 0.12,
+        dashAnimateTime: closed ? 900 : 3200
+      };
+    });
+  }, [layers.rutas, disruptions, turn]);
+
+  const points = useMemo(() => {
+    if (!layers.points) return [] as Record<string, unknown>[];
+    return visiblePoints(layers, disruptions, turn).map((pt) => ({
+      ...pt,
+      color: POINT_COLORS[pt.kind] ?? '#fff',
+      radius: pt.kind === 'capital' ? 0.35 : 0.25
+    }));
+  }, [layers, disruptions, turn]);
+
+  const rings = useMemo(() => {
+    const out: Record<string, unknown>[] = [];
+    if (playerCode && countries[playerCode]) {
+      const p = countries[playerCode];
+      out.push({ lat: p.lat, lng: p.lng, color: 'rgba(245, 215, 110, 0.55)' });
+    }
+    for (const c of activeDisruptions(disruptions, turn)) {
+      out.push({ lat: c.lat, lng: c.lng, color: 'rgba(229, 72, 77, 0.55)' });
+    }
+    return out;
+  }, [playerCode, countries, disruptions, turn]);
+
+  const polygonAltitude = useCallback((f: Feature) => {
+    const code = codeOf(f);
+    if (code === playerCode) return 0.03;
+    if (hover && codeOf(hover) === code) return 0.02;
+    return 0.01;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playerCode, hover]);
+
+  const sideColor = () => 'rgba(0,0,0,0.2)';
   const strokeColor = () => 'rgba(255,255,255,0.08)';
   const onHover = useCallback((f: Feature | null) => setHover(f), []);
   const onPolygonClick = useCallback((f: Feature) => {
@@ -296,8 +330,29 @@ export default function GlobeView() {
         arcDashInitialGap={() => Math.random()}
         arcsTransitionDuration={600}
         pathsData={paths}
+        pathPoints="coords"
+        pathPointLat={(p: number[]) => p[0]}
+        pathPointLng={(p: number[]) => p[1]}
+        pathColor="color"
+        pathStroke="stroke"
+        pathLabel="name"
+        pathDashLength="dashLength"
+        pathDashGap="dashGap"
+        pathDashAnimateTime="dashAnimateTime"
+        pathDashInitialGap={() => Math.random()}
+        pathAltitude={0.012}
+        pathsTransitionDuration={800}
         pointsData={points}
+        pointColor="color"
+        pointRadius="radius"
+        pointAltitude={0.015}
+        pointLabel="label"
+        pointsMerge={false}
         ringsData={rings}
+        ringColor={(r: { color: string }) => () => r.color}
+        ringMaxRadius={5}
+        ringPropagationSpeed={2}
+        ringRepeatPeriod={900}
       />
       <div className="legend">
         {mapMode === 'relaciones' && (
@@ -308,6 +363,28 @@ export default function GlobeView() {
             <div><span className="dot" style={{ background: REL_COLORS.tenso }} /> Tenso</div>
             <div><span className="dot" style={{ background: REL_COLORS.hostil }} /> Hostil</div>
           </>
+        )}
+        {mapMode === 'bloques' && blocs.filter((b) => b.type !== 'politica').map((b) => (
+          <div key={b.id}><span className="dot" style={{ background: b.color }} /> {b.short}</div>
+        ))}
+        {(mapMode === 'estabilidad' || mapMode === 'economia') && (
+          <>
+            <div><span className="dot" style={{ background: heat(85) }} /> Alto</div>
+            <div><span className="dot" style={{ background: heat(50) }} /> Medio</div>
+            <div><span className="dot" style={{ background: heat(15) }} /> Bajo</div>
+          </>
+        )}
+        <div style={{ height: 6 }} />
+        <div><i style={{ background: ARC_COLORS.alianza }} /> Alianza militar</div>
+        <div><i style={{ background: ARC_COLORS.comercio }} /> Comercio / aduanas</div>
+        <div><i style={{ background: ARC_COLORS.tension }} /> Tension</div>
+        <div><i style={{ background: ARC_COLORS.sancion }} /> Sanciones</div>
+        <div><i style={{ background: ARC_COLORS.flujo }} /> Flujo comercial</div>
+        <div><i style={{ background: '#00e5ff' }} /> Ruta maritima</div>
+        {activeDisruptions(disruptions, turn).length > 0 && (
+          <div className="bad">
+            Cerrado: {activeDisruptions(disruptions, turn).map((c) => c.name).join(', ')}
+          </div>
         )}
       </div>
     </div>
