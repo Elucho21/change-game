@@ -15,6 +15,7 @@ import { cabinetPassive, coalitionPartners as coalitionPartnersOf, type Cabinet 
 import { CAPITAL_PASSIVE_BASE } from './electoral';
 import { defaultImf, tickImf, type ImfState } from './imf';
 import { applyFx, FX_START, fxInflationPassthrough, fxPressure, DEVALUE_JUMP } from './fx';
+import { defaultStreet, streetDrip, tickStreetPressure, type StreetState } from './streetPressure';
 
 /**
  * Simulacion determinista del mundo: todo lo que pasa en un turno SIN azar.
@@ -52,6 +53,8 @@ export interface SimState {
   honeymoonUntil?: number;
   /** arco FMI del jugador. Si falta, el tick lo crea. */
   imf?: ImfState;
+  /** presion de calle por inflacion/desempleo altos sostenidos. Si falta, el tick lo crea. */
+  street?: StreetState;
 }
 
 export const cloneSim = (s: SimState): SimState => JSON.parse(JSON.stringify(s)) as SimState;
@@ -64,9 +67,10 @@ export function eventExtraOf(s: SimState) {
   const player = s.countries[s.playerCode];
   const imf = s.imf;
   const fx = player?.fx ?? FX_START;
+  const street = s.street;
 
   if (!s.politics) {
-    return { imf, fx };
+    return { imf, fx, street };
   }
 
   const sys = systemOf(s.playerCode);
@@ -99,7 +103,8 @@ export function eventExtraOf(s: SimState) {
       topPartner: topPartnerOf(s.playerCode, ctx)
     },
     imf,
-    fx
+    fx,
+    street
   };
 }
 
@@ -198,6 +203,17 @@ export function deterministicTick(s: SimState): TickResult {
   const prevGold = playerBefore.economy.gold_reserves_tonnes;
 
   naturalDrift(s.countries, s.blocs, s.world, tradeEffects(s), s.taxBase);
+
+  // presion de calle: inflacion/desempleo altos sostenidos varios meses
+  // suben el weight de eventos de calle y gotean humor/estabilidad. Despues
+  // del drift para que mida el mes economico que se acaba de cerrar.
+  const streetPlayer = s.countries[s.playerCode];
+  s.street = tickStreetPressure(
+    s.street ?? defaultStreet(), streetPlayer.economy.inflation, streetPlayer.economy.unemployment
+  );
+  if (s.street.streetWeight >= 4) {
+    applyDelta(streetPlayer, streetDrip(s.street.streetWeight), s.world);
+  }
 
   // FMI + tipo de cambio del jugador. Despues del drift para que vean
   // el mes economico, no el estado con el que se abrio el turno.

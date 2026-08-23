@@ -5,7 +5,7 @@ import {
   worldShockMultiplier
 } from '../lib/engine';
 import { bilateralVolume, tradeBaseline, tradeMatrix, volumeFrom, type TradeContext } from '../lib/trade';
-import { deterministicTick, projectDecision, type SimState } from '../lib/simulation';
+import { deterministicTick, eventExtraOf, projectDecision, type SimState } from '../lib/simulation';
 import {
   defaultPolitics, driftOpposition, parliamentCostFactor, poll, seatsFromVote
 } from '../lib/politics';
@@ -16,8 +16,10 @@ import {
 } from '../lib/orders';
 import { cooldownLeft, cooldownOf, scaleDecision } from '../lib/diplomacy';
 import {
-  cabinetCostFactor, cabinetPassive, cabinetVoteBonus, coalitionSeats, hasCoalition
+  cabinetCostFactor, cabinetPassive, cabinetVoteBonus, coalitionDemand, coalitionSeats, factionsOf,
+  hasCoalition, ministerById
 } from '../lib/cabinet';
+import { factionCostFactor } from '../lib/factions';
 import { chokepointClosureRisk } from '../lib/routes';
 import type { Country, GlobalState } from '../lib/types';
 
@@ -224,6 +226,38 @@ describe('turno determinista', () => {
     // con inflacion alta sostenida la felicidad cae, pero no se hunde a cero:
     // tiene que existir un equilibrio jugable
     expect(p.happiness).toBeGreaterThan(15);
+  });
+});
+
+describe('presion de calle (cableado en deterministicTick)', () => {
+  it('Argentina (140% inflacion) prende la mecha en 2 turnos', () => {
+    let s = simFor('Argentina');
+    expect(s.street).toBeUndefined();
+    s = deterministicTick(s).state;
+    expect(s.street?.inflationMonthsHigh).toBe(1);
+    s = deterministicTick(s).state;
+    expect(s.street?.inflationMonthsHigh).toBe(2);
+    expect(s.street?.streetWeight).toBeGreaterThanOrEqual(4);
+  });
+
+  it('con la calle prendida, el goteo pega mas fuerte que sin ella', () => {
+    // Alemania arranca con inflacion baja: no prende la mecha
+    let calma = simFor('Germany');
+    for (let i = 0; i < 4; i++) calma = deterministicTick(calma).state;
+    expect(calma.street?.streetWeight ?? 0).toBe(0);
+
+    // Argentina si, y para el turno 2 ya deberia estar goteando
+    let caliente = simFor('Argentina');
+    for (let i = 0; i < 2; i++) caliente = deterministicTick(caliente).state;
+    expect(caliente.street!.streetWeight).toBeGreaterThanOrEqual(4);
+  });
+
+  it('street sobrevive a eventExtraOf para que los eventos lo puedan leer', () => {
+    let s = simFor('Argentina');
+    s = deterministicTick(s).state;
+    s = deterministicTick(s).state;
+    const extra = eventExtraOf({ ...s, politics: undefined });
+    expect(extra.street?.streetWeight).toBe(s.street?.streetWeight);
   });
 });
 
@@ -438,6 +472,23 @@ describe('gabinete y parlamento', () => {
     expect(conDerrota).toBeLessThan(previo);
     // nunca barre el Congreso de un saque
     expect(conVictoria).toBeLessThan(70);
+  });
+
+  it('factionsOf clasifica el gabinete real y factionCostFactor lo usa', () => {
+    const liberal = factionsOf({ economia: 'eco_ortodoxa' });
+    const sindical = factionsOf({ economia: 'eco_sindical' });
+    expect(liberal).toContain('liberal');
+    expect(sindical).toContain('sindical');
+    expect(factionCostFactor(sindical, 'gasto')).toBeLessThan(factionCostFactor(liberal, 'gasto'));
+  });
+
+  it('coalitionDemand le pide obra a un socio sindical y superavit a uno liberal', () => {
+    const sindical = ministerById('eco_sindical')!;
+    const liberal = ministerById('eco_ortodoxa')!;
+    for (let i = 0; i < 10; i++) {
+      expect(coalitionDemand(sindical, 1).choices?.[0].id).toBe('obra');
+      expect(coalitionDemand(liberal, 1).choices?.[0].id).toBe('superavit');
+    }
   });
 });
 

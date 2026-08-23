@@ -242,6 +242,15 @@ export interface EventContext {
    *   when: (c) => (c.fx ?? 100) > 120
    */
   fx?: number;
+  /**
+   * Presion de calle por inflacion/desempleo altos sostenidos (lib/streetPressure.ts).
+   *   when: (c) => (c.street?.streetWeight ?? 0) >= 4
+   */
+  street?: {
+    inflationMonthsHigh: number;
+    unemploymentMonthsHigh: number;
+    streetWeight: number;
+  };
 }
 
 export interface ActiveEvent {

@@ -1,5 +1,6 @@
 import type { Decision, Delta, GameEvent } from './types';
 import { EXTRA_MINISTERS } from './ministers_extra';
+import { factionOfMinister, type Faction } from './factions';
 
 /**
  * Gabinete de cinco sillas.
@@ -202,6 +203,10 @@ export function seatedMinisters(cabinet: Cabinet): Minister[] {
     .filter((m): m is Minister => !!m);
 }
 
+/** Facciones del gabinete actual, para factionCostFactor (lib/factions.ts). */
+export const factionsOf = (cabinet: Cabinet): Faction[] =>
+  seatedMinisters(cabinet).map(factionOfMinister);
+
 /** Suma de los pasivos mensuales del gabinete. */
 export function cabinetPassive(cabinet: Cabinet): Delta & { capitalPerTurn: number } {
   const out: Delta & { capitalPerTurn: number } = { capitalPerTurn: 0 };
@@ -258,13 +263,19 @@ export const DEMAND_EVERY = 7;
  * medidas grandes en el Congreso.
  */
 export function coalitionDemand(partner: Minister, turn: number): GameEvent {
-  const pedidos = [
-    {
-      id: 'obra',
-      label: `Aprobar el plan de obras que pide ${partner.name}`,
-      detail: 'Obra publica en los distritos de su partido. Cuesta caja y sostiene la alianza.',
-      effects: { fiscal_balance: -0.6, happiness: 1.5 } as Delta
-    },
+  const obra = {
+    id: 'obra',
+    label: `Aprobar el plan de obras que pide ${partner.name}`,
+    detail: 'Obra publica en los distritos de su partido. Cuesta caja y sostiene la alianza.',
+    effects: { fiscal_balance: -0.6, happiness: 1.5 } as Delta
+  };
+  const superavit = {
+    id: 'superavit',
+    label: `Comprometerte a una meta de superavit que pide ${partner.name}`,
+    detail: 'Disciplina fiscal por escrito. El mercado lo festeja, la calle no tanto.',
+    effects: { fiscal_balance: 0.8, happiness: -2, stability: -1 } as Delta
+  };
+  const otros = [
     {
       id: 'cargo',
       label: 'Darle dos secretarias mas a su espacio',
@@ -278,7 +289,15 @@ export function coalitionDemand(partner: Minister, turn: number): GameEvent {
       effects: { capital: -12 } as Delta
     }
   ];
-  const pedido = pedidos[Math.floor(Math.random() * pedidos.length)];
+
+  // el pedido refleja de donde viene el socio: un sindical presiona por
+  // obra publica, un liberal por ajuste. El resto de las facciones no
+  // tiene una demanda tipica, asi que sortea entre obra y las genericas.
+  const faction = factionOfMinister(partner);
+  const pool = faction === 'sindical' ? [obra]
+    : faction === 'liberal' ? [superavit]
+      : [obra, ...otros];
+  const pedido = pool[Math.floor(Math.random() * pool.length)];
 
   return {
     id: `coalicion_${pedido.id}_${turn}`,

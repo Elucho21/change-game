@@ -55,6 +55,12 @@ export interface PersistedState {
     weight: number;
     exitUntil: number;
   };
+  /** presion de calle por inflacion/desempleo altos sostenidos */
+  street?: {
+    inflationMonthsHigh: number;
+    unemploymentMonthsHigh: number;
+    streetWeight: number;
+  };
   /** opcionales: los saves v1 no los traian */
   taxBase?: Record<string, TaxRates>;
   politics?: Politics;

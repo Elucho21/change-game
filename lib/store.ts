@@ -32,13 +32,15 @@ import {
 import { cooldownKey, cooldownLeft, cooldownUntil, scaleDecision } from './diplomacy';
 import {
   cabinetCostFactor, cabinetVoteBonus, coalitionDemand, coalitionPartners, coalitionSeats,
-  DEMAND_EVERY, ministerById, SEAT_LABEL, type Cabinet, type CabinetSeat
+  DEMAND_EVERY, factionsOf, ministerById, SEAT_LABEL, type Cabinet, type CabinetSeat
 } from './cabinet';
+import { factionCostFactor, policyKindOf } from './factions';
 import {
   clearGame, loadGame, saveGame, savedSummary,
   type PersistedState, type SavedGame
 } from './persistence';
 import { defaultImf, imfLabel, type ImfState } from './imf';
+import { defaultStreet, type StreetState } from './streetPressure';
 import { applyFx, DEVALUE_JUMP, FX_START } from './fx';
 import type {
   ActiveEvent, Bloc, ChokepointCrisis, Country, Decision, Delta, FeedItem, GameEvent,
@@ -128,6 +130,8 @@ interface GameStore {
   lastCoalitionDemand: number;
   /** arco FMI del jugador */
   imf: ImfState;
+  /** presion de calle por inflacion/desempleo altos sostenidos */
+  street: StreetState;
   /** eleccion resuelta esperando que el jugador la lea */
   election: ElectionResult | null;
   /** candidatos a sucederte: si esta lleno, la partida espera tu eleccion */
@@ -222,6 +226,7 @@ const initial = () => ({
   cabinet: {} as Cabinet,
   lastCoalitionDemand: 0,
   imf: defaultImf(),
+  street: defaultStreet(),
   election: null as ElectionResult | null,
   succession: [] as Candidate[],
   gameOver: null as { title: string; body: string } | null
@@ -257,22 +262,26 @@ function snapshot(st: GameStore): PersistedState {
     cabinet: st.cabinet,
     lastCoalitionDemand: st.lastCoalitionDemand,
     imf: st.imf,
+    street: st.street,
     gameOver: st.gameOver
   };
 }
 
 /**
- * Costo final de una decision. Suman tres frentes:
+ * Costo final de una decision. Suman cuatro frentes:
  *  - la oposicion en la calle encarece todo
  *  - sin mayoria en el Congreso, las medidas grandes hay que negociarlas
  *  - un ministro de esa area las abarata
+ *  - las facciones del gabinete empujan gasto o ajuste segun su perfil
+ *    (un sindical abarata gasto y encarece ajuste; un liberal, al reves)
  */
 function decisionCost(st: GameStore, dec: Decision, baseCost: number): number {
   const seats = coalitionSeats(st.cabinet);
   const factor =
     oppositionCostFactor(st.politics.opposition)
     * parliamentCostFactor(st.politics, baseCost, seats)
-    * cabinetCostFactor(st.cabinet, dec.category);
+    * cabinetCostFactor(st.cabinet, dec.category)
+    * factionCostFactor(factionsOf(st.cabinet), policyKindOf(dec.id));
   return Math.max(1, Math.round(baseCost * factor));
 }
 
@@ -693,7 +702,8 @@ export const useGame = create<GameStore>((set, get) => {
     taxBase: st.taxBase,
     politics: st.politics,
     honeymoonUntil: st.politics.honeymoonUntil,
-    imf: st.imf
+    imf: st.imf,
+    street: st.street
   });
 
   return {
@@ -728,6 +738,7 @@ export const useGame = create<GameStore>((set, get) => {
       capital: preset.capital,
       startingGdp: player.economy.gdp_trillion_usd,
       imf: defaultImf(),
+      street: defaultStreet(),
       feed: [
         {
           turn: 1,
@@ -835,6 +846,7 @@ export const useGame = create<GameStore>((set, get) => {
       cabinet: st.cabinet ?? {},
       lastCoalitionDemand: st.lastCoalitionDemand ?? 0,
       imf: st.imf ?? defaultImf(),
+      street: st.street ?? defaultStreet(),
       gameOver: st.gameOver
     });
     return true;
@@ -1128,11 +1140,13 @@ export const useGame = create<GameStore>((set, get) => {
       active: st.active,
       taxBase: st.taxBase,
       cabinet: run.cabinet,
-      imf: st.imf
+      imf: st.imf,
+      street: st.street
     });
     const turn = tick.state.turn;
     const active = tick.state.active;
     const imf = tick.state.imf ?? st.imf;
+    const street = tick.state.street ?? st.street;
 
     if (tick.oilShockApplied > 0) {
       feed.push({
@@ -1154,6 +1168,25 @@ export const useGame = create<GameStore>((set, get) => {
           ? 'El pais sale del radar del Fondo. El mercado lo lee como alivio, no como perdón.'
           : `Peso ${imf.weight}/18. La deuda y el deficit definen si esto escala.`,
         tone
+      });
+    }
+
+    // presion de calle: se avisa cuando prende (cruza el umbral que ya
+    // gotea humor/estabilidad todos los meses) o cuando se apaga del todo
+    const prevStreetWeight = st.street?.streetWeight ?? 0;
+    if (prevStreetWeight < 4 && street.streetWeight >= 4) {
+      feed.push({
+        turn, date: dateLabel(world), kind: 'sistema', emoji: '🔥',
+        title: 'La calle se calienta',
+        body: 'La inflacion y/o el desempleo llevan meses arriba del umbral: hasta que bajen, cada mes resta humor social y estabilidad de a poco.',
+        tone: 'malo'
+      });
+    } else if (prevStreetWeight >= 4 && street.streetWeight < 4) {
+      feed.push({
+        turn, date: dateLabel(world), kind: 'sistema', emoji: '🕊️',
+        title: 'La calle se enfria',
+        body: 'Inflacion y desempleo volvieron a niveles sostenibles: el goteo mensual se corta.',
+        tone: 'bueno'
       });
     }
 
@@ -1447,6 +1480,7 @@ export const useGame = create<GameStore>((set, get) => {
       cabinet: run.cabinet,
       lastCoalitionDemand,
       imf,
+      street,
       reactions,
       lastActions: [],
       pending: [...pending],
