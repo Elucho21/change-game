@@ -6,23 +6,10 @@ import { exportSave } from '@/lib/persistence';
 import type { HistoryPoint } from '@/lib/store';
 import { monthsToElection } from '@/lib/politics';
 
-/**
- * Barra de indicadores. Cada KPI abre, al pasar el mouse, la evolucion de los
- * ultimos meses: el numero de hoy dice poco si no se ve de donde viene.
- */
-
 type MetricKey = keyof Omit<HistoryPoint, 'turn'>;
 
-/** Metricas donde subir es malo, para pintar la linea del color correcto. */
 const BAD_UP: MetricKey[] = ['inflation', 'unemployment', 'debt', 'opposition', 'tension', 'oil', 'fx'];
 
-/**
- * Explicacion de "por que" detras de cada numero. No son solo datos: son la
- * relacion entre metricas que el jugador no ve en ningun otro lado. La mas
- * importante es deuda/fiscal: mejorar el balance fiscal sin llegar a 0 sigue
- * dejando que la deuda suba (mas lento, pero sube), y eso se siente como que
- * "se pierde lo conseguido" cuando en realidad el balance fiscal no se movio.
- */
 function statInsight(
   metric: MetricKey,
   ctx: { fiscal: number; debt: number; opposition: number; happiness: number }
@@ -114,8 +101,6 @@ function Stat({
     return () => document.removeEventListener('mousedown', onClickOutside);
   }, [open]);
 
-  // flash breve cuando el numero cambia: asi ejecutar el turno se siente
-  // como que algo paso de verdad, no solo un texto que cambia sin mas.
   const [flash, setFlash] = useState(false);
   const prevValue = useRef(value);
   useEffect(() => {
@@ -150,7 +135,7 @@ function Stat({
   );
 }
 
-export default function TopBar({ onGrok }: { onGrok: () => void }) {
+export default function TopBar({ onGrok, turnFx = false }: { onGrok: () => void; turnFx?: boolean }) {
   const {
     countries, playerCode, turn, capital, world, pending, politics, active, orders, history
   } = useGame();
@@ -162,17 +147,12 @@ export default function TopBar({ onGrok }: { onGrok: () => void }) {
     fiscal: e.fiscal_balance, debt: e.debt_to_gdp, opposition: politics.opposition, happiness: p.population.happiness
   };
 
-  // endTurn es sincronico (no hay ningun await de por medio), asi que dos
-  // clicks rapidos no compiten por el mismo estado: cada uno se procesa
-  // entero antes del siguiente. El problema es otro: un doble click sin
-  // querer avanza dos meses de una sin que el jugador lo pida. Se bloquea
-  // el boton un instante despues de cada click para que eso no pase.
   const [busy, setBusy] = useState(false);
   const handleEndTurn = () => {
-    if (busy) return;
+    if (busy || turnFx) return;
     setBusy(true);
     endTurn();
-    setTimeout(() => setBusy(false), 350);
+    setTimeout(() => setBusy(false), 900);
   };
 
   return (
@@ -249,14 +229,18 @@ export default function TopBar({ onGrok }: { onGrok: () => void }) {
           ↺ Nueva
         </button>
         <button
-          className="btn-primary"
+          className={`btn-primary${turnFx ? ' turn-btn-fx' : ''}`}
           onClick={handleEndTurn}
-          disabled={busy}
+          disabled={busy || turnFx}
           title={orders.length ? 'Ejecuta el plan y avanza el mes' : 'Avanza el mes sin tomar decisiones'}
         >
-          {orders.length
-            ? `Ejecutar ${orders.length} y avanzar ▶`
-            : pending.length ? `Avanzar mes (${pending.length} sin responder)` : 'Avanzar mes ▶'}
+          {turnFx || busy
+            ? 'Resolviendo mes…'
+            : orders.length
+              ? `Ejecutar ${orders.length} y avanzar ▶`
+              : pending.length
+                ? `Avanzar mes (${pending.length} sin responder)`
+                : 'Avanzar mes ▶'}
         </button>
       </div>
     </div>
