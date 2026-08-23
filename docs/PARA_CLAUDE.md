@@ -22,6 +22,16 @@ Esta rama **incluye el #9 más el WIP de motor** que Grok no quiso mandar a `mai
 
 ---
 
+## Base de datos macro (23/08, Grok)
+
+`engine/countries_mvp.json` quedó en **2026** con FMI WEO abril 2026 (PBI, crecimiento, inflación, desempleo, deuda, fiscal, población), SIPRI (militar), WGC (oro) y ficha `social` por país (edad de jubilación H/M, gasto pensiones % PBI, aportes, formal/informal).
+
+Al elegir país, `pensionFromCountry` / `employmentFromCountry` siembran el tick. Detalle: `docs/DATOS_MACRO.md`. Tests: `tests/macro.test.ts`.
+
+Argentina ya no arranca al 140% de inflación (WEO 2026: ~30%). Ucrania tiene gasto militar de guerra (~29% PBI). Francia/Italia gastan el doble que EE.UU. en pensiones.
+
+---
+
 ## Qué hay en esta rama (dos capas)
 
 ### Capa A — contenido Grok (listo para mergear si el motor no se pisa)

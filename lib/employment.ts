@@ -11,6 +11,8 @@
  * termino negativo de subir aportes.
  */
 
+import gen from './data/countries.gen.json';
+
 export interface EmploymentState {
   /** % de ocupados que son empleo formal */
   formalPct: number;
@@ -30,11 +32,25 @@ export const WAGE_CONTRIB_IMPACT = 0.9;
 export const WAGE_DEFLATION_BONUS = 0.05;
 export const WAGE_HIGH_INFLATION_PENALTY = 0.1;
 
-export const defaultEmployment = (): EmploymentState => ({
+type GenFile = { countries: Record<string, { social?: { formal_pct: number; informal_pct: number } }> };
+
+const FALLBACK_EMPLOYMENT: EmploymentState = {
   formalPct: 58,
   informalPct: 34,
   realWageIndex: 100
-});
+};
+
+export function employmentFromCountry(code: string): EmploymentState {
+  const s = (gen as GenFile).countries[code]?.social;
+  if (!s) return { ...FALLBACK_EMPLOYMENT };
+  return {
+    formalPct: s.formal_pct,
+    informalPct: s.informal_pct,
+    realWageIndex: 100
+  };
+}
+
+export const defaultEmployment = (): EmploymentState => ({ ...FALLBACK_EMPLOYMENT });
 
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 const round = (v: number, d = 2) => Math.round(v * 10 ** d) / 10 ** d;

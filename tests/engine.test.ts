@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import data from '../lib/data/countries.gen.json';
 import {
-  aiCountryDecisions, aiRoster, applySectorShock, applyWorldShock, canJoin, getRelation, ratesOf,
+  aiCountryDecisions, aiRoster, applySectorShock, applyWorldShock, canJoin, getRelation, naturalDrift, ratesOf,
   resolveDriftTarget, taxEffects, worldShockMultiplier
 } from '../lib/engine';
 import { bilateralVolume, tradeBaseline, tradeMatrix, volumeFrom, type TradeContext } from '../lib/trade';
@@ -714,5 +714,24 @@ describe('shock mundial diferenciado', () => {
     expect(spread).not.toBeNull();
     expect(spread!.best).toBe('USA');
     expect(spread!.worst).toBe('Bolivia');
+  });
+});
+
+describe('recaudacion dinamica (tax buoyancy, Change World Game v1.0)', () => {
+  it('crecer deja mejor el balance fiscal que contraerse, a igualdad de todo lo demas', () => {
+    const world = fresh(RAW.global);
+    const boom = fresh(RAW.countries).USA;
+    const bust = fresh(RAW.countries).USA;
+    boom.economy.gdp_growth = 5;
+    bust.economy.gdp_growth = -5;
+    const fiscalBefore = boom.economy.fiscal_balance;
+
+    naturalDrift({ USA: boom }, [], world, {}, {});
+    naturalDrift({ USA: bust }, [], fresh(RAW.global), {}, {});
+
+    expect(boom.economy.fiscal_balance).toBeGreaterThan(bust.economy.fiscal_balance);
+    // el efecto es de "segundo orden": mueve el balance fiscal de a poco por
+    // mes, no lo reemplaza (lag de años, no un salto de golpe)
+    expect(Math.abs(boom.economy.fiscal_balance - fiscalBefore)).toBeLessThan(1);
   });
 });

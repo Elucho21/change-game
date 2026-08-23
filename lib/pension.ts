@@ -2,7 +2,7 @@
  * Sistema previsional (jubilaciones), Change World Game v1.0.
  *
  * Mismo patron que lib/fx.ts / lib/imf.ts: estado puro solo del jugador
- * (no hay datos demograficos reales de los 76 paises), enganchado en
+ * Semilla por pais en engine/countries_mvp.json -> social. Enganchado en
  * deterministicTick (lib/simulation.ts) despues de naturalDrift.
  *
  * El resultado previsional (aportes recaudados vs gasto en haberes, en %
@@ -11,6 +11,8 @@
  * en lib/engine.ts, para que una reforma mueva la caja una vez y no la
  * economia entera arranque ya con un flujo desconocido metido adentro.
  */
+
+import gen from './data/countries.gen.json';
 
 export interface PensionState {
   retirementAgeMen: number;
@@ -36,7 +38,33 @@ export const WAGE_MASS_SHARE = 0.6;
 /** Envejecimiento lento: cuanto sube la dependencia previsional por mes. */
 export const DEPENDENCY_DRIFT = 0.0003;
 
-export const defaultPension = (): PensionState => ({
+/** Resultado previsional del mes, en puntos de PBI (positivo = superavit). */
+export function pensionResultPctGdp(s: PensionState): number {
+  const revenue = (s.contribWorker + s.contribEmployer) * WAGE_MASS_SHARE * s.coverage * (1 - s.evasion);
+  const spend = s.dependencyRatio * s.replacementRate * WAGE_MASS_SHARE;
+  return Math.round((revenue - spend) * 1000) / 10;
+}
+
+type GenFile = { countries: Record<string, { social?: {
+  retirement_age_men: number; retirement_age_women: number;
+  contrib_worker: number; contrib_employer: number; replacement_rate: number;
+  coverage: number; evasion: number; dependency_ratio: number;
+} }> };
+
+function baseFromSocial(s: NonNullable<GenFile['countries'][string]['social']>) {
+  return {
+    retirementAgeMen: s.retirement_age_men,
+    retirementAgeWomen: s.retirement_age_women,
+    contribWorker: s.contrib_worker,
+    contribEmployer: s.contrib_employer,
+    replacementRate: s.replacement_rate,
+    coverage: s.coverage,
+    evasion: s.evasion,
+    dependencyRatio: s.dependency_ratio
+  };
+}
+
+const FALLBACK_BASE = {
   retirementAgeMen: 65,
   retirementAgeWomen: 60,
   contribWorker: 0.11,
@@ -44,16 +72,20 @@ export const defaultPension = (): PensionState => ({
   replacementRate: 0.65,
   coverage: 0.72,
   evasion: 0.18,
-  dependencyRatio: 0.22,
-  resultApplied: 0
-});
+  dependencyRatio: 0.22
+};
 
-/** Resultado previsional del mes, en puntos de PBI (positivo = superavit). */
-export function pensionResultPctGdp(s: PensionState): number {
-  const revenue = (s.contribWorker + s.contribEmployer) * WAGE_MASS_SHARE * s.coverage * (1 - s.evasion);
-  const spend = s.dependencyRatio * s.replacementRate * WAGE_MASS_SHARE;
-  return Math.round((revenue - spend) * 1000) / 10;
+function withApplied(base: Omit<PensionState, 'resultApplied'>): PensionState {
+  return { ...base, resultApplied: pensionResultPctGdp({ ...base, resultApplied: 0 }) };
 }
+
+/** Semilla previsional del pais elegido. Si no hay ficha social, fallback v1.0. */
+export function pensionFromCountry(code: string): PensionState {
+  const s = (gen as GenFile).countries[code]?.social;
+  return withApplied(s ? baseFromSocial(s) : FALLBACK_BASE);
+}
+
+export const defaultPension = (): PensionState => withApplied(FALLBACK_BASE);
 
 export interface PensionTickResult {
   state: PensionState;

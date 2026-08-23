@@ -140,7 +140,8 @@ for (const code of codes) {
     population: c.population,
     military: c.military,
     sectors: c.sectors,
-    traits: c.traits
+    traits: c.traits,
+    social: c.social
   };
 }
 

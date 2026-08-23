@@ -1,10 +1,10 @@
 {
   "meta": {
     "version": "1.0",
-    "year": 2025,
-    "description": "Base de datos MVP - Pax Historia style geopolítica. Datos lógicos y proporcionales, no exactos al 100%.",
+    "year": 2026,
+    "description": "CHANGE WORLD GAME — base macro FMI WEO abril 2026 + SIPRI + WGC + previsional/empleo por pais.",
     "countries_count": 76,
-    "notes": "Datos logicos y proporcionales, no exactos. Todos los listados son jugables."
+    "notes": "PBI, crecimiento, inflacion, desempleo, deuda, resultado fiscal y poblacion: FMI WEO abril 2026 (proyeccion 2026; 2025 si falta). Militar: SIPRI 2024/25 o % previo reescalado. Oro: World Gold Council 2025. Previsional/empleo: OECD/ISSA/ILO. Corea del Norte y Cuba sin WEO: se conservan estimaciones. unemployed_millions = poblacion * 0.5 * desempleo/100 (PEA aprox.)."
   },
   "countries": {
     "USA": {
@@ -14,22 +14,22 @@
       "capital": "Washington D.C.",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 28.5,
-        "gdp_growth": 2.1,
-        "unemployment": 4.2,
-        "inflation": 2.8,
+        "gdp_trillion_usd": 32.4,
+        "gdp_growth": 2.3,
+        "unemployment": 4.4,
+        "inflation": 3.2,
         "gold_reserves_tonnes": 8133,
-        "debt_to_gdp": 122,
-        "fiscal_balance": -5.8,
+        "debt_to_gdp": 125.8,
+        "fiscal_balance": -7.5,
         "tax_iva": 0,
         "tax_corporate": 21,
         "tax_income_avg": 24
       },
       "population": {
-        "total_millions": 341,
+        "total_millions": 343,
         "male_pct": 49.2,
         "female_pct": 50.8,
-        "unemployed_millions": 7.1,
+        "unemployed_millions": 7.5,
         "minorities": {
           "hispanic": 19.1,
           "black": 13.6,
@@ -47,7 +47,7 @@
         "nuclear_warheads": 3700,
         "tanks": 4600,
         "naval_ships": 480,
-        "military_budget_bn": 880
+        "military_budget_bn": 997
       },
       "sectors": {
         "industry": 18,
@@ -87,6 +87,20 @@
           "protect_allies",
           "economic_growth"
         ]
+      },
+      "social": {
+        "retirement_age_men": 67,
+        "retirement_age_women": 67,
+        "pension_spend_pct_gdp": 7.1,
+        "military_spend_pct_gdp": 3.08,
+        "contrib_worker": 0.062,
+        "contrib_employer": 0.062,
+        "replacement_rate": 0.39,
+        "coverage": 0.9,
+        "evasion": 0.08,
+        "dependency_ratio": 0.28,
+        "formal_pct": 86,
+        "informal_pct": 10
       }
     },
     "China": {
@@ -96,22 +110,22 @@
       "capital": "Beijing",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 18.5,
-        "gdp_growth": 4.8,
+        "gdp_trillion_usd": 20.9,
+        "gdp_growth": 4.4,
         "unemployment": 5.1,
-        "inflation": 1.9,
-        "gold_reserves_tonnes": 2260,
-        "debt_to_gdp": 88,
-        "fiscal_balance": -3.2,
+        "inflation": 1.2,
+        "gold_reserves_tonnes": 2292,
+        "debt_to_gdp": 106.9,
+        "fiscal_balance": -8.2,
         "tax_iva": 13,
         "tax_corporate": 25,
         "tax_income_avg": 20
       },
       "population": {
-        "total_millions": 1410,
+        "total_millions": 1402,
         "male_pct": 51.2,
         "female_pct": 48.8,
-        "unemployed_millions": 35,
+        "unemployed_millions": 35.8,
         "minorities": {
           "han": 91.1,
           "other": 8.9
@@ -127,7 +141,7 @@
         "nuclear_warheads": 600,
         "tanks": 5000,
         "naval_ships": 730,
-        "military_budget_bn": 296
+        "military_budget_bn": 314
       },
       "sectors": {
         "industry": 38,
@@ -157,6 +171,20 @@
           "secure_supply_chains",
           "expand_influence"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 55,
+        "pension_spend_pct_gdp": 6.8,
+        "military_spend_pct_gdp": 1.5,
+        "contrib_worker": 0.08,
+        "contrib_employer": 0.16,
+        "replacement_rate": 0.45,
+        "coverage": 0.68,
+        "evasion": 0.2,
+        "dependency_ratio": 0.22,
+        "formal_pct": 62,
+        "informal_pct": 32
       }
     },
     "Russia": {
@@ -166,22 +194,22 @@
       "capital": "Moscow",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 2.1,
-        "gdp_growth": 1.5,
-        "unemployment": 3.8,
-        "inflation": 7.2,
-        "gold_reserves_tonnes": 2330,
-        "debt_to_gdp": 19,
-        "fiscal_balance": -1.5,
+        "gdp_trillion_usd": 2.66,
+        "gdp_growth": 1.1,
+        "unemployment": 2.4,
+        "inflation": 5.6,
+        "gold_reserves_tonnes": 2336,
+        "debt_to_gdp": 19.1,
+        "fiscal_balance": -2,
         "tax_iva": 20,
         "tax_corporate": 20,
         "tax_income_avg": 13
       },
       "population": {
-        "total_millions": 144,
+        "total_millions": 143,
         "male_pct": 46.5,
         "female_pct": 53.5,
-        "unemployed_millions": 2.8,
+        "unemployed_millions": 1.7,
         "minorities": {
           "russian": 77.7,
           "tatar": 3.7,
@@ -198,7 +226,7 @@
         "nuclear_warheads": 5500,
         "tanks": 12500,
         "naval_ships": 340,
-        "military_budget_bn": 109
+        "military_budget_bn": 149
       },
       "sectors": {
         "industry": 30,
@@ -228,6 +256,20 @@
           "energy_leverage",
           "great_power_status"
         ]
+      },
+      "social": {
+        "retirement_age_men": 65,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 7.2,
+        "military_spend_pct_gdp": 5.6,
+        "contrib_worker": 0,
+        "contrib_employer": 0.22,
+        "replacement_rate": 0.4,
+        "coverage": 0.75,
+        "evasion": 0.15,
+        "dependency_ratio": 0.26,
+        "formal_pct": 78,
+        "informal_pct": 16
       }
     },
     "Japan": {
@@ -237,13 +279,13 @@
       "capital": "Tokyo",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 4.2,
-        "gdp_growth": 0.9,
-        "unemployment": 2.6,
-        "inflation": 2.4,
+        "gdp_trillion_usd": 4.38,
+        "gdp_growth": 0.7,
+        "unemployment": 2.5,
+        "inflation": 2.2,
         "gold_reserves_tonnes": 846,
-        "debt_to_gdp": 255,
-        "fiscal_balance": -5.5,
+        "debt_to_gdp": 204.4,
+        "fiscal_balance": -2,
         "tax_iva": 10,
         "tax_corporate": 23,
         "tax_income_avg": 25
@@ -252,7 +294,7 @@
         "total_millions": 123,
         "male_pct": 48.6,
         "female_pct": 51.4,
-        "unemployed_millions": 1.7,
+        "unemployed_millions": 1.5,
         "minorities": {
           "japanese": 97.9,
           "other": 2.1
@@ -268,7 +310,7 @@
         "nuclear_warheads": 0,
         "tanks": 1000,
         "naval_ships": 155,
-        "military_budget_bn": 52
+        "military_budget_bn": 55
       },
       "sectors": {
         "industry": 27,
@@ -296,6 +338,20 @@
           "counter_china",
           "demographic_challenge"
         ]
+      },
+      "social": {
+        "retirement_age_men": 65,
+        "retirement_age_women": 65,
+        "pension_spend_pct_gdp": 9.4,
+        "military_spend_pct_gdp": 1.26,
+        "contrib_worker": 0.0915,
+        "contrib_employer": 0.0915,
+        "replacement_rate": 0.39,
+        "coverage": 0.95,
+        "evasion": 0.04,
+        "dependency_ratio": 0.5,
+        "formal_pct": 88,
+        "informal_pct": 8
       }
     },
     "SouthKorea": {
@@ -305,22 +361,22 @@
       "capital": "Seoul",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 1.8,
-        "gdp_growth": 2.2,
+        "gdp_trillion_usd": 1.93,
+        "gdp_growth": 1.9,
         "unemployment": 2.8,
         "inflation": 2.5,
         "gold_reserves_tonnes": 104,
-        "debt_to_gdp": 54,
-        "fiscal_balance": -2.1,
+        "debt_to_gdp": 54.4,
+        "fiscal_balance": -1.5,
         "tax_iva": 10,
         "tax_corporate": 24,
         "tax_income_avg": 22
       },
       "population": {
-        "total_millions": 51.7,
+        "total_millions": 51.6,
         "male_pct": 49.7,
         "female_pct": 50.3,
-        "unemployed_millions": 0.8,
+        "unemployed_millions": 0.7,
         "minorities": {
           "korean": 96,
           "other": 4
@@ -363,6 +419,20 @@
           "tech_leadership",
           "demographic_crisis"
         ]
+      },
+      "social": {
+        "retirement_age_men": 63,
+        "retirement_age_women": 63,
+        "pension_spend_pct_gdp": 3.6,
+        "military_spend_pct_gdp": 2.49,
+        "contrib_worker": 0.045,
+        "contrib_employer": 0.045,
+        "replacement_rate": 0.43,
+        "coverage": 0.82,
+        "evasion": 0.1,
+        "dependency_ratio": 0.24,
+        "formal_pct": 74,
+        "informal_pct": 16
       }
     },
     "NorthKorea": {
@@ -387,7 +457,7 @@
         "total_millions": 26.2,
         "male_pct": 48.8,
         "female_pct": 51.2,
-        "unemployed_millions": 4,
+        "unemployed_millions": 3.28,
         "minorities": {
           "korean": 99.8,
           "other": 0.2
@@ -431,6 +501,20 @@
           "extract_aid",
           "propaganda"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 55,
+        "pension_spend_pct_gdp": 4,
+        "military_spend_pct_gdp": 14.29,
+        "contrib_worker": 0,
+        "contrib_employer": 0.2,
+        "replacement_rate": 0.3,
+        "coverage": 0.95,
+        "evasion": 0.05,
+        "dependency_ratio": 0.18,
+        "formal_pct": 90,
+        "informal_pct": 5
       }
     },
     "UK": {
@@ -440,22 +524,22 @@
       "capital": "London",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 3.5,
-        "gdp_growth": 1.2,
-        "unemployment": 4.3,
-        "inflation": 2.6,
+        "gdp_trillion_usd": 4.26,
+        "gdp_growth": 0.8,
+        "unemployment": 5.6,
+        "inflation": 3.2,
         "gold_reserves_tonnes": 310,
-        "debt_to_gdp": 101,
-        "fiscal_balance": -4.5,
+        "debt_to_gdp": 103.6,
+        "fiscal_balance": -3.9,
         "tax_iva": 20,
         "tax_corporate": 25,
         "tax_income_avg": 28
       },
       "population": {
-        "total_millions": 68.5,
+        "total_millions": 69.9,
         "male_pct": 49.3,
         "female_pct": 50.7,
-        "unemployed_millions": 1.5,
+        "unemployed_millions": 2,
         "minorities": {
           "white_british": 74,
           "asian": 9.3,
@@ -473,7 +557,7 @@
         "nuclear_warheads": 225,
         "tanks": 220,
         "naval_ships": 70,
-        "military_budget_bn": 75
+        "military_budget_bn": 82
       },
       "sectors": {
         "industry": 17,
@@ -502,6 +586,20 @@
           "financial_hub",
           "post_brexit_trade"
         ]
+      },
+      "social": {
+        "retirement_age_men": 66,
+        "retirement_age_women": 66,
+        "pension_spend_pct_gdp": 5.1,
+        "military_spend_pct_gdp": 1.92,
+        "contrib_worker": 0.08,
+        "contrib_employer": 0.138,
+        "replacement_rate": 0.29,
+        "coverage": 0.92,
+        "evasion": 0.06,
+        "dependency_ratio": 0.3,
+        "formal_pct": 86,
+        "informal_pct": 10
       }
     },
     "France": {
@@ -511,22 +609,22 @@
       "capital": "Paris",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 3.1,
-        "gdp_growth": 1.1,
-        "unemployment": 7.3,
-        "inflation": 2.3,
-        "gold_reserves_tonnes": 2436,
-        "debt_to_gdp": 112,
-        "fiscal_balance": -5.2,
+        "gdp_trillion_usd": 3.6,
+        "gdp_growth": 0.9,
+        "unemployment": 7.9,
+        "inflation": 1.8,
+        "gold_reserves_tonnes": 2437,
+        "debt_to_gdp": 118.4,
+        "fiscal_balance": -4.9,
         "tax_iva": 20,
         "tax_corporate": 25,
         "tax_income_avg": 30
       },
       "population": {
-        "total_millions": 68.2,
+        "total_millions": 69,
         "male_pct": 48.4,
         "female_pct": 51.6,
-        "unemployed_millions": 2.3,
+        "unemployed_millions": 2.7,
         "minorities": {
           "french": 85,
           "other_european": 8,
@@ -544,7 +642,7 @@
         "nuclear_warheads": 290,
         "tanks": 400,
         "naval_ships": 110,
-        "military_budget_bn": 62
+        "military_budget_bn": 65
       },
       "sectors": {
         "industry": 19,
@@ -573,6 +671,20 @@
           "africa_influence",
           "strategic_autonomy"
         ]
+      },
+      "social": {
+        "retirement_age_men": 64,
+        "retirement_age_women": 64,
+        "pension_spend_pct_gdp": 13.8,
+        "military_spend_pct_gdp": 1.81,
+        "contrib_worker": 0.111,
+        "contrib_employer": 0.165,
+        "replacement_rate": 0.74,
+        "coverage": 0.9,
+        "evasion": 0.08,
+        "dependency_ratio": 0.35,
+        "formal_pct": 86,
+        "informal_pct": 8
       }
     },
     "Germany": {
@@ -582,22 +694,22 @@
       "capital": "Berlin",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 4.6,
-        "gdp_growth": 0.3,
-        "unemployment": 3.3,
-        "inflation": 2.4,
+        "gdp_trillion_usd": 5.45,
+        "gdp_growth": 0.8,
+        "unemployment": 3.9,
+        "inflation": 2.7,
         "gold_reserves_tonnes": 3352,
-        "debt_to_gdp": 64,
-        "fiscal_balance": -2.1,
+        "debt_to_gdp": 64.6,
+        "fiscal_balance": -3.8,
         "tax_iva": 19,
         "tax_corporate": 30,
         "tax_income_avg": 32
       },
       "population": {
-        "total_millions": 84.5,
+        "total_millions": 83.5,
         "male_pct": 49.3,
         "female_pct": 50.7,
-        "unemployed_millions": 1.5,
+        "unemployed_millions": 1.6,
         "minorities": {
           "german": 80,
           "turkish": 3.5,
@@ -614,7 +726,7 @@
         "nuclear_warheads": 0,
         "tanks": 300,
         "naval_ships": 60,
-        "military_budget_bn": 68
+        "military_budget_bn": 88
       },
       "sectors": {
         "industry": 27,
@@ -643,6 +755,20 @@
           "energy_security",
           "nato_commitment"
         ]
+      },
+      "social": {
+        "retirement_age_men": 67,
+        "retirement_age_women": 67,
+        "pension_spend_pct_gdp": 10.4,
+        "military_spend_pct_gdp": 1.61,
+        "contrib_worker": 0.093,
+        "contrib_employer": 0.093,
+        "replacement_rate": 0.48,
+        "coverage": 0.9,
+        "evasion": 0.07,
+        "dependency_ratio": 0.36,
+        "formal_pct": 88,
+        "informal_pct": 8
       }
     },
     "Spain": {
@@ -652,22 +778,22 @@
       "capital": "Madrid",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 1.7,
-        "gdp_growth": 2.5,
-        "unemployment": 11.5,
-        "inflation": 2.8,
+        "gdp_trillion_usd": 2.09,
+        "gdp_growth": 2.1,
+        "unemployment": 9.8,
+        "inflation": 3,
         "gold_reserves_tonnes": 282,
-        "debt_to_gdp": 107,
-        "fiscal_balance": -3.5,
+        "debt_to_gdp": 98.2,
+        "fiscal_balance": -2.1,
         "tax_iva": 21,
         "tax_corporate": 25,
         "tax_income_avg": 24
       },
       "population": {
-        "total_millions": 48.5,
+        "total_millions": 50.3,
         "male_pct": 49,
         "female_pct": 51,
-        "unemployed_millions": 2.8,
+        "unemployed_millions": 2.5,
         "minorities": {
           "spanish": 85,
           "latin_american": 8,
@@ -684,7 +810,7 @@
         "nuclear_warheads": 0,
         "tanks": 320,
         "naval_ships": 50,
-        "military_budget_bn": 22
+        "military_budget_bn": 25
       },
       "sectors": {
         "industry": 20,
@@ -713,6 +839,20 @@
           "latin_america_ties",
           "internal_stability"
         ]
+      },
+      "social": {
+        "retirement_age_men": 66,
+        "retirement_age_women": 66,
+        "pension_spend_pct_gdp": 11.6,
+        "military_spend_pct_gdp": 1.2,
+        "contrib_worker": 0.047,
+        "contrib_employer": 0.236,
+        "replacement_rate": 0.72,
+        "coverage": 0.85,
+        "evasion": 0.12,
+        "dependency_ratio": 0.33,
+        "formal_pct": 78,
+        "informal_pct": 15
       }
     },
     "Canada": {
@@ -722,22 +862,22 @@
       "capital": "Ottawa",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 2.2,
-        "gdp_growth": 1.6,
-        "unemployment": 6.1,
+        "gdp_trillion_usd": 2.51,
+        "gdp_growth": 1.5,
+        "unemployment": 6.5,
         "inflation": 2.5,
         "gold_reserves_tonnes": 0,
-        "debt_to_gdp": 107,
-        "fiscal_balance": -1.8,
+        "debt_to_gdp": 110.7,
+        "fiscal_balance": -2.7,
         "tax_iva": 5,
         "tax_corporate": 15,
         "tax_income_avg": 26
       },
       "population": {
-        "total_millions": 41.5,
+        "total_millions": 41.6,
         "male_pct": 49.6,
         "female_pct": 50.4,
-        "unemployed_millions": 1.3,
+        "unemployed_millions": 1.35,
         "minorities": {
           "european": 70,
           "asian": 18,
@@ -755,7 +895,7 @@
         "nuclear_warheads": 0,
         "tanks": 80,
         "naval_ships": 40,
-        "military_budget_bn": 28
+        "military_budget_bn": 29
       },
       "sectors": {
         "industry": 25,
@@ -782,6 +922,20 @@
           "immigration",
           "arctic"
         ]
+      },
+      "social": {
+        "retirement_age_men": 65,
+        "retirement_age_women": 65,
+        "pension_spend_pct_gdp": 4.8,
+        "military_spend_pct_gdp": 1.16,
+        "contrib_worker": 0.0595,
+        "contrib_employer": 0.0595,
+        "replacement_rate": 0.39,
+        "coverage": 0.93,
+        "evasion": 0.06,
+        "dependency_ratio": 0.3,
+        "formal_pct": 86,
+        "informal_pct": 10
       }
     },
     "Mexico": {
@@ -791,22 +945,22 @@
       "capital": "Mexico City",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 1.8,
-        "gdp_growth": 2,
-        "unemployment": 2.9,
-        "inflation": 4.5,
+        "gdp_trillion_usd": 2.12,
+        "gdp_growth": 1.6,
+        "unemployment": 2.7,
+        "inflation": 3.9,
         "gold_reserves_tonnes": 120,
-        "debt_to_gdp": 55,
-        "fiscal_balance": -3.5,
+        "debt_to_gdp": 62.7,
+        "fiscal_balance": -4.4,
         "tax_iva": 16,
         "tax_corporate": 30,
         "tax_income_avg": 20
       },
       "population": {
-        "total_millions": 130,
+        "total_millions": 134,
         "male_pct": 48.8,
         "female_pct": 51.2,
-        "unemployed_millions": 1.9,
+        "unemployed_millions": 1.8,
         "minorities": {
           "mestizo": 62,
           "indigenous": 21,
@@ -851,6 +1005,20 @@
           "nearshoring",
           "energy"
         ]
+      },
+      "social": {
+        "retirement_age_men": 65,
+        "retirement_age_women": 65,
+        "pension_spend_pct_gdp": 2.7,
+        "military_spend_pct_gdp": 0.57,
+        "contrib_worker": 0.011,
+        "contrib_employer": 0.052,
+        "replacement_rate": 0.26,
+        "coverage": 0.35,
+        "evasion": 0.25,
+        "dependency_ratio": 0.12,
+        "formal_pct": 42,
+        "informal_pct": 55
       }
     },
     "Brazil": {
@@ -860,22 +1028,22 @@
       "capital": "Brasília",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 2.2,
-        "gdp_growth": 2.5,
-        "unemployment": 7.5,
-        "inflation": 4.2,
+        "gdp_trillion_usd": 2.64,
+        "gdp_growth": 1.9,
+        "unemployment": 6.8,
+        "inflation": 4,
         "gold_reserves_tonnes": 130,
-        "debt_to_gdp": 88,
-        "fiscal_balance": -4.5,
+        "debt_to_gdp": 96.5,
+        "fiscal_balance": -7.7,
         "tax_iva": 17,
         "tax_corporate": 34,
         "tax_income_avg": 22
       },
       "population": {
-        "total_millions": 216,
+        "total_millions": 214,
         "male_pct": 49.1,
         "female_pct": 50.9,
-        "unemployed_millions": 8.2,
+        "unemployed_millions": 7.3,
         "minorities": {
           "white": 43,
           "pardo": 47,
@@ -893,7 +1061,7 @@
         "nuclear_warheads": 0,
         "tanks": 450,
         "naval_ships": 100,
-        "military_budget_bn": 22
+        "military_budget_bn": 21
       },
       "sectors": {
         "industry": 20,
@@ -920,6 +1088,20 @@
           "agriculture_exports",
           "brics"
         ]
+      },
+      "social": {
+        "retirement_age_men": 65,
+        "retirement_age_women": 62,
+        "pension_spend_pct_gdp": 12,
+        "military_spend_pct_gdp": 0.8,
+        "contrib_worker": 0.08,
+        "contrib_employer": 0.2,
+        "replacement_rate": 0.58,
+        "coverage": 0.55,
+        "evasion": 0.22,
+        "dependency_ratio": 0.16,
+        "formal_pct": 54,
+        "informal_pct": 38
       }
     },
     "Argentina": {
@@ -929,22 +1111,22 @@
       "capital": "Buenos Aires",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.65,
-        "gdp_growth": 2,
-        "unemployment": 7,
-        "inflation": 140,
+        "gdp_trillion_usd": 0.688,
+        "gdp_growth": 3.5,
+        "unemployment": 7.2,
+        "inflation": 30.4,
         "gold_reserves_tonnes": 62,
-        "debt_to_gdp": 90,
-        "fiscal_balance": -3,
+        "debt_to_gdp": 70.4,
+        "fiscal_balance": 0.5,
         "tax_iva": 21,
         "tax_corporate": 35,
         "tax_income_avg": 25
       },
       "population": {
-        "total_millions": 46.5,
+        "total_millions": 47.9,
         "male_pct": 48.9,
         "female_pct": 51.1,
-        "unemployed_millions": 1.6,
+        "unemployed_millions": 1.72,
         "minorities": {
           "european": 85,
           "mestizo": 12,
@@ -961,7 +1143,7 @@
         "nuclear_warheads": 0,
         "tanks": 300,
         "naval_ships": 40,
-        "military_budget_bn": 3.5
+        "military_budget_bn": 4.2
       },
       "sectors": {
         "industry": 25,
@@ -989,6 +1171,20 @@
           "debt_management",
           "regional_influence"
         ]
+      },
+      "social": {
+        "retirement_age_men": 65,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 8.5,
+        "military_spend_pct_gdp": 0.61,
+        "contrib_worker": 0.11,
+        "contrib_employer": 0.16,
+        "replacement_rate": 0.72,
+        "coverage": 0.52,
+        "evasion": 0.22,
+        "dependency_ratio": 0.18,
+        "formal_pct": 48,
+        "informal_pct": 42
       }
     },
     "Chile": {
@@ -998,22 +1194,22 @@
       "capital": "Santiago",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.35,
-        "gdp_growth": 2.2,
-        "unemployment": 8.5,
-        "inflation": 3.8,
-        "gold_reserves_tonnes": 0.2,
-        "debt_to_gdp": 38,
+        "gdp_trillion_usd": 0.408,
+        "gdp_growth": 2.4,
+        "unemployment": 8.1,
+        "inflation": 2.9,
+        "gold_reserves_tonnes": 0.25,
+        "debt_to_gdp": 42.5,
         "fiscal_balance": -2.5,
         "tax_iva": 19,
         "tax_corporate": 27,
         "tax_income_avg": 22
       },
       "population": {
-        "total_millions": 19.8,
+        "total_millions": 20.2,
         "male_pct": 49,
         "female_pct": 51,
-        "unemployed_millions": 0.9,
+        "unemployed_millions": 0.82,
         "minorities": {
           "mestizo": 65,
           "european": 25,
@@ -1057,6 +1253,20 @@
           "trade",
           "pacific_alliance"
         ]
+      },
+      "social": {
+        "retirement_age_men": 65,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 3.1,
+        "military_spend_pct_gdp": 1.35,
+        "contrib_worker": 0.1,
+        "contrib_employer": 0,
+        "replacement_rate": 0.4,
+        "coverage": 0.65,
+        "evasion": 0.18,
+        "dependency_ratio": 0.18,
+        "formal_pct": 68,
+        "informal_pct": 27
       }
     },
     "Colombia": {
@@ -1066,22 +1276,22 @@
       "capital": "Bogotá",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.4,
-        "gdp_growth": 2,
-        "unemployment": 10,
-        "inflation": 5.5,
-        "gold_reserves_tonnes": 5,
-        "debt_to_gdp": 55,
-        "fiscal_balance": -4,
+        "gdp_trillion_usd": 0.54,
+        "gdp_growth": 2.3,
+        "unemployment": 9,
+        "inflation": 5.9,
+        "gold_reserves_tonnes": 4.7,
+        "debt_to_gdp": 60.9,
+        "fiscal_balance": -5.2,
         "tax_iva": 19,
         "tax_corporate": 35,
         "tax_income_avg": 25
       },
       "population": {
-        "total_millions": 52.5,
+        "total_millions": 53.4,
         "male_pct": 49,
         "female_pct": 51,
-        "unemployed_millions": 2.6,
+        "unemployed_millions": 2.4,
         "minorities": {
           "mestizo": 58,
           "white": 20,
@@ -1126,6 +1336,20 @@
           "us_aid",
           "oil"
         ]
+      },
+      "social": {
+        "retirement_age_men": 62,
+        "retirement_age_women": 57,
+        "pension_spend_pct_gdp": 3.8,
+        "military_spend_pct_gdp": 2.04,
+        "contrib_worker": 0.04,
+        "contrib_employer": 0.12,
+        "replacement_rate": 0.45,
+        "coverage": 0.35,
+        "evasion": 0.28,
+        "dependency_ratio": 0.13,
+        "formal_pct": 40,
+        "informal_pct": 56
       }
     },
     "Peru": {
@@ -1135,22 +1359,22 @@
       "capital": "Lima",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.28,
-        "gdp_growth": 2.5,
-        "unemployment": 6.5,
-        "inflation": 3.5,
+        "gdp_trillion_usd": 0.381,
+        "gdp_growth": 2.8,
+        "unemployment": 6.3,
+        "inflation": 2.5,
         "gold_reserves_tonnes": 35,
-        "debt_to_gdp": 35,
-        "fiscal_balance": -2.5,
+        "debt_to_gdp": 30,
+        "fiscal_balance": -2,
         "tax_iva": 18,
         "tax_corporate": 29,
         "tax_income_avg": 20
       },
       "population": {
-        "total_millions": 34.5,
+        "total_millions": 34.8,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 1.2,
+        "unemployed_millions": 1.1,
         "minorities": {
           "mestizo": 60,
           "indigenous": 25,
@@ -1168,7 +1392,7 @@
         "nuclear_warheads": 0,
         "tanks": 250,
         "naval_ships": 40,
-        "military_budget_bn": 2.8
+        "military_budget_bn": 2.9
       },
       "sectors": {
         "industry": 30,
@@ -1195,6 +1419,20 @@
           "china_trade",
           "internal_order"
         ]
+      },
+      "social": {
+        "retirement_age_men": 65,
+        "retirement_age_women": 65,
+        "pension_spend_pct_gdp": 2.2,
+        "military_spend_pct_gdp": 0.76,
+        "contrib_worker": 0.13,
+        "contrib_employer": 0.09,
+        "replacement_rate": 0.4,
+        "coverage": 0.28,
+        "evasion": 0.3,
+        "dependency_ratio": 0.12,
+        "formal_pct": 28,
+        "informal_pct": 68
       }
     },
     "Venezuela": {
@@ -1204,22 +1442,22 @@
       "capital": "Caracas",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.1,
-        "gdp_growth": 3,
+        "gdp_trillion_usd": 0.111,
+        "gdp_growth": 4,
         "unemployment": 15,
-        "inflation": 60,
-        "gold_reserves_tonnes": 150,
-        "debt_to_gdp": 150,
-        "fiscal_balance": -8,
+        "inflation": 387.4,
+        "gold_reserves_tonnes": 161,
+        "debt_to_gdp": 308.7,
+        "fiscal_balance": -5.8,
         "tax_iva": 16,
         "tax_corporate": 34,
         "tax_income_avg": 15
       },
       "population": {
-        "total_millions": 28.5,
+        "total_millions": 26.9,
         "male_pct": 49,
         "female_pct": 51,
-        "unemployed_millions": 2.5,
+        "unemployed_millions": 2.02,
         "minorities": {
           "mestizo": 50,
           "white": 20,
@@ -1266,6 +1504,20 @@
           "allies_russia_china",
           "control_opposition"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 55,
+        "pension_spend_pct_gdp": 4.5,
+        "military_spend_pct_gdp": 1.35,
+        "contrib_worker": 0.04,
+        "contrib_employer": 0.09,
+        "replacement_rate": 0.4,
+        "coverage": 0.3,
+        "evasion": 0.4,
+        "dependency_ratio": 0.14,
+        "formal_pct": 35,
+        "informal_pct": 55
       }
     },
     "Ecuador": {
@@ -1275,13 +1527,13 @@
       "capital": "Quito",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.12,
-        "gdp_growth": 1.5,
-        "unemployment": 4,
-        "inflation": 2.5,
-        "gold_reserves_tonnes": 10,
-        "debt_to_gdp": 55,
-        "fiscal_balance": -2,
+        "gdp_trillion_usd": 0.138,
+        "gdp_growth": 2.5,
+        "unemployment": 3.1,
+        "inflation": 2.9,
+        "gold_reserves_tonnes": 26,
+        "debt_to_gdp": 54.4,
+        "fiscal_balance": -2.9,
         "tax_iva": 12,
         "tax_corporate": 25,
         "tax_income_avg": 18
@@ -1290,7 +1542,7 @@
         "total_millions": 18.2,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 0.4,
+        "unemployed_millions": 0.28,
         "minorities": {
           "mestizo": 72,
           "indigenous": 7,
@@ -1309,7 +1561,7 @@
         "nuclear_warheads": 0,
         "tanks": 100,
         "naval_ships": 25,
-        "military_budget_bn": 2.5
+        "military_budget_bn": 2.4
       },
       "sectors": {
         "industry": 30,
@@ -1335,6 +1587,20 @@
           "security",
           "china_loans"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 4.4,
+        "military_spend_pct_gdp": 1.74,
+        "contrib_worker": 0.0945,
+        "contrib_employer": 0.1115,
+        "replacement_rate": 0.7,
+        "coverage": 0.4,
+        "evasion": 0.25,
+        "dependency_ratio": 0.13,
+        "formal_pct": 48,
+        "informal_pct": 46
       }
     },
     "Bolivia": {
@@ -1344,22 +1610,22 @@
       "capital": "La Paz",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.045,
-        "gdp_growth": 2,
-        "unemployment": 5,
-        "inflation": 4,
-        "gold_reserves_tonnes": 28,
-        "debt_to_gdp": 70,
-        "fiscal_balance": -5,
+        "gdp_trillion_usd": 0.0807,
+        "gdp_growth": -3.3,
+        "unemployment": 4.5,
+        "inflation": 20.7,
+        "gold_reserves_tonnes": 23,
+        "debt_to_gdp": 102.7,
+        "fiscal_balance": -9.3,
         "tax_iva": 13,
         "tax_corporate": 25,
         "tax_income_avg": 15
       },
       "population": {
-        "total_millions": 12.3,
+        "total_millions": 12.7,
         "male_pct": 49.8,
         "female_pct": 50.2,
-        "unemployed_millions": 0.3,
+        "unemployed_millions": 0.29,
         "minorities": {
           "mestizo": 68,
           "indigenous": 20,
@@ -1403,6 +1669,20 @@
           "indigenous_rights",
           "anti_imperialism"
         ]
+      },
+      "social": {
+        "retirement_age_men": 58,
+        "retirement_age_women": 58,
+        "pension_spend_pct_gdp": 3.5,
+        "military_spend_pct_gdp": 0.74,
+        "contrib_worker": 0.1,
+        "contrib_employer": 0.03,
+        "replacement_rate": 0.7,
+        "coverage": 0.22,
+        "evasion": 0.32,
+        "dependency_ratio": 0.1,
+        "formal_pct": 25,
+        "informal_pct": 70
       }
     },
     "Paraguay": {
@@ -1412,22 +1692,22 @@
       "capital": "Asunción",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.045,
-        "gdp_growth": 3.5,
-        "unemployment": 6,
-        "inflation": 4,
+        "gdp_trillion_usd": 0.0605,
+        "gdp_growth": 4.2,
+        "unemployment": 5.2,
+        "inflation": 3.3,
         "gold_reserves_tonnes": 8,
-        "debt_to_gdp": 40,
-        "fiscal_balance": -2,
+        "debt_to_gdp": 37.8,
+        "fiscal_balance": -1.3,
         "tax_iva": 10,
         "tax_corporate": 10,
         "tax_income_avg": 10
       },
       "population": {
-        "total_millions": 7.5,
+        "total_millions": 6.5,
         "male_pct": 50,
         "female_pct": 50,
-        "unemployed_millions": 0.25,
+        "unemployed_millions": 0.17,
         "minorities": {
           "mestizo": 95,
           "other": 5
@@ -1468,6 +1748,20 @@
           "stability",
           "trade"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 2.8,
+        "military_spend_pct_gdp": 0.66,
+        "contrib_worker": 0.09,
+        "contrib_employer": 0.14,
+        "replacement_rate": 0.45,
+        "coverage": 0.22,
+        "evasion": 0.3,
+        "dependency_ratio": 0.1,
+        "formal_pct": 30,
+        "informal_pct": 64
       }
     },
     "Uruguay": {
@@ -1477,13 +1771,13 @@
       "capital": "Montevideo",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.07,
-        "gdp_growth": 2,
+        "gdp_trillion_usd": 0.0961,
+        "gdp_growth": 1.8,
         "unemployment": 8,
-        "inflation": 5,
+        "inflation": 4,
         "gold_reserves_tonnes": 0.1,
-        "debt_to_gdp": 65,
-        "fiscal_balance": -3,
+        "debt_to_gdp": 66.8,
+        "fiscal_balance": -3.8,
         "tax_iva": 22,
         "tax_corporate": 25,
         "tax_income_avg": 25
@@ -1492,7 +1786,7 @@
         "total_millions": 3.5,
         "male_pct": 48.5,
         "female_pct": 51.5,
-        "unemployed_millions": 0.15,
+        "unemployed_millions": 0.14,
         "minorities": {
           "european": 88,
           "mestizo": 8,
@@ -1509,7 +1803,7 @@
         "nuclear_warheads": 0,
         "tanks": 20,
         "naval_ships": 15,
-        "military_budget_bn": 1.2
+        "military_budget_bn": 1.4
       },
       "sectors": {
         "industry": 25,
@@ -1534,6 +1828,20 @@
           "tourism",
           "social_policy"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 8.7,
+        "military_spend_pct_gdp": 1.46,
+        "contrib_worker": 0.15,
+        "contrib_employer": 0.075,
+        "replacement_rate": 0.6,
+        "coverage": 0.72,
+        "evasion": 0.12,
+        "dependency_ratio": 0.24,
+        "formal_pct": 72,
+        "informal_pct": 22
       }
     },
     "Guyana": {
@@ -1543,22 +1851,22 @@
       "capital": "Georgetown",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.02,
-        "gdp_growth": 25,
+        "gdp_trillion_usd": 0.034,
+        "gdp_growth": 16.2,
         "unemployment": 12,
-        "inflation": 4,
+        "inflation": 4.1,
         "gold_reserves_tonnes": 5,
-        "debt_to_gdp": 30,
-        "fiscal_balance": 5,
+        "debt_to_gdp": 29.2,
+        "fiscal_balance": -6.4,
         "tax_iva": 14,
         "tax_corporate": 25,
         "tax_income_avg": 20
       },
       "population": {
-        "total_millions": 0.8,
+        "total_millions": 1,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 0.05,
+        "unemployed_millions": 0.06,
         "minorities": {
           "indo_guyanese": 40,
           "afro_guyanese": 30,
@@ -1576,7 +1884,7 @@
         "nuclear_warheads": 0,
         "tanks": 0,
         "naval_ships": 10,
-        "military_budget_bn": 0.08
+        "military_budget_bn": 0.1
       },
       "sectors": {
         "industry": 30,
@@ -1602,6 +1910,20 @@
           "development",
           "foreign_investment"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 1.2,
+        "military_spend_pct_gdp": 0.29,
+        "contrib_worker": 0.05,
+        "contrib_employer": 0.07,
+        "replacement_rate": 0.4,
+        "coverage": 0.25,
+        "evasion": 0.3,
+        "dependency_ratio": 0.08,
+        "formal_pct": 40,
+        "informal_pct": 48
       }
     },
     "Suriname": {
@@ -1611,19 +1933,19 @@
       "capital": "Paramaribo",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.004,
-        "gdp_growth": 2.5,
-        "unemployment": 8,
-        "inflation": 40,
+        "gdp_trillion_usd": 0.0059,
+        "gdp_growth": 3.9,
+        "unemployment": 9,
+        "inflation": 11.8,
         "gold_reserves_tonnes": 5,
-        "debt_to_gdp": 120,
-        "fiscal_balance": -5,
+        "debt_to_gdp": 87.1,
+        "fiscal_balance": -4.7,
         "tax_iva": 10,
         "tax_corporate": 36,
         "tax_income_avg": 20
       },
       "population": {
-        "total_millions": 0.63,
+        "total_millions": 0.7,
         "male_pct": 50,
         "female_pct": 50,
         "unemployed_millions": 0.03,
@@ -1645,7 +1967,7 @@
         "nuclear_warheads": 0,
         "tanks": 0,
         "naval_ships": 5,
-        "military_budget_bn": 0.05
+        "military_budget_bn": 0.1
       },
       "sectors": {
         "industry": 25,
@@ -1670,6 +1992,20 @@
           "debt",
           "stability"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 2,
+        "military_spend_pct_gdp": 1.69,
+        "contrib_worker": 0.04,
+        "contrib_employer": 0.08,
+        "replacement_rate": 0.4,
+        "coverage": 0.3,
+        "evasion": 0.28,
+        "dependency_ratio": 0.1,
+        "formal_pct": 42,
+        "informal_pct": 48
       }
     },
     "India": {
@@ -1679,22 +2015,22 @@
       "capital": "New Delhi",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 3.9,
+        "gdp_trillion_usd": 4.15,
         "gdp_growth": 6.5,
-        "unemployment": 8,
-        "inflation": 4.8,
-        "gold_reserves_tonnes": 800,
-        "debt_to_gdp": 82,
-        "fiscal_balance": -5.6,
+        "unemployment": 4.9,
+        "inflation": 4.7,
+        "gold_reserves_tonnes": 880,
+        "debt_to_gdp": 83.4,
+        "fiscal_balance": -7.4,
         "tax_iva": 18,
         "tax_corporate": 25,
         "tax_income_avg": 20
       },
       "population": {
-        "total_millions": 1440,
+        "total_millions": 1477,
         "male_pct": 52,
         "female_pct": 48,
-        "unemployed_millions": 115.2,
+        "unemployed_millions": 36.2,
         "minorities": {
           "hindu": 80,
           "muslim": 14,
@@ -1711,7 +2047,7 @@
         "nuclear_warheads": 170,
         "tanks": 4600,
         "naval_ships": 150,
-        "military_budget_bn": 85
+        "military_budget_bn": 86
       },
       "sectors": {
         "industry": 25,
@@ -1739,6 +2075,20 @@
           "food",
           "tech"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 1.3,
+        "military_spend_pct_gdp": 2.07,
+        "contrib_worker": 0.12,
+        "contrib_employer": 0.12,
+        "replacement_rate": 0.4,
+        "coverage": 0.22,
+        "evasion": 0.25,
+        "dependency_ratio": 0.1,
+        "formal_pct": 18,
+        "informal_pct": 80
       }
     },
     "Indonesia": {
@@ -1748,22 +2098,22 @@
       "capital": "Jakarta",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 1.4,
+        "gdp_trillion_usd": 1.54,
         "gdp_growth": 5,
-        "unemployment": 5.3,
-        "inflation": 2.6,
+        "unemployment": 4.9,
+        "inflation": 3,
         "gold_reserves_tonnes": 79,
-        "debt_to_gdp": 40,
-        "fiscal_balance": -2.3,
+        "debt_to_gdp": 41.5,
+        "fiscal_balance": -2.9,
         "tax_iva": 11,
         "tax_corporate": 22,
         "tax_income_avg": 22
       },
       "population": {
-        "total_millions": 279,
+        "total_millions": 287,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 14.8,
+        "unemployed_millions": 7,
         "minorities": {
           "javanese": 40,
           "sundanese": 16,
@@ -1780,7 +2130,7 @@
         "nuclear_warheads": 0,
         "tanks": 167,
         "naval_ships": 220,
-        "military_budget_bn": 10
+        "military_budget_bn": 9.5
       },
       "sectors": {
         "industry": 40,
@@ -1807,6 +2157,20 @@
           "islam_politics",
           "nickel"
         ]
+      },
+      "social": {
+        "retirement_age_men": 57,
+        "retirement_age_women": 57,
+        "pension_spend_pct_gdp": 1,
+        "military_spend_pct_gdp": 0.62,
+        "contrib_worker": 0.03,
+        "contrib_employer": 0.037,
+        "replacement_rate": 0.4,
+        "coverage": 0.28,
+        "evasion": 0.3,
+        "dependency_ratio": 0.1,
+        "formal_pct": 30,
+        "informal_pct": 66
       }
     },
     "Turkey": {
@@ -1816,22 +2180,22 @@
       "capital": "Ankara",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 1.1,
-        "gdp_growth": 3.2,
-        "unemployment": 9.4,
-        "inflation": 45,
-        "gold_reserves_tonnes": 540,
-        "debt_to_gdp": 35,
-        "fiscal_balance": -5,
+        "gdp_trillion_usd": 1.64,
+        "gdp_growth": 3.4,
+        "unemployment": 8.3,
+        "inflation": 28.6,
+        "gold_reserves_tonnes": 571,
+        "debt_to_gdp": 25.5,
+        "fiscal_balance": -3.4,
         "tax_iva": 20,
         "tax_corporate": 25,
         "tax_income_avg": 27
       },
       "population": {
-        "total_millions": 86,
+        "total_millions": 86.2,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 8.1,
+        "unemployed_millions": 3.6,
         "minorities": {
           "turkish": 75,
           "kurdish": 18,
@@ -1848,7 +2212,7 @@
         "nuclear_warheads": 0,
         "tanks": 3000,
         "naval_ships": 115,
-        "military_budget_bn": 16
+        "military_budget_bn": 19
       },
       "sectors": {
         "industry": 31,
@@ -1875,6 +2239,20 @@
           "nato_leverage",
           "industry"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 58,
+        "pension_spend_pct_gdp": 7.2,
+        "military_spend_pct_gdp": 1.16,
+        "contrib_worker": 0.09,
+        "contrib_employer": 0.115,
+        "replacement_rate": 0.7,
+        "coverage": 0.7,
+        "evasion": 0.18,
+        "dependency_ratio": 0.14,
+        "formal_pct": 68,
+        "informal_pct": 28
       }
     },
     "SaudiArabia": {
@@ -1884,22 +2262,22 @@
       "capital": "Riyadh",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 1.1,
-        "gdp_growth": 1.5,
+        "gdp_trillion_usd": 1.39,
+        "gdp_growth": 3.1,
         "unemployment": 5,
-        "inflation": 1.8,
+        "inflation": 2.3,
         "gold_reserves_tonnes": 323,
-        "debt_to_gdp": 30,
-        "fiscal_balance": -2,
+        "debt_to_gdp": 32.1,
+        "fiscal_balance": -3.5,
         "tax_iva": 15,
         "tax_corporate": 20,
         "tax_income_avg": 0
       },
       "population": {
-        "total_millions": 37,
+        "total_millions": 36.7,
         "male_pct": 57.5,
         "female_pct": 42.5,
-        "unemployed_millions": 1.9,
+        "unemployed_millions": 0.92,
         "minorities": {
           "saudi": 58,
           "foreign": 42
@@ -1915,7 +2293,7 @@
         "nuclear_warheads": 0,
         "tanks": 1000,
         "naval_ships": 55,
-        "military_budget_bn": 75
+        "military_budget_bn": 80
       },
       "sectors": {
         "industry": 48,
@@ -1942,6 +2320,20 @@
           "vision2030",
           "contain_iran"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 55,
+        "pension_spend_pct_gdp": 2.2,
+        "military_spend_pct_gdp": 5.76,
+        "contrib_worker": 0.09,
+        "contrib_employer": 0.09,
+        "replacement_rate": 0.5,
+        "coverage": 0.55,
+        "evasion": 0.15,
+        "dependency_ratio": 0.06,
+        "formal_pct": 70,
+        "informal_pct": 20
       }
     },
     "Iran": {
@@ -1951,22 +2343,22 @@
       "capital": "Tehran",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.4,
-        "gdp_growth": 2.5,
-        "unemployment": 9,
-        "inflation": 35,
+        "gdp_trillion_usd": 0.3,
+        "gdp_growth": -6.1,
+        "unemployment": 9.2,
+        "inflation": 68.9,
         "gold_reserves_tonnes": 320,
-        "debt_to_gdp": 35,
-        "fiscal_balance": -4,
+        "debt_to_gdp": 37.3,
+        "fiscal_balance": -5.2,
         "tax_iva": 9,
         "tax_corporate": 25,
         "tax_income_avg": 25
       },
       "population": {
-        "total_millions": 90,
+        "total_millions": 87.9,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 8.1,
+        "unemployed_millions": 4,
         "minorities": {
           "persian": 61,
           "azeri": 16,
@@ -1984,7 +2376,7 @@
         "nuclear_warheads": 0,
         "tanks": 1600,
         "naval_ships": 70,
-        "military_budget_bn": 16
+        "military_budget_bn": 8
       },
       "sectors": {
         "industry": 35,
@@ -2011,6 +2403,20 @@
           "nuclear",
           "axis"
         ]
+      },
+      "social": {
+        "retirement_age_men": 62,
+        "retirement_age_women": 55,
+        "pension_spend_pct_gdp": 4.8,
+        "military_spend_pct_gdp": 2.67,
+        "contrib_worker": 0.07,
+        "contrib_employer": 0.2,
+        "replacement_rate": 0.55,
+        "coverage": 0.5,
+        "evasion": 0.22,
+        "dependency_ratio": 0.1,
+        "formal_pct": 55,
+        "informal_pct": 38
       }
     },
     "Israel": {
@@ -2020,22 +2426,22 @@
       "capital": "Jerusalem",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.53,
-        "gdp_growth": 2,
-        "unemployment": 3.4,
-        "inflation": 2.8,
+        "gdp_trillion_usd": 0.72,
+        "gdp_growth": 3.5,
+        "unemployment": 3.2,
+        "inflation": 2.3,
         "gold_reserves_tonnes": 0,
-        "debt_to_gdp": 62,
-        "fiscal_balance": -4.5,
+        "debt_to_gdp": 69.8,
+        "fiscal_balance": -5.9,
         "tax_iva": 17,
         "tax_corporate": 23,
         "tax_income_avg": 31
       },
       "population": {
-        "total_millions": 9.8,
+        "total_millions": 10.3,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 0.3,
+        "unemployed_millions": 0.16,
         "minorities": {
           "jewish": 74,
           "arab": 21,
@@ -2052,7 +2458,7 @@
         "nuclear_warheads": 90,
         "tanks": 1400,
         "naval_ships": 65,
-        "military_budget_bn": 24
+        "military_budget_bn": 47
       },
       "sectors": {
         "industry": 17,
@@ -2078,6 +2484,20 @@
           "tech",
           "usa"
         ]
+      },
+      "social": {
+        "retirement_age_men": 67,
+        "retirement_age_women": 62,
+        "pension_spend_pct_gdp": 4.8,
+        "military_spend_pct_gdp": 6.53,
+        "contrib_worker": 0.06,
+        "contrib_employer": 0.065,
+        "replacement_rate": 0.5,
+        "coverage": 0.8,
+        "evasion": 0.1,
+        "dependency_ratio": 0.22,
+        "formal_pct": 82,
+        "informal_pct": 12
       }
     },
     "Iraq": {
@@ -2087,22 +2507,22 @@
       "capital": "Baghdad",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.25,
-        "gdp_growth": 2.8,
+        "gdp_trillion_usd": 0.265,
+        "gdp_growth": -6.8,
         "unemployment": 14,
-        "inflation": 4,
-        "gold_reserves_tonnes": 130,
-        "debt_to_gdp": 48,
-        "fiscal_balance": -1.5,
+        "inflation": 3,
+        "gold_reserves_tonnes": 153,
+        "debt_to_gdp": 61.7,
+        "fiscal_balance": -7.9,
         "tax_iva": 0,
         "tax_corporate": 15,
         "tax_income_avg": 15
       },
       "population": {
-        "total_millions": 45,
+        "total_millions": 46.6,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 6.3,
+        "unemployed_millions": 3.26,
         "minorities": {
           "shia": 60,
           "sunni": 20,
@@ -2146,6 +2566,20 @@
           "stability",
           "sovereignty"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 55,
+        "pension_spend_pct_gdp": 3.5,
+        "military_spend_pct_gdp": 2.64,
+        "contrib_worker": 0.05,
+        "contrib_employer": 0.12,
+        "replacement_rate": 0.5,
+        "coverage": 0.35,
+        "evasion": 0.3,
+        "dependency_ratio": 0.08,
+        "formal_pct": 40,
+        "informal_pct": 50
       }
     },
     "UAE": {
@@ -2155,22 +2589,22 @@
       "capital": "Abu Dhabi",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.51,
-        "gdp_growth": 4,
+        "gdp_trillion_usd": 0.622,
+        "gdp_growth": 3.1,
         "unemployment": 2.5,
-        "inflation": 2,
+        "inflation": 2.5,
         "gold_reserves_tonnes": 74,
-        "debt_to_gdp": 32,
-        "fiscal_balance": 4,
+        "debt_to_gdp": 31.4,
+        "fiscal_balance": 4.9,
         "tax_iva": 5,
         "tax_corporate": 9,
         "tax_income_avg": 0
       },
       "population": {
-        "total_millions": 10.5,
+        "total_millions": 11.5,
         "male_pct": 69,
         "female_pct": 31,
-        "unemployed_millions": 0.3,
+        "unemployed_millions": 0.14,
         "minorities": {
           "emirati": 12,
           "foreign": 88
@@ -2212,6 +2646,20 @@
           "oil",
           "soft_power"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 0.8,
+        "military_spend_pct_gdp": 3.7,
+        "contrib_worker": 0.05,
+        "contrib_employer": 0.125,
+        "replacement_rate": 0.5,
+        "coverage": 0.4,
+        "evasion": 0.1,
+        "dependency_ratio": 0.04,
+        "formal_pct": 75,
+        "informal_pct": 15
       }
     },
     "Australia": {
@@ -2221,22 +2669,22 @@
       "capital": "Canberra",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 1.8,
-        "gdp_growth": 1.8,
-        "unemployment": 4.1,
-        "inflation": 3.2,
+        "gdp_trillion_usd": 2.12,
+        "gdp_growth": 2,
+        "unemployment": 4.2,
+        "inflation": 4,
         "gold_reserves_tonnes": 80,
-        "debt_to_gdp": 50,
-        "fiscal_balance": -1.5,
+        "debt_to_gdp": 50.6,
+        "fiscal_balance": -2.4,
         "tax_iva": 10,
         "tax_corporate": 30,
         "tax_income_avg": 32
       },
       "population": {
-        "total_millions": 27,
+        "total_millions": 28.1,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 1.1,
+        "unemployed_millions": 0.59,
         "minorities": {
           "anglo": 57,
           "asian": 18,
@@ -2253,7 +2701,7 @@
         "nuclear_warheads": 0,
         "tanks": 190,
         "naval_ships": 50,
-        "military_budget_bn": 33
+        "military_budget_bn": 34
       },
       "sectors": {
         "industry": 25,
@@ -2280,6 +2728,20 @@
           "china_trade",
           "minerals"
         ]
+      },
+      "social": {
+        "retirement_age_men": 67,
+        "retirement_age_women": 67,
+        "pension_spend_pct_gdp": 4.3,
+        "military_spend_pct_gdp": 1.6,
+        "contrib_worker": 0,
+        "contrib_employer": 0.115,
+        "replacement_rate": 0.32,
+        "coverage": 0.9,
+        "evasion": 0.05,
+        "dependency_ratio": 0.26,
+        "formal_pct": 86,
+        "informal_pct": 10
       }
     },
     "NewZealand": {
@@ -2289,22 +2751,22 @@
       "capital": "Wellington",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.25,
-        "gdp_growth": 1.2,
-        "unemployment": 4.6,
-        "inflation": 3,
+        "gdp_trillion_usd": 0.279,
+        "gdp_growth": 2.1,
+        "unemployment": 5.4,
+        "inflation": 3.1,
         "gold_reserves_tonnes": 0,
-        "debt_to_gdp": 45,
-        "fiscal_balance": -2.5,
+        "debt_to_gdp": 56.7,
+        "fiscal_balance": -3.9,
         "tax_iva": 15,
         "tax_corporate": 28,
         "tax_income_avg": 33
       },
       "population": {
-        "total_millions": 5.3,
+        "total_millions": 5.4,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 0.2,
+        "unemployed_millions": 0.15,
         "minorities": {
           "european": 70,
           "maori": 17,
@@ -2321,7 +2783,7 @@
         "nuclear_warheads": 0,
         "tanks": 80,
         "naval_ships": 11,
-        "military_budget_bn": 3.5
+        "military_budget_bn": 3.6
       },
       "sectors": {
         "industry": 20,
@@ -2347,6 +2809,20 @@
           "pacific",
           "climate"
         ]
+      },
+      "social": {
+        "retirement_age_men": 65,
+        "retirement_age_women": 65,
+        "pension_spend_pct_gdp": 5.1,
+        "military_spend_pct_gdp": 1.29,
+        "contrib_worker": 0,
+        "contrib_employer": 0.03,
+        "replacement_rate": 0.4,
+        "coverage": 0.95,
+        "evasion": 0.04,
+        "dependency_ratio": 0.26,
+        "formal_pct": 88,
+        "informal_pct": 8
       }
     },
     "Italy": {
@@ -2356,22 +2832,22 @@
       "capital": "Rome",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 2.3,
-        "gdp_growth": 0.7,
-        "unemployment": 7.5,
-        "inflation": 1.5,
+        "gdp_trillion_usd": 2.74,
+        "gdp_growth": 0.5,
+        "unemployment": 6,
+        "inflation": 2.6,
         "gold_reserves_tonnes": 2452,
-        "debt_to_gdp": 138,
-        "fiscal_balance": -4,
+        "debt_to_gdp": 138.4,
+        "fiscal_balance": -2.8,
         "tax_iva": 22,
         "tax_corporate": 24,
         "tax_income_avg": 36
       },
       "population": {
-        "total_millions": 59,
+        "total_millions": 58.9,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 4.4,
+        "unemployed_millions": 1.8,
         "minorities": {
           "italian": 92,
           "other": 8
@@ -2387,7 +2863,7 @@
         "nuclear_warheads": 0,
         "tanks": 214,
         "naval_ships": 180,
-        "military_budget_bn": 32
+        "military_budget_bn": 38
       },
       "sectors": {
         "industry": 24,
@@ -2412,6 +2888,20 @@
           "eu",
           "industry"
         ]
+      },
+      "social": {
+        "retirement_age_men": 67,
+        "retirement_age_women": 67,
+        "pension_spend_pct_gdp": 15.4,
+        "military_spend_pct_gdp": 1.39,
+        "contrib_worker": 0.0919,
+        "contrib_employer": 0.2361,
+        "replacement_rate": 0.74,
+        "coverage": 0.88,
+        "evasion": 0.1,
+        "dependency_ratio": 0.39,
+        "formal_pct": 82,
+        "informal_pct": 12
       }
     },
     "Poland": {
@@ -2421,22 +2911,22 @@
       "capital": "Warsaw",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.85,
-        "gdp_growth": 2.8,
-        "unemployment": 2.9,
-        "inflation": 4,
-        "gold_reserves_tonnes": 360,
-        "debt_to_gdp": 54,
-        "fiscal_balance": -5,
+        "gdp_trillion_usd": 1.13,
+        "gdp_growth": 3.3,
+        "unemployment": 3.4,
+        "inflation": 3.3,
+        "gold_reserves_tonnes": 448,
+        "debt_to_gdp": 65.7,
+        "fiscal_balance": -6.7,
         "tax_iva": 23,
         "tax_corporate": 19,
         "tax_income_avg": 32
       },
       "population": {
-        "total_millions": 37.5,
+        "total_millions": 36.2,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 1.1,
+        "unemployed_millions": 0.62,
         "minorities": {
           "polish": 97,
           "other": 3
@@ -2452,7 +2942,7 @@
         "nuclear_warheads": 0,
         "tanks": 600,
         "naval_ships": 50,
-        "military_budget_bn": 35
+        "military_budget_bn": 38
       },
       "sectors": {
         "industry": 32,
@@ -2478,6 +2968,20 @@
           "ukraine",
           "energy"
         ]
+      },
+      "social": {
+        "retirement_age_men": 65,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 11.1,
+        "military_spend_pct_gdp": 3.36,
+        "contrib_worker": 0.0976,
+        "contrib_employer": 0.0976,
+        "replacement_rate": 0.54,
+        "coverage": 0.8,
+        "evasion": 0.12,
+        "dependency_ratio": 0.28,
+        "formal_pct": 78,
+        "informal_pct": 16
       }
     },
     "Netherlands": {
@@ -2487,22 +2991,22 @@
       "capital": "Amsterdam",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 1.2,
-        "gdp_growth": 1.1,
-        "unemployment": 3.7,
-        "inflation": 2.8,
+        "gdp_trillion_usd": 1.45,
+        "gdp_growth": 1.2,
+        "unemployment": 4.1,
+        "inflation": 2.7,
         "gold_reserves_tonnes": 612,
-        "debt_to_gdp": 48,
-        "fiscal_balance": -0.5,
+        "debt_to_gdp": 44.1,
+        "fiscal_balance": -2.7,
         "tax_iva": 21,
         "tax_corporate": 25,
         "tax_income_avg": 37
       },
       "population": {
-        "total_millions": 18,
+        "total_millions": 18.1,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 0.7,
+        "unemployed_millions": 0.37,
         "minorities": {
           "dutch": 76,
           "other": 24
@@ -2518,7 +3022,7 @@
         "nuclear_warheads": 0,
         "tanks": 155,
         "naval_ships": 30,
-        "military_budget_bn": 16
+        "military_budget_bn": 23
       },
       "sectors": {
         "industry": 18,
@@ -2543,6 +3047,20 @@
           "eu",
           "ports"
         ]
+      },
+      "social": {
+        "retirement_age_men": 67,
+        "retirement_age_women": 67,
+        "pension_spend_pct_gdp": 5.2,
+        "military_spend_pct_gdp": 1.59,
+        "contrib_worker": 0.05,
+        "contrib_employer": 0.13,
+        "replacement_rate": 0.71,
+        "coverage": 0.92,
+        "evasion": 0.05,
+        "dependency_ratio": 0.32,
+        "formal_pct": 88,
+        "informal_pct": 8
       }
     },
     "Belgium": {
@@ -2552,22 +3070,22 @@
       "capital": "Brussels",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.65,
-        "gdp_growth": 1,
-        "unemployment": 5.6,
-        "inflation": 2.5,
+        "gdp_trillion_usd": 0.777,
+        "gdp_growth": 0.7,
+        "unemployment": 6.2,
+        "inflation": 2.8,
         "gold_reserves_tonnes": 227,
-        "debt_to_gdp": 108,
-        "fiscal_balance": -4.5,
+        "debt_to_gdp": 109.2,
+        "fiscal_balance": -5.1,
         "tax_iva": 21,
         "tax_corporate": 25,
         "tax_income_avg": 40
       },
       "population": {
-        "total_millions": 11.7,
+        "total_millions": 11.9,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 0.7,
+        "unemployed_millions": 0.37,
         "minorities": {
           "flemish": 57,
           "walloon": 32,
@@ -2584,7 +3102,7 @@
         "nuclear_warheads": 0,
         "tanks": 114,
         "naval_ships": 9,
-        "military_budget_bn": 7
+        "military_budget_bn": 7.5
       },
       "sectors": {
         "industry": 22,
@@ -2608,6 +3126,20 @@
           "eu_capital",
           "nato_hq"
         ]
+      },
+      "social": {
+        "retirement_age_men": 66,
+        "retirement_age_women": 66,
+        "pension_spend_pct_gdp": 10.5,
+        "military_spend_pct_gdp": 0.97,
+        "contrib_worker": 0.075,
+        "contrib_employer": 0.0886,
+        "replacement_rate": 0.61,
+        "coverage": 0.88,
+        "evasion": 0.08,
+        "dependency_ratio": 0.32,
+        "formal_pct": 86,
+        "informal_pct": 10
       }
     },
     "Sweden": {
@@ -2617,22 +3149,22 @@
       "capital": "Stockholm",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.6,
-        "gdp_growth": 1.2,
-        "unemployment": 8.2,
-        "inflation": 2,
+        "gdp_trillion_usd": 0.76,
+        "gdp_growth": 2,
+        "unemployment": 8.6,
+        "inflation": 1.5,
         "gold_reserves_tonnes": 126,
-        "debt_to_gdp": 35,
-        "fiscal_balance": -0.8,
+        "debt_to_gdp": 36.7,
+        "fiscal_balance": -2.4,
         "tax_iva": 25,
         "tax_corporate": 21,
         "tax_income_avg": 32
       },
       "population": {
-        "total_millions": 10.5,
+        "total_millions": 10.8,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 0.9,
+        "unemployed_millions": 0.46,
         "minorities": {
           "swedish": 80,
           "other": 20
@@ -2673,6 +3205,20 @@
           "tech",
           "welfare"
         ]
+      },
+      "social": {
+        "retirement_age_men": 66,
+        "retirement_age_women": 66,
+        "pension_spend_pct_gdp": 7.2,
+        "military_spend_pct_gdp": 1.58,
+        "contrib_worker": 0.07,
+        "contrib_employer": 0.1021,
+        "replacement_rate": 0.54,
+        "coverage": 0.92,
+        "evasion": 0.05,
+        "dependency_ratio": 0.33,
+        "formal_pct": 90,
+        "informal_pct": 6
       }
     },
     "Norway": {
@@ -2682,22 +3228,22 @@
       "capital": "Oslo",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.5,
+        "gdp_trillion_usd": 0.599,
         "gdp_growth": 1.5,
-        "unemployment": 3.8,
-        "inflation": 2.6,
+        "unemployment": 4.2,
+        "inflation": 3.3,
         "gold_reserves_tonnes": 37,
-        "debt_to_gdp": 44,
-        "fiscal_balance": 12,
+        "debt_to_gdp": 42.9,
+        "fiscal_balance": 10.2,
         "tax_iva": 25,
         "tax_corporate": 22,
         "tax_income_avg": 28
       },
       "population": {
-        "total_millions": 5.5,
+        "total_millions": 5.7,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 0.2,
+        "unemployed_millions": 0.12,
         "minorities": {
           "norwegian": 83,
           "other": 17
@@ -2713,7 +3259,7 @@
         "nuclear_warheads": 0,
         "tanks": 100,
         "naval_ships": 60,
-        "military_budget_bn": 9
+        "military_budget_bn": 10
       },
       "sectors": {
         "industry": 32,
@@ -2738,6 +3284,20 @@
           "arctic",
           "nato"
         ]
+      },
+      "social": {
+        "retirement_age_men": 67,
+        "retirement_age_women": 67,
+        "pension_spend_pct_gdp": 5.4,
+        "military_spend_pct_gdp": 1.67,
+        "contrib_worker": 0.079,
+        "contrib_employer": 0.141,
+        "replacement_rate": 0.52,
+        "coverage": 0.93,
+        "evasion": 0.04,
+        "dependency_ratio": 0.28,
+        "formal_pct": 90,
+        "informal_pct": 6
       }
     },
     "Switzerland": {
@@ -2747,22 +3307,22 @@
       "capital": "Bern",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.9,
+        "gdp_trillion_usd": 1.15,
         "gdp_growth": 1.3,
-        "unemployment": 2.4,
-        "inflation": 1.2,
+        "unemployment": 3,
+        "inflation": 0.5,
         "gold_reserves_tonnes": 1040,
-        "debt_to_gdp": 38,
-        "fiscal_balance": 0.5,
+        "debt_to_gdp": 38.5,
+        "fiscal_balance": 0.2,
         "tax_iva": 8,
         "tax_corporate": 15,
         "tax_income_avg": 22
       },
       "population": {
-        "total_millions": 8.9,
+        "total_millions": 9.1,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 0.2,
+        "unemployed_millions": 0.14,
         "minorities": {
           "german": 62,
           "french": 23,
@@ -2780,7 +3340,7 @@
         "nuclear_warheads": 0,
         "tanks": 134,
         "naval_ships": 10,
-        "military_budget_bn": 6
+        "military_budget_bn": 6.5
       },
       "sectors": {
         "industry": 25,
@@ -2805,6 +3365,20 @@
           "neutrality",
           "pharma"
         ]
+      },
+      "social": {
+        "retirement_age_men": 65,
+        "retirement_age_women": 64,
+        "pension_spend_pct_gdp": 6.5,
+        "military_spend_pct_gdp": 0.57,
+        "contrib_worker": 0.053,
+        "contrib_employer": 0.053,
+        "replacement_rate": 0.44,
+        "coverage": 0.9,
+        "evasion": 0.05,
+        "dependency_ratio": 0.3,
+        "formal_pct": 88,
+        "informal_pct": 8
       }
     },
     "Portugal": {
@@ -2814,22 +3388,22 @@
       "capital": "Lisbon",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.3,
-        "gdp_growth": 1.8,
-        "unemployment": 6.4,
-        "inflation": 2.4,
+        "gdp_trillion_usd": 0.381,
+        "gdp_growth": 1.9,
+        "unemployment": 5.9,
+        "inflation": 3.1,
         "gold_reserves_tonnes": 383,
-        "debt_to_gdp": 98,
-        "fiscal_balance": -0.8,
+        "debt_to_gdp": 85.6,
+        "fiscal_balance": -0.1,
         "tax_iva": 23,
         "tax_corporate": 21,
         "tax_income_avg": 28
       },
       "population": {
-        "total_millions": 10.4,
+        "total_millions": 10.7,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 0.7,
+        "unemployed_millions": 0.32,
         "minorities": {
           "portuguese": 95,
           "other": 5
@@ -2845,7 +3419,7 @@
         "nuclear_warheads": 0,
         "tanks": 80,
         "naval_ships": 20,
-        "military_budget_bn": 4
+        "military_budget_bn": 4.2
       },
       "sectors": {
         "industry": 19,
@@ -2870,6 +3444,20 @@
           "tourism",
           "lusophone"
         ]
+      },
+      "social": {
+        "retirement_age_men": 66,
+        "retirement_age_women": 66,
+        "pension_spend_pct_gdp": 12.4,
+        "military_spend_pct_gdp": 1.1,
+        "contrib_worker": 0.11,
+        "contrib_employer": 0.238,
+        "replacement_rate": 0.74,
+        "coverage": 0.85,
+        "evasion": 0.12,
+        "dependency_ratio": 0.36,
+        "formal_pct": 80,
+        "informal_pct": 14
       }
     },
     "Greece": {
@@ -2879,13 +3467,13 @@
       "capital": "Athens",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.24,
-        "gdp_growth": 2,
-        "unemployment": 10,
-        "inflation": 2.8,
+        "gdp_trillion_usd": 0.308,
+        "gdp_growth": 1.8,
+        "unemployment": 7.4,
+        "inflation": 3.5,
         "gold_reserves_tonnes": 114,
-        "debt_to_gdp": 162,
-        "fiscal_balance": -1,
+        "debt_to_gdp": 136.9,
+        "fiscal_balance": 0.6,
         "tax_iva": 24,
         "tax_corporate": 22,
         "tax_income_avg": 22
@@ -2894,7 +3482,7 @@
         "total_millions": 10.4,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 1,
+        "unemployed_millions": 0.38,
         "minorities": {
           "greek": 93,
           "other": 7
@@ -2910,7 +3498,7 @@
         "nuclear_warheads": 0,
         "tanks": 80,
         "naval_ships": 70,
-        "military_budget_bn": 7
+        "military_budget_bn": 8
       },
       "sectors": {
         "industry": 16,
@@ -2935,6 +3523,20 @@
           "aegean",
           "tourism"
         ]
+      },
+      "social": {
+        "retirement_age_men": 67,
+        "retirement_age_women": 67,
+        "pension_spend_pct_gdp": 15.7,
+        "military_spend_pct_gdp": 2.6,
+        "contrib_worker": 0.0667,
+        "contrib_employer": 0.1333,
+        "replacement_rate": 0.76,
+        "coverage": 0.8,
+        "evasion": 0.18,
+        "dependency_ratio": 0.37,
+        "formal_pct": 72,
+        "informal_pct": 20
       }
     },
     "Ukraine": {
@@ -2944,22 +3546,22 @@
       "capital": "Kyiv",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.18,
-        "gdp_growth": 3.5,
-        "unemployment": 18,
-        "inflation": 8,
+        "gdp_trillion_usd": 0.225,
+        "gdp_growth": 2,
+        "unemployment": 10.2,
+        "inflation": 6.1,
         "gold_reserves_tonnes": 27,
-        "debt_to_gdp": 90,
-        "fiscal_balance": -18,
+        "debt_to_gdp": 122.6,
+        "fiscal_balance": -18.4,
         "tax_iva": 20,
         "tax_corporate": 18,
         "tax_income_avg": 18
       },
       "population": {
-        "total_millions": 37,
+        "total_millions": 32.3,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 6.7,
+        "unemployed_millions": 1.65,
         "minorities": {
           "ukrainian": 78,
           "russian": 17,
@@ -2976,7 +3578,7 @@
         "nuclear_warheads": 0,
         "tanks": 1500,
         "naval_ships": 20,
-        "military_budget_bn": 30
+        "military_budget_bn": 65
       },
       "sectors": {
         "industry": 20,
@@ -3002,6 +3604,20 @@
           "eu",
           "grain"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 10,
+        "military_spend_pct_gdp": 28.89,
+        "contrib_worker": 0.22,
+        "contrib_employer": 0,
+        "replacement_rate": 0.4,
+        "coverage": 0.55,
+        "evasion": 0.25,
+        "dependency_ratio": 0.28,
+        "formal_pct": 60,
+        "informal_pct": 30
       }
     },
     "Czechia": {
@@ -3011,13 +3627,13 @@
       "capital": "Prague",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.33,
-        "gdp_growth": 1.5,
-        "unemployment": 2.6,
-        "inflation": 2.5,
-        "gold_reserves_tonnes": 12,
-        "debt_to_gdp": 44,
-        "fiscal_balance": -2.5,
+        "gdp_trillion_usd": 0.433,
+        "gdp_growth": 2.2,
+        "unemployment": 3,
+        "inflation": 2.4,
+        "gold_reserves_tonnes": 51,
+        "debt_to_gdp": 46.4,
+        "fiscal_balance": -2.3,
         "tax_iva": 21,
         "tax_corporate": 21,
         "tax_income_avg": 15
@@ -3026,7 +3642,7 @@
         "total_millions": 10.9,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 0.3,
+        "unemployed_millions": 0.16,
         "minorities": {
           "czech": 64,
           "moravian": 5,
@@ -3043,7 +3659,7 @@
         "nuclear_warheads": 0,
         "tanks": 120,
         "naval_ships": 6,
-        "military_budget_bn": 5
+        "military_budget_bn": 6.5
       },
       "sectors": {
         "industry": 35,
@@ -3068,6 +3684,20 @@
           "eu",
           "energy"
         ]
+      },
+      "social": {
+        "retirement_age_men": 64,
+        "retirement_age_women": 64,
+        "pension_spend_pct_gdp": 8,
+        "military_spend_pct_gdp": 1.5,
+        "contrib_worker": 0.065,
+        "contrib_employer": 0.216,
+        "replacement_rate": 0.46,
+        "coverage": 0.88,
+        "evasion": 0.08,
+        "dependency_ratio": 0.32,
+        "formal_pct": 86,
+        "informal_pct": 10
       }
     },
     "Hungary": {
@@ -3077,22 +3707,22 @@
       "capital": "Budapest",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.22,
-        "gdp_growth": 1,
-        "unemployment": 4.3,
-        "inflation": 4.5,
+        "gdp_trillion_usd": 0.271,
+        "gdp_growth": 1.7,
+        "unemployment": 4.2,
+        "inflation": 3.8,
         "gold_reserves_tonnes": 94,
-        "debt_to_gdp": 74,
-        "fiscal_balance": -5,
+        "debt_to_gdp": 77.9,
+        "fiscal_balance": -5.5,
         "tax_iva": 27,
         "tax_corporate": 9,
         "tax_income_avg": 15
       },
       "population": {
-        "total_millions": 9.6,
+        "total_millions": 9.5,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 0.4,
+        "unemployed_millions": 0.2,
         "minorities": {
           "hungarian": 85,
           "other": 15
@@ -3108,7 +3738,7 @@
         "nuclear_warheads": 0,
         "tanks": 50,
         "naval_ships": 6,
-        "military_budget_bn": 5
+        "military_budget_bn": 5.5
       },
       "sectors": {
         "industry": 30,
@@ -3134,6 +3764,20 @@
           "illiberal",
           "eu_funds"
         ]
+      },
+      "social": {
+        "retirement_age_men": 65,
+        "retirement_age_women": 65,
+        "pension_spend_pct_gdp": 7.3,
+        "military_spend_pct_gdp": 2.03,
+        "contrib_worker": 0.1,
+        "contrib_employer": 0.13,
+        "replacement_rate": 0.56,
+        "coverage": 0.85,
+        "evasion": 0.1,
+        "dependency_ratio": 0.3,
+        "formal_pct": 84,
+        "informal_pct": 12
       }
     },
     "Romania": {
@@ -3143,22 +3787,22 @@
       "capital": "Bucharest",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.35,
-        "gdp_growth": 2.2,
-        "unemployment": 5.5,
-        "inflation": 5.5,
+        "gdp_trillion_usd": 0.481,
+        "gdp_growth": 0.7,
+        "unemployment": 6,
+        "inflation": 7.8,
         "gold_reserves_tonnes": 104,
-        "debt_to_gdp": 50,
-        "fiscal_balance": -6,
+        "debt_to_gdp": 61.9,
+        "fiscal_balance": -6.2,
         "tax_iva": 19,
         "tax_corporate": 16,
         "tax_income_avg": 10
       },
       "population": {
-        "total_millions": 19,
+        "total_millions": 18.7,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 1,
+        "unemployed_millions": 0.56,
         "minorities": {
           "romanian": 89,
           "hungarian": 6,
@@ -3200,6 +3844,20 @@
           "energy",
           "eu"
         ]
+      },
+      "social": {
+        "retirement_age_men": 65,
+        "retirement_age_women": 63,
+        "pension_spend_pct_gdp": 8.1,
+        "military_spend_pct_gdp": 1.66,
+        "contrib_worker": 0.105,
+        "contrib_employer": 0.205,
+        "replacement_rate": 0.44,
+        "coverage": 0.7,
+        "evasion": 0.18,
+        "dependency_ratio": 0.28,
+        "formal_pct": 72,
+        "informal_pct": 22
       }
     },
     "Ireland": {
@@ -3209,22 +3867,22 @@
       "capital": "Dublin",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.55,
+        "gdp_trillion_usd": 0.779,
         "gdp_growth": 2.5,
-        "unemployment": 4.4,
-        "inflation": 2.2,
+        "unemployment": 4.8,
+        "inflation": 3.1,
         "gold_reserves_tonnes": 6,
-        "debt_to_gdp": 43,
-        "fiscal_balance": 1.5,
+        "debt_to_gdp": 31.6,
+        "fiscal_balance": 0.6,
         "tax_iva": 23,
         "tax_corporate": 15,
         "tax_income_avg": 40
       },
       "population": {
-        "total_millions": 5.3,
+        "total_millions": 5.6,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 0.2,
+        "unemployed_millions": 0.13,
         "minorities": {
           "irish": 82,
           "other": 18
@@ -3240,7 +3898,7 @@
         "nuclear_warheads": 0,
         "tanks": 105,
         "naval_ships": 8,
-        "military_budget_bn": 1.2
+        "military_budget_bn": 1.4
       },
       "sectors": {
         "industry": 38,
@@ -3265,6 +3923,20 @@
           "neutrality",
           "eu"
         ]
+      },
+      "social": {
+        "retirement_age_men": 66,
+        "retirement_age_women": 66,
+        "pension_spend_pct_gdp": 3.5,
+        "military_spend_pct_gdp": 0.18,
+        "contrib_worker": 0.04,
+        "contrib_employer": 0.088,
+        "replacement_rate": 0.34,
+        "coverage": 0.9,
+        "evasion": 0.06,
+        "dependency_ratio": 0.24,
+        "formal_pct": 86,
+        "informal_pct": 10
       }
     },
     "SouthAfrica": {
@@ -3274,22 +3946,22 @@
       "capital": "Pretoria",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.4,
+        "gdp_trillion_usd": 0.48,
         "gdp_growth": 1,
-        "unemployment": 32,
-        "inflation": 4.8,
+        "unemployment": 32.5,
+        "inflation": 3.9,
         "gold_reserves_tonnes": 125,
-        "debt_to_gdp": 75,
-        "fiscal_balance": -5,
+        "debt_to_gdp": 78.9,
+        "fiscal_balance": -4.9,
         "tax_iva": 15,
         "tax_corporate": 27,
         "tax_income_avg": 31
       },
       "population": {
-        "total_millions": 63,
+        "total_millions": 64,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 20.2,
+        "unemployed_millions": 10.4,
         "minorities": {
           "black": 81,
           "coloured": 9,
@@ -3307,7 +3979,7 @@
         "nuclear_warheads": 0,
         "tanks": 89,
         "naval_ships": 40,
-        "military_budget_bn": 3
+        "military_budget_bn": 3.1
       },
       "sectors": {
         "industry": 25,
@@ -3332,6 +4004,20 @@
           "minerals",
           "inequality"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 3.1,
+        "military_spend_pct_gdp": 0.65,
+        "contrib_worker": 0,
+        "contrib_employer": 0.01,
+        "replacement_rate": 0.18,
+        "coverage": 0.12,
+        "evasion": 0.2,
+        "dependency_ratio": 0.09,
+        "formal_pct": 32,
+        "informal_pct": 34
       }
     },
     "Nigeria": {
@@ -3341,22 +4027,22 @@
       "capital": "Abuja",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.25,
-        "gdp_growth": 3.2,
+        "gdp_trillion_usd": 0.377,
+        "gdp_growth": 4.1,
         "unemployment": 33,
-        "inflation": 28,
+        "inflation": 16,
         "gold_reserves_tonnes": 21,
-        "debt_to_gdp": 50,
-        "fiscal_balance": -4,
+        "debt_to_gdp": 32.3,
+        "fiscal_balance": -4.4,
         "tax_iva": 7.5,
         "tax_corporate": 30,
         "tax_income_avg": 24
       },
       "population": {
-        "total_millions": 227,
+        "total_millions": 243,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 74.9,
+        "unemployed_millions": 40.1,
         "minorities": {
           "hausa": 30,
           "yoruba": 21,
@@ -3374,7 +4060,7 @@
         "nuclear_warheads": 0,
         "tanks": 80,
         "naval_ships": 75,
-        "military_budget_bn": 3.2
+        "military_budget_bn": 3.4
       },
       "sectors": {
         "industry": 22,
@@ -3399,6 +4085,20 @@
           "security",
           "demography"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 0.6,
+        "military_spend_pct_gdp": 0.9,
+        "contrib_worker": 0.08,
+        "contrib_employer": 0.1,
+        "replacement_rate": 0.4,
+        "coverage": 0.1,
+        "evasion": 0.35,
+        "dependency_ratio": 0.06,
+        "formal_pct": 12,
+        "informal_pct": 80
       }
     },
     "Egypt": {
@@ -3408,22 +4108,22 @@
       "capital": "Cairo",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.4,
-        "gdp_growth": 3.8,
-        "unemployment": 7,
-        "inflation": 25,
-        "gold_reserves_tonnes": 126,
-        "debt_to_gdp": 96,
-        "fiscal_balance": -3.5,
+        "gdp_trillion_usd": 0.43,
+        "gdp_growth": 4.2,
+        "unemployment": 7.4,
+        "inflation": 13.2,
+        "gold_reserves_tonnes": 127,
+        "debt_to_gdp": 87,
+        "fiscal_balance": -12.1,
         "tax_iva": 14,
         "tax_corporate": 22,
         "tax_income_avg": 25
       },
       "population": {
-        "total_millions": 114,
+        "total_millions": 110,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 8,
+        "unemployed_millions": 4.1,
         "minorities": {
           "arab": 99,
           "other": 1
@@ -3439,7 +4139,7 @@
         "nuclear_warheads": 0,
         "tanks": 4500,
         "naval_ships": 320,
-        "military_budget_bn": 5
+        "military_budget_bn": 5.2
       },
       "sectors": {
         "industry": 32,
@@ -3465,6 +4165,20 @@
           "imf",
           "stability"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 4.2,
+        "military_spend_pct_gdp": 1.21,
+        "contrib_worker": 0.11,
+        "contrib_employer": 0.1875,
+        "replacement_rate": 0.55,
+        "coverage": 0.4,
+        "evasion": 0.28,
+        "dependency_ratio": 0.1,
+        "formal_pct": 45,
+        "informal_pct": 48
       }
     },
     "Kenya": {
@@ -3474,22 +4188,22 @@
       "capital": "Nairobi",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.12,
-        "gdp_growth": 5,
+        "gdp_trillion_usd": 0.147,
+        "gdp_growth": 4.5,
         "unemployment": 5.5,
-        "inflation": 6,
+        "inflation": 5.9,
         "gold_reserves_tonnes": 0,
-        "debt_to_gdp": 70,
-        "fiscal_balance": -5.5,
+        "debt_to_gdp": 71.6,
+        "fiscal_balance": -6.4,
         "tax_iva": 16,
         "tax_corporate": 30,
         "tax_income_avg": 25
       },
       "population": {
-        "total_millions": 55,
+        "total_millions": 54.3,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 3,
+        "unemployed_millions": 1.5,
         "minorities": {
           "kikuyu": 17,
           "luhya": 14,
@@ -3506,7 +4220,7 @@
         "nuclear_warheads": 0,
         "tanks": 80,
         "naval_ships": 6,
-        "military_budget_bn": 1.2
+        "military_budget_bn": 1.3
       },
       "sectors": {
         "industry": 16,
@@ -3531,6 +4245,20 @@
           "debt",
           "climate"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 1.1,
+        "military_spend_pct_gdp": 0.88,
+        "contrib_worker": 0.06,
+        "contrib_employer": 0.06,
+        "replacement_rate": 0.4,
+        "coverage": 0.18,
+        "evasion": 0.3,
+        "dependency_ratio": 0.06,
+        "formal_pct": 20,
+        "informal_pct": 72
       }
     },
     "Morocco": {
@@ -3540,22 +4268,22 @@
       "capital": "Rabat",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.15,
-        "gdp_growth": 3,
-        "unemployment": 13,
-        "inflation": 2.5,
+        "gdp_trillion_usd": 0.194,
+        "gdp_growth": 4.9,
+        "unemployment": 12.2,
+        "inflation": 1.3,
         "gold_reserves_tonnes": 22,
-        "debt_to_gdp": 70,
-        "fiscal_balance": -4.5,
+        "debt_to_gdp": 65.8,
+        "fiscal_balance": -3.5,
         "tax_iva": 20,
         "tax_corporate": 31,
         "tax_income_avg": 38
       },
       "population": {
-        "total_millions": 38,
+        "total_millions": 38.1,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 4.9,
+        "unemployed_millions": 2.32,
         "minorities": {
           "arab_berber": 99,
           "other": 1
@@ -3571,7 +4299,7 @@
         "nuclear_warheads": 0,
         "tanks": 600,
         "naval_ships": 70,
-        "military_budget_bn": 5
+        "military_budget_bn": 5.5
       },
       "sectors": {
         "industry": 25,
@@ -3597,6 +4325,20 @@
           "eu_trade",
           "phosphate"
         ]
+      },
+      "social": {
+        "retirement_age_men": 63,
+        "retirement_age_women": 63,
+        "pension_spend_pct_gdp": 2.8,
+        "military_spend_pct_gdp": 2.84,
+        "contrib_worker": 0.0448,
+        "contrib_employer": 0.0888,
+        "replacement_rate": 0.5,
+        "coverage": 0.3,
+        "evasion": 0.28,
+        "dependency_ratio": 0.11,
+        "formal_pct": 32,
+        "informal_pct": 60
       }
     },
     "Algeria": {
@@ -3606,22 +4348,22 @@
       "capital": "Algiers",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.25,
-        "gdp_growth": 3,
+        "gdp_trillion_usd": 0.317,
+        "gdp_growth": 3.8,
         "unemployment": 12,
-        "inflation": 6,
+        "inflation": 2.9,
         "gold_reserves_tonnes": 174,
-        "debt_to_gdp": 55,
-        "fiscal_balance": -3,
+        "debt_to_gdp": 59.2,
+        "fiscal_balance": -10.2,
         "tax_iva": 19,
         "tax_corporate": 26,
         "tax_income_avg": 35
       },
       "population": {
-        "total_millions": 46,
+        "total_millions": 47.9,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 5.5,
+        "unemployed_millions": 2.87,
         "minorities": {
           "arab_berber": 99,
           "other": 1
@@ -3637,7 +4379,7 @@
         "nuclear_warheads": 0,
         "tanks": 1200,
         "naval_ships": 70,
-        "military_budget_bn": 18
+        "military_budget_bn": 21
       },
       "sectors": {
         "industry": 45,
@@ -3662,6 +4404,20 @@
           "sahara",
           "non_aligned"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 55,
+        "pension_spend_pct_gdp": 6.5,
+        "military_spend_pct_gdp": 6.62,
+        "contrib_worker": 0.09,
+        "contrib_employer": 0.16,
+        "replacement_rate": 0.65,
+        "coverage": 0.45,
+        "evasion": 0.22,
+        "dependency_ratio": 0.1,
+        "formal_pct": 40,
+        "informal_pct": 50
       }
     },
     "Ethiopia": {
@@ -3671,22 +4427,22 @@
       "capital": "Addis Ababa",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.16,
-        "gdp_growth": 6.5,
+        "gdp_trillion_usd": 0.122,
+        "gdp_growth": 9.2,
         "unemployment": 18,
-        "inflation": 20,
+        "inflation": 11.8,
         "gold_reserves_tonnes": 0.3,
-        "debt_to_gdp": 40,
-        "fiscal_balance": -3,
+        "debt_to_gdp": 40.4,
+        "fiscal_balance": -1.8,
         "tax_iva": 15,
         "tax_corporate": 30,
         "tax_income_avg": 35
       },
       "population": {
-        "total_millions": 129,
+        "total_millions": 112,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 23.2,
+        "unemployed_millions": 10.1,
         "minorities": {
           "oromo": 35,
           "amhara": 27,
@@ -3727,6 +4483,20 @@
           "growth",
           "federation"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 0.8,
+        "military_spend_pct_gdp": 0.41,
+        "contrib_worker": 0.07,
+        "contrib_employer": 0.11,
+        "replacement_rate": 0.4,
+        "coverage": 0.1,
+        "evasion": 0.3,
+        "dependency_ratio": 0.06,
+        "formal_pct": 12,
+        "informal_pct": 80
       }
     },
     "Ghana": {
@@ -3736,22 +4506,22 @@
       "capital": "Accra",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.08,
-        "gdp_growth": 3.5,
+        "gdp_trillion_usd": 0.118,
+        "gdp_growth": 4.8,
         "unemployment": 14,
-        "inflation": 18,
+        "inflation": 5.8,
         "gold_reserves_tonnes": 9,
-        "debt_to_gdp": 84,
-        "fiscal_balance": -5,
+        "debt_to_gdp": 53,
+        "fiscal_balance": -2.3,
         "tax_iva": 15,
         "tax_corporate": 25,
         "tax_income_avg": 25
       },
       "population": {
-        "total_millions": 34,
+        "total_millions": 35.7,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 4.8,
+        "unemployed_millions": 2.5,
         "minorities": {
           "akan": 48,
           "other": 52
@@ -3767,7 +4537,7 @@
         "nuclear_warheads": 0,
         "tanks": 80,
         "naval_ships": 6,
-        "military_budget_bn": 0.3
+        "military_budget_bn": 0.4
       },
       "sectors": {
         "industry": 32,
@@ -3792,6 +4562,20 @@
           "gold",
           "democracy"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 1.2,
+        "military_spend_pct_gdp": 0.34,
+        "contrib_worker": 0.055,
+        "contrib_employer": 0.13,
+        "replacement_rate": 0.4,
+        "coverage": 0.15,
+        "evasion": 0.3,
+        "dependency_ratio": 0.06,
+        "formal_pct": 18,
+        "informal_pct": 70
       }
     },
     "Angola": {
@@ -3801,22 +4585,22 @@
       "capital": "Luanda",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.09,
-        "gdp_growth": 2.5,
+        "gdp_trillion_usd": 0.152,
+        "gdp_growth": 2.3,
         "unemployment": 15,
-        "inflation": 18,
+        "inflation": 12.9,
         "gold_reserves_tonnes": 0,
-        "debt_to_gdp": 60,
-        "fiscal_balance": -1,
+        "debt_to_gdp": 51.6,
+        "fiscal_balance": -2.4,
         "tax_iva": 14,
         "tax_corporate": 25,
         "tax_income_avg": 17
       },
       "population": {
-        "total_millions": 37,
+        "total_millions": 40.6,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 5.6,
+        "unemployed_millions": 3.05,
         "minorities": {
           "ovimbundu": 37,
           "other": 63
@@ -3832,7 +4616,7 @@
         "nuclear_warheads": 0,
         "tanks": 80,
         "naval_ships": 6,
-        "military_budget_bn": 1.5
+        "military_budget_bn": 1.6
       },
       "sectors": {
         "industry": 42,
@@ -3857,6 +4641,20 @@
           "cabinda",
           "china"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 1.5,
+        "military_spend_pct_gdp": 1.05,
+        "contrib_worker": 0.03,
+        "contrib_employer": 0.08,
+        "replacement_rate": 0.4,
+        "coverage": 0.12,
+        "evasion": 0.32,
+        "dependency_ratio": 0.06,
+        "formal_pct": 20,
+        "informal_pct": 70
       }
     },
     "Tanzania": {
@@ -3866,22 +4664,22 @@
       "capital": "Dodoma",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.08,
-        "gdp_growth": 5.5,
+        "gdp_trillion_usd": 0.0949,
+        "gdp_growth": 5.9,
         "unemployment": 9,
-        "inflation": 3.5,
+        "inflation": 4,
         "gold_reserves_tonnes": 0,
-        "debt_to_gdp": 48,
-        "fiscal_balance": -3.5,
+        "debt_to_gdp": 48.7,
+        "fiscal_balance": -3.2,
         "tax_iva": 18,
         "tax_corporate": 30,
         "tax_income_avg": 30
       },
       "population": {
-        "total_millions": 67,
+        "total_millions": 69.7,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 6,
+        "unemployed_millions": 3.1,
         "minorities": {
           "sukuma": 16,
           "other": 84
@@ -3921,6 +4719,20 @@
           "minerals",
           "union"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 0.9,
+        "military_spend_pct_gdp": 0.84,
+        "contrib_worker": 0.1,
+        "contrib_employer": 0.1,
+        "replacement_rate": 0.4,
+        "coverage": 0.1,
+        "evasion": 0.32,
+        "dependency_ratio": 0.06,
+        "formal_pct": 14,
+        "informal_pct": 76
       }
     },
     "CongoDR": {
@@ -3930,22 +4742,22 @@
       "capital": "Kinshasa",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.07,
-        "gdp_growth": 6,
+        "gdp_trillion_usd": 0.123,
+        "gdp_growth": 5.9,
         "unemployment": 12,
-        "inflation": 12,
+        "inflation": 3.3,
         "gold_reserves_tonnes": 0,
-        "debt_to_gdp": 15,
-        "fiscal_balance": -1.5,
+        "debt_to_gdp": 24.6,
+        "fiscal_balance": -3.5,
         "tax_iva": 16,
         "tax_corporate": 30,
         "tax_income_avg": 30
       },
       "population": {
-        "total_millions": 102,
+        "total_millions": 110,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 12.2,
+        "unemployed_millions": 6.6,
         "minorities": {
           "kongo": 16,
           "luba": 18,
@@ -3986,6 +4798,20 @@
           "east_conflict",
           "state"
         ]
+      },
+      "social": {
+        "retirement_age_men": 65,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 0.7,
+        "military_spend_pct_gdp": 0.33,
+        "contrib_worker": 0.05,
+        "contrib_employer": 0.05,
+        "replacement_rate": 0.4,
+        "coverage": 0.08,
+        "evasion": 0.35,
+        "dependency_ratio": 0.05,
+        "formal_pct": 10,
+        "informal_pct": 82
       }
     },
     "Senegal": {
@@ -3995,22 +4821,22 @@
       "capital": "Dakar",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.03,
-        "gdp_growth": 5,
+        "gdp_trillion_usd": 0.0405,
+        "gdp_growth": 2.2,
         "unemployment": 20,
-        "inflation": 3.5,
+        "inflation": 2.5,
         "gold_reserves_tonnes": 0,
-        "debt_to_gdp": 80,
-        "fiscal_balance": -5,
+        "debt_to_gdp": 132.3,
+        "fiscal_balance": -6.7,
         "tax_iva": 18,
         "tax_corporate": 30,
         "tax_income_avg": 40
       },
       "population": {
-        "total_millions": 18,
+        "total_millions": 19.7,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 3.6,
+        "unemployed_millions": 1.97,
         "minorities": {
           "wolof": 43,
           "other": 57
@@ -4050,6 +4876,20 @@
           "sahel",
           "ports"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 1.4,
+        "military_spend_pct_gdp": 0.99,
+        "contrib_worker": 0.056,
+        "contrib_employer": 0.084,
+        "replacement_rate": 0.4,
+        "coverage": 0.15,
+        "evasion": 0.3,
+        "dependency_ratio": 0.06,
+        "formal_pct": 18,
+        "informal_pct": 72
       }
     },
     "Thailand": {
@@ -4059,22 +4899,22 @@
       "capital": "Bangkok",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.5,
-        "gdp_growth": 2.5,
-        "unemployment": 1.1,
-        "inflation": 1,
-        "gold_reserves_tonnes": 244,
-        "debt_to_gdp": 62,
-        "fiscal_balance": -3,
+        "gdp_trillion_usd": 0.58,
+        "gdp_growth": 1.5,
+        "unemployment": 1,
+        "inflation": 0.9,
+        "gold_reserves_tonnes": 235,
+        "debt_to_gdp": 66.8,
+        "fiscal_balance": -2.2,
         "tax_iva": 7,
         "tax_corporate": 20,
         "tax_income_avg": 25
       },
       "population": {
-        "total_millions": 72,
+        "total_millions": 71.6,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 0.8,
+        "unemployed_millions": 0.4,
         "minorities": {
           "thai": 98,
           "other": 2
@@ -4090,7 +4930,7 @@
         "nuclear_warheads": 0,
         "tanks": 100,
         "naval_ships": 80,
-        "military_budget_bn": 6
+        "military_budget_bn": 6.2
       },
       "sectors": {
         "industry": 35,
@@ -4115,6 +4955,20 @@
           "export",
           "palace"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 3,
+        "military_spend_pct_gdp": 1.07,
+        "contrib_worker": 0.05,
+        "contrib_employer": 0.05,
+        "replacement_rate": 0.4,
+        "coverage": 0.4,
+        "evasion": 0.2,
+        "dependency_ratio": 0.2,
+        "formal_pct": 55,
+        "informal_pct": 38
       }
     },
     "Vietnam": {
@@ -4124,22 +4978,22 @@
       "capital": "Hanoi",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.45,
-        "gdp_growth": 6,
-        "unemployment": 2.2,
-        "inflation": 3.5,
+        "gdp_trillion_usd": 0.527,
+        "gdp_growth": 7.1,
+        "unemployment": 2.1,
+        "inflation": 4.9,
         "gold_reserves_tonnes": 0,
-        "debt_to_gdp": 38,
-        "fiscal_balance": -3.5,
+        "debt_to_gdp": 29.8,
+        "fiscal_balance": -2,
         "tax_iva": 10,
         "tax_corporate": 20,
         "tax_income_avg": 20
       },
       "population": {
-        "total_millions": 100,
+        "total_millions": 103,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 2.2,
+        "unemployed_millions": 1.1,
         "minorities": {
           "viet": 85,
           "other": 15
@@ -4155,7 +5009,7 @@
         "nuclear_warheads": 0,
         "tanks": 95,
         "naval_ships": 100,
-        "military_budget_bn": 7
+        "military_budget_bn": 7.3
       },
       "sectors": {
         "industry": 38,
@@ -4180,6 +5034,20 @@
           "south_china_sea",
           "party"
         ]
+      },
+      "social": {
+        "retirement_age_men": 62,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 2,
+        "military_spend_pct_gdp": 1.39,
+        "contrib_worker": 0.08,
+        "contrib_employer": 0.175,
+        "replacement_rate": 0.45,
+        "coverage": 0.35,
+        "evasion": 0.22,
+        "dependency_ratio": 0.12,
+        "formal_pct": 40,
+        "informal_pct": 52
       }
     },
     "Philippines": {
@@ -4189,13 +5057,13 @@
       "capital": "Manila",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.45,
-        "gdp_growth": 5.5,
-        "unemployment": 4.3,
-        "inflation": 3.2,
-        "gold_reserves_tonnes": 164,
-        "debt_to_gdp": 60,
-        "fiscal_balance": -4,
+        "gdp_trillion_usd": 0.512,
+        "gdp_growth": 4.1,
+        "unemployment": 4.7,
+        "inflation": 4.3,
+        "gold_reserves_tonnes": 128,
+        "debt_to_gdp": 60.2,
+        "fiscal_balance": -3.7,
         "tax_iva": 12,
         "tax_corporate": 25,
         "tax_income_avg": 25
@@ -4204,7 +5072,7 @@
         "total_millions": 115,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 4.9,
+        "unemployed_millions": 2.7,
         "minorities": {
           "tagalog": 28,
           "other": 72
@@ -4220,7 +5088,7 @@
         "nuclear_warheads": 0,
         "tanks": 95,
         "naval_ships": 90,
-        "military_budget_bn": 4
+        "military_budget_bn": 4.4
       },
       "sectors": {
         "industry": 30,
@@ -4245,6 +5113,20 @@
           "remittances",
           "usa"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 1.7,
+        "military_spend_pct_gdp": 0.86,
+        "contrib_worker": 0.05,
+        "contrib_employer": 0.1,
+        "replacement_rate": 0.4,
+        "coverage": 0.3,
+        "evasion": 0.25,
+        "dependency_ratio": 0.1,
+        "formal_pct": 38,
+        "informal_pct": 55
       }
     },
     "Malaysia": {
@@ -4254,22 +5136,22 @@
       "capital": "Kuala Lumpur",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.45,
-        "gdp_growth": 4.5,
-        "unemployment": 3.3,
-        "inflation": 2,
+        "gdp_trillion_usd": 0.516,
+        "gdp_growth": 4.7,
+        "unemployment": 3,
+        "inflation": 1.9,
         "gold_reserves_tonnes": 39,
-        "debt_to_gdp": 66,
-        "fiscal_balance": -4.5,
+        "debt_to_gdp": 69.5,
+        "fiscal_balance": -3.3,
         "tax_iva": 8,
         "tax_corporate": 24,
         "tax_income_avg": 26
       },
       "population": {
-        "total_millions": 34,
+        "total_millions": 34.2,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 1.1,
+        "unemployed_millions": 0.51,
         "minorities": {
           "malay": 69,
           "chinese": 23,
@@ -4287,7 +5169,7 @@
         "nuclear_warheads": 0,
         "tanks": 95,
         "naval_ships": 60,
-        "military_budget_bn": 4
+        "military_budget_bn": 4.2
       },
       "sectors": {
         "industry": 37,
@@ -4312,6 +5194,20 @@
           "palm",
           "islam"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 2.2,
+        "military_spend_pct_gdp": 0.81,
+        "contrib_worker": 0.11,
+        "contrib_employer": 0.13,
+        "replacement_rate": 0.4,
+        "coverage": 0.5,
+        "evasion": 0.18,
+        "dependency_ratio": 0.1,
+        "formal_pct": 62,
+        "informal_pct": 30
       }
     },
     "Singapore": {
@@ -4321,22 +5217,22 @@
       "capital": "Singapore",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.5,
-        "gdp_growth": 2.5,
-        "unemployment": 2.1,
-        "inflation": 2.5,
-        "gold_reserves_tonnes": 222,
-        "debt_to_gdp": 168,
-        "fiscal_balance": 3,
+        "gdp_trillion_usd": 0.66,
+        "gdp_growth": 3.5,
+        "unemployment": 2,
+        "inflation": 2.3,
+        "gold_reserves_tonnes": 220,
+        "debt_to_gdp": 171.9,
+        "fiscal_balance": 3.3,
         "tax_iva": 9,
         "tax_corporate": 17,
         "tax_income_avg": 22
       },
       "population": {
-        "total_millions": 5.9,
+        "total_millions": 6.1,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 0.1,
+        "unemployed_millions": 0.06,
         "minorities": {
           "chinese": 76,
           "malay": 15,
@@ -4354,7 +5250,7 @@
         "nuclear_warheads": 0,
         "tanks": 100,
         "naval_ships": 40,
-        "military_budget_bn": 16
+        "military_budget_bn": 13
       },
       "sectors": {
         "industry": 25,
@@ -4379,6 +5275,20 @@
           "malacca",
           "finance"
         ]
+      },
+      "social": {
+        "retirement_age_men": 63,
+        "retirement_age_women": 63,
+        "pension_spend_pct_gdp": 2.1,
+        "military_spend_pct_gdp": 1.97,
+        "contrib_worker": 0.2,
+        "contrib_employer": 0.17,
+        "replacement_rate": 0.2,
+        "coverage": 0.85,
+        "evasion": 0.05,
+        "dependency_ratio": 0.2,
+        "formal_pct": 90,
+        "informal_pct": 6
       }
     },
     "Bangladesh": {
@@ -4388,22 +5298,22 @@
       "capital": "Dhaka",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.45,
-        "gdp_growth": 6,
+        "gdp_trillion_usd": 0.511,
+        "gdp_growth": 4.7,
         "unemployment": 5,
-        "inflation": 9.5,
+        "inflation": 9.2,
         "gold_reserves_tonnes": 14,
-        "debt_to_gdp": 40,
-        "fiscal_balance": -4.5,
+        "debt_to_gdp": 41.8,
+        "fiscal_balance": -4.3,
         "tax_iva": 15,
         "tax_corporate": 27,
         "tax_income_avg": 25
       },
       "population": {
-        "total_millions": 173,
+        "total_millions": 175,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 8.7,
+        "unemployed_millions": 4.4,
         "minorities": {
           "bengali": 98,
           "other": 2
@@ -4419,7 +5329,7 @@
         "nuclear_warheads": 0,
         "tanks": 95,
         "naval_ships": 50,
-        "military_budget_bn": 4.5
+        "military_budget_bn": 4.6
       },
       "sectors": {
         "industry": 33,
@@ -4444,6 +5354,20 @@
           "climate",
           "growth"
         ]
+      },
+      "social": {
+        "retirement_age_men": 59,
+        "retirement_age_women": 59,
+        "pension_spend_pct_gdp": 0.7,
+        "military_spend_pct_gdp": 0.9,
+        "contrib_worker": 0,
+        "contrib_employer": 0,
+        "replacement_rate": 0.3,
+        "coverage": 0.08,
+        "evasion": 0.3,
+        "dependency_ratio": 0.08,
+        "formal_pct": 14,
+        "informal_pct": 82
       }
     },
     "Pakistan": {
@@ -4453,22 +5377,22 @@
       "capital": "Islamabad",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.35,
-        "gdp_growth": 2.5,
-        "unemployment": 8,
-        "inflation": 12,
+        "gdp_trillion_usd": 0.408,
+        "gdp_growth": 3.6,
+        "unemployment": 6.9,
+        "inflation": 7.2,
         "gold_reserves_tonnes": 65,
-        "debt_to_gdp": 78,
-        "fiscal_balance": -7,
+        "debt_to_gdp": 70.1,
+        "fiscal_balance": -3.2,
         "tax_iva": 18,
         "tax_corporate": 29,
         "tax_income_avg": 20
       },
       "population": {
-        "total_millions": 241,
+        "total_millions": 245,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 19.3,
+        "unemployed_millions": 8.5,
         "minorities": {
           "punjabi": 45,
           "pashtun": 15,
@@ -4512,6 +5436,20 @@
           "imf",
           "army"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 55,
+        "pension_spend_pct_gdp": 1.6,
+        "military_spend_pct_gdp": 2.45,
+        "contrib_worker": 0.01,
+        "contrib_employer": 0.05,
+        "replacement_rate": 0.4,
+        "coverage": 0.12,
+        "evasion": 0.32,
+        "dependency_ratio": 0.08,
+        "formal_pct": 20,
+        "informal_pct": 72
       }
     },
     "Kazakhstan": {
@@ -4521,22 +5459,22 @@
       "capital": "Astana",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.26,
-        "gdp_growth": 4,
-        "unemployment": 4.8,
-        "inflation": 8,
-        "gold_reserves_tonnes": 400,
-        "debt_to_gdp": 25,
-        "fiscal_balance": -2,
+        "gdp_trillion_usd": 0.36,
+        "gdp_growth": 4.6,
+        "unemployment": 4.6,
+        "inflation": 10.7,
+        "gold_reserves_tonnes": 294,
+        "debt_to_gdp": 24.9,
+        "fiscal_balance": -1.3,
         "tax_iva": 12,
         "tax_corporate": 20,
         "tax_income_avg": 10
       },
       "population": {
-        "total_millions": 20,
+        "total_millions": 20.6,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 1,
+        "unemployed_millions": 0.47,
         "minorities": {
           "kazakh": 70,
           "russian": 15,
@@ -4553,7 +5491,7 @@
         "nuclear_warheads": 0,
         "tanks": 300,
         "naval_ships": 6,
-        "military_budget_bn": 1.5
+        "military_budget_bn": 1.8
       },
       "sectors": {
         "industry": 32,
@@ -4578,6 +5516,20 @@
           "multivector",
           "steppe"
         ]
+      },
+      "social": {
+        "retirement_age_men": 63,
+        "retirement_age_women": 61,
+        "pension_spend_pct_gdp": 3.5,
+        "military_spend_pct_gdp": 0.5,
+        "contrib_worker": 0.1,
+        "contrib_employer": 0.05,
+        "replacement_rate": 0.4,
+        "coverage": 0.6,
+        "evasion": 0.18,
+        "dependency_ratio": 0.12,
+        "formal_pct": 70,
+        "informal_pct": 24
       }
     },
     "Cuba": {
@@ -4602,7 +5554,7 @@
         "total_millions": 11,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 0.3,
+        "unemployed_millions": 0.16,
         "minorities": {
           "white": 64,
           "mestizo": 27,
@@ -4645,6 +5597,20 @@
           "tourism",
           "medicine"
         ]
+      },
+      "social": {
+        "retirement_age_men": 65,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 7,
+        "military_spend_pct_gdp": 0.5,
+        "contrib_worker": 0.05,
+        "contrib_employer": 0.125,
+        "replacement_rate": 0.6,
+        "coverage": 0.85,
+        "evasion": 0.1,
+        "dependency_ratio": 0.22,
+        "formal_pct": 80,
+        "informal_pct": 15
       }
     },
     "Panama": {
@@ -4654,22 +5620,22 @@
       "capital": "Panama City",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.08,
-        "gdp_growth": 4.5,
-        "unemployment": 8,
-        "inflation": 1.5,
+        "gdp_trillion_usd": 0.095,
+        "gdp_growth": 3.8,
+        "unemployment": 10.4,
+        "inflation": 1.4,
         "gold_reserves_tonnes": 0,
-        "debt_to_gdp": 55,
-        "fiscal_balance": -3,
+        "debt_to_gdp": 57.7,
+        "fiscal_balance": -3.4,
         "tax_iva": 7,
         "tax_corporate": 25,
         "tax_income_avg": 25
       },
       "population": {
-        "total_millions": 4.5,
+        "total_millions": 4.6,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 0.4,
+        "unemployed_millions": 0.24,
         "minorities": {
           "mestizo": 65,
           "other": 35
@@ -4710,6 +5676,20 @@
           "finance",
           "logistics"
         ]
+      },
+      "social": {
+        "retirement_age_men": 62,
+        "retirement_age_women": 57,
+        "pension_spend_pct_gdp": 3.2,
+        "military_spend_pct_gdp": 0.84,
+        "contrib_worker": 0.0925,
+        "contrib_employer": 0.1225,
+        "replacement_rate": 0.6,
+        "coverage": 0.45,
+        "evasion": 0.22,
+        "dependency_ratio": 0.12,
+        "formal_pct": 50,
+        "informal_pct": 42
       }
     },
     "CostaRica": {
@@ -4719,22 +5699,22 @@
       "capital": "San Jose",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.07,
-        "gdp_growth": 3.5,
-        "unemployment": 8,
-        "inflation": 1.5,
+        "gdp_trillion_usd": 0.11,
+        "gdp_growth": 3.6,
+        "unemployment": 7,
+        "inflation": -0.4,
         "gold_reserves_tonnes": 0,
-        "debt_to_gdp": 60,
-        "fiscal_balance": -3.5,
+        "debt_to_gdp": 61.1,
+        "fiscal_balance": -3.6,
         "tax_iva": 13,
         "tax_corporate": 30,
         "tax_income_avg": 25
       },
       "population": {
-        "total_millions": 5.2,
+        "total_millions": 5.4,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 0.4,
+        "unemployed_millions": 0.19,
         "minorities": {
           "white_mestizo": 84,
           "other": 16
@@ -4774,6 +5754,20 @@
           "eco",
           "tech"
         ]
+      },
+      "social": {
+        "retirement_age_men": 65,
+        "retirement_age_women": 65,
+        "pension_spend_pct_gdp": 5.4,
+        "military_spend_pct_gdp": 0.45,
+        "contrib_worker": 0.1066,
+        "contrib_employer": 0.2667,
+        "replacement_rate": 0.67,
+        "coverage": 0.6,
+        "evasion": 0.18,
+        "dependency_ratio": 0.16,
+        "formal_pct": 58,
+        "informal_pct": 36
       }
     },
     "DominicanRepublic": {
@@ -4783,22 +5777,22 @@
       "capital": "Santo Domingo",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.12,
-        "gdp_growth": 4.5,
-        "unemployment": 5.5,
-        "inflation": 3.5,
+        "gdp_trillion_usd": 0.136,
+        "gdp_growth": 3.7,
+        "unemployment": 5.3,
+        "inflation": 5.1,
         "gold_reserves_tonnes": 0.6,
-        "debt_to_gdp": 58,
-        "fiscal_balance": -3,
+        "debt_to_gdp": 58.3,
+        "fiscal_balance": -3.5,
         "tax_iva": 18,
         "tax_corporate": 27,
         "tax_income_avg": 25
       },
       "population": {
-        "total_millions": 11.3,
+        "total_millions": 11,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 0.6,
+        "unemployed_millions": 0.29,
         "minorities": {
           "mixed": 73,
           "white": 16,
@@ -4838,6 +5832,20 @@
           "remittances",
           "haiti"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 2.4,
+        "military_spend_pct_gdp": 0.59,
+        "contrib_worker": 0.0287,
+        "contrib_employer": 0.071,
+        "replacement_rate": 0.4,
+        "coverage": 0.4,
+        "evasion": 0.25,
+        "dependency_ratio": 0.1,
+        "formal_pct": 42,
+        "informal_pct": 52
       }
     },
     "Guatemala": {
@@ -4847,22 +5855,22 @@
       "capital": "Guatemala City",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.1,
-        "gdp_growth": 3.5,
+        "gdp_trillion_usd": 0.129,
+        "gdp_growth": 3.9,
         "unemployment": 2.5,
-        "inflation": 4,
+        "inflation": 2.6,
         "gold_reserves_tonnes": 7,
-        "debt_to_gdp": 30,
-        "fiscal_balance": -1.5,
+        "debt_to_gdp": 27.6,
+        "fiscal_balance": -2.2,
         "tax_iva": 12,
         "tax_corporate": 25,
         "tax_income_avg": 7
       },
       "population": {
-        "total_millions": 18,
+        "total_millions": 18.9,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 0.5,
+        "unemployed_millions": 0.24,
         "minorities": {
           "mestizo": 56,
           "maya": 42,
@@ -4903,6 +5911,20 @@
           "corruption",
           "coffee"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 1.1,
+        "military_spend_pct_gdp": 0.23,
+        "contrib_worker": 0.0483,
+        "contrib_employer": 0.1067,
+        "replacement_rate": 0.4,
+        "coverage": 0.2,
+        "evasion": 0.3,
+        "dependency_ratio": 0.08,
+        "formal_pct": 28,
+        "informal_pct": 68
       }
     },
     "Honduras": {
@@ -4912,22 +5934,22 @@
       "capital": "Tegucigalpa",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.035,
-        "gdp_growth": 3.2,
-        "unemployment": 8,
-        "inflation": 5,
+        "gdp_trillion_usd": 0.0415,
+        "gdp_growth": 3.3,
+        "unemployment": 6.8,
+        "inflation": 4.4,
         "gold_reserves_tonnes": 0.7,
-        "debt_to_gdp": 50,
-        "fiscal_balance": -3.5,
+        "debt_to_gdp": 43.8,
+        "fiscal_balance": -1.5,
         "tax_iva": 15,
         "tax_corporate": 25,
         "tax_income_avg": 25
       },
       "population": {
-        "total_millions": 10.6,
+        "total_millions": 11.2,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 0.8,
+        "unemployed_millions": 0.38,
         "minorities": {
           "mestizo": 90,
           "other": 10
@@ -4966,6 +5988,20 @@
           "migration",
           "usa"
         ]
+      },
+      "social": {
+        "retirement_age_men": 65,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 1.3,
+        "military_spend_pct_gdp": 0.96,
+        "contrib_worker": 0.025,
+        "contrib_employer": 0.035,
+        "replacement_rate": 0.4,
+        "coverage": 0.2,
+        "evasion": 0.3,
+        "dependency_ratio": 0.08,
+        "formal_pct": 25,
+        "informal_pct": 70
       }
     },
     "ElSalvador": {
@@ -4975,22 +6011,22 @@
       "capital": "San Salvador",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.035,
-        "gdp_growth": 2.8,
-        "unemployment": 5.5,
-        "inflation": 1.5,
+        "gdp_trillion_usd": 0.0398,
+        "gdp_growth": 3.3,
+        "unemployment": 4.3,
+        "inflation": 2.5,
         "gold_reserves_tonnes": 0,
-        "debt_to_gdp": 85,
-        "fiscal_balance": -4,
+        "debt_to_gdp": 84.5,
+        "fiscal_balance": -2,
         "tax_iva": 13,
         "tax_corporate": 30,
         "tax_income_avg": 30
       },
       "population": {
-        "total_millions": 6.3,
+        "total_millions": 6.4,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 0.3,
+        "unemployed_millions": 0.14,
         "minorities": {
           "mestizo": 86,
           "other": 14
@@ -5030,6 +6066,20 @@
           "gangs",
           "strongman"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 55,
+        "pension_spend_pct_gdp": 4.2,
+        "military_spend_pct_gdp": 0.75,
+        "contrib_worker": 0.0725,
+        "contrib_employer": 0.0775,
+        "replacement_rate": 0.45,
+        "coverage": 0.28,
+        "evasion": 0.28,
+        "dependency_ratio": 0.12,
+        "formal_pct": 32,
+        "informal_pct": 62
       }
     },
     "Nicaragua": {
@@ -5039,22 +6089,22 @@
       "capital": "Managua",
       "playable": true,
       "economy": {
-        "gdp_trillion_usd": 0.017,
-        "gdp_growth": 3.5,
-        "unemployment": 5,
-        "inflation": 5.5,
+        "gdp_trillion_usd": 0.0242,
+        "gdp_growth": 3.8,
+        "unemployment": 2.7,
+        "inflation": 3.5,
         "gold_reserves_tonnes": 0,
-        "debt_to_gdp": 45,
-        "fiscal_balance": -2,
+        "debt_to_gdp": 33.2,
+        "fiscal_balance": 1.4,
         "tax_iva": 15,
         "tax_corporate": 30,
         "tax_income_avg": 15
       },
       "population": {
-        "total_millions": 6.9,
+        "total_millions": 6.8,
         "male_pct": 49.5,
         "female_pct": 50.5,
-        "unemployed_millions": 0.3,
+        "unemployed_millions": 0.09,
         "minorities": {
           "mestizo": 69,
           "white": 17,
@@ -5097,6 +6147,20 @@
           "russia",
           "family"
         ]
+      },
+      "social": {
+        "retirement_age_men": 60,
+        "retirement_age_women": 60,
+        "pension_spend_pct_gdp": 3,
+        "military_spend_pct_gdp": 0.41,
+        "contrib_worker": 0.07,
+        "contrib_employer": 0.1,
+        "replacement_rate": 0.4,
+        "coverage": 0.22,
+        "evasion": 0.28,
+        "dependency_ratio": 0.1,
+        "formal_pct": 30,
+        "informal_pct": 64
       }
     }
   },

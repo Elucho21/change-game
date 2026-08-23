@@ -48,6 +48,30 @@ export interface Traits {
   priorities: string[];
 }
 
+/**
+ * Previsional, empleo y peso fiscal de pensiones/defensa.
+ * Viene de engine/countries_mvp.json (FMI/SIPRI/OECD/ILO, 2026).
+ * Opcional: un save viejo o un pais sin ficha social no rompe.
+ */
+export interface SocialStats {
+  retirement_age_men: number;
+  retirement_age_women: number;
+  /** gasto publico en pensiones, % del PBI */
+  pension_spend_pct_gdp: number;
+  /** gasto militar, % del PBI (SIPRI o presupuesto / PBI) */
+  military_spend_pct_gdp: number;
+  contrib_worker: number;
+  contrib_employer: number;
+  replacement_rate: number;
+  coverage: number;
+  evasion: number;
+  dependency_ratio: number;
+  /** % de ocupados formales */
+  formal_pct: number;
+  /** % de ocupados informales */
+  informal_pct: number;
+}
+
 export interface Country {
   code: string;              // clave del JSON original: 'Argentina', 'USA'...
   iso: string;               // ADM0_A3 del GeoJSON: 'ARG', 'USA'...
@@ -63,6 +87,8 @@ export interface Country {
   military: Military;
   sectors: Record<string, number>;
   traits: Traits;
+  /** ficha previsional/empleo del pais. Semilla del tick v1.0. */
+  social?: SocialStats;
   /**
    * Salud de cada sector, 0-100. No viene del JSON: aparece cuando un evento
    * golpea un sector y se recupera sola unos puntos por turno.

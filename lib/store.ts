@@ -42,8 +42,8 @@ import {
 import { defaultImf, imfLabel, type ImfState } from './imf';
 import { defaultStreet, type StreetState } from './streetPressure';
 import { applyFx, DEVALUE_JUMP, FX_START } from './fx';
-import { defaultPension, pensionReformCostMultiplier, type PensionState } from './pension';
-import { defaultEmployment, type EmploymentState } from './employment';
+import { defaultPension, pensionFromCountry, pensionReformCostMultiplier, type PensionState } from './pension';
+import { defaultEmployment, employmentFromCountry, type EmploymentState } from './employment';
 import type {
   ActiveEvent, Bloc, ChokepointCrisis, Country, Decision, Delta, FeedItem, GameEvent,
   GlobalState, Layers, MapMode, Projection
@@ -767,8 +767,8 @@ export const useGame = create<GameStore>((set, get) => {
       startingGdp: player.economy.gdp_trillion_usd,
       imf: defaultImf(),
       street: defaultStreet(),
-      pension: defaultPension(),
-      employment: defaultEmployment(),
+      pension: pensionFromCountry(code),
+      employment: employmentFromCountry(code),
       feed: [
         {
           turn: 1,
@@ -877,8 +877,8 @@ export const useGame = create<GameStore>((set, get) => {
       lastCoalitionDemand: st.lastCoalitionDemand ?? 0,
       imf: st.imf ?? defaultImf(),
       street: st.street ?? defaultStreet(),
-      pension: st.pension ?? defaultPension(),
-      employment: st.employment ?? defaultEmployment(),
+      pension: st.pension ?? pensionFromCountry(st.playerCode),
+      employment: st.employment ?? employmentFromCountry(st.playerCode),
       gameOver: st.gameOver
     });
     return true;
