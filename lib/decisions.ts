@@ -608,6 +608,86 @@ export const DECISIONS: Decision[] = [
     cost: { capital: 6 },
     cooldown: 4,
     effects: { happiness: 5, stability: 4, capital: -2 }
+  },
+
+  // ---------------------------------------------------------- previsional (Change World Game v1.0)
+  // El coste de capital de cada reforma sale de lib/pension.ts
+  // (PENSION_REFORM_BASE_COST + pensionReformCostMultiplier en lib/store.ts,
+  // igual que el resto de las categorias en decisionCost). Los efectos
+  // fiscales/de empleo de fondo los calcula el tick de lib/pension.ts y
+  // lib/employment.ts turno a turno; lo que va aca es el golpe politico
+  // inmediato del anuncio.
+  {
+    id: 'subir_edad_jubilacion',
+    category: 'previsional',
+    label: 'Subir la edad de jubilacion',
+    emoji: '👴',
+    detail: '+2 anios para hombres y mujeres. Mejora el sistema a mediano plazo; los activos cercanos al retiro lo sienten ya.',
+    cost: { capital: 4 },
+    effects: { happiness: -2, stability: -1 }
+  },
+  {
+    id: 'igualar_edad_hm',
+    category: 'previsional',
+    label: 'Igualar edad de jubilacion entre generos',
+    emoji: '⚖️',
+    detail: 'La edad de las mujeres sube a la de los hombres. Correcto en el papel, caro en votos de un dia para el otro.',
+    cost: { capital: 7 },
+    effects: { happiness: -3, stability: -1 }
+  },
+  {
+    id: 'subir_aporte_trabajador',
+    category: 'previsional',
+    label: 'Subir el aporte del trabajador',
+    emoji: '💸',
+    detail: '+2 puntos porcentuales. El trabajador lo siente en el bolsillo de inmediato; con el tiempo empuja informalidad.',
+    cost: { capital: 6 },
+    effects: { happiness: -3 }
+  },
+  {
+    id: 'subir_aporte_empleador',
+    category: 'previsional',
+    label: 'Subir el aporte del empleador',
+    emoji: '🏭',
+    detail: '+2 puntos porcentuales. Menos ruido politico inmediato que subirselo al trabajador, pero encarece contratar formal.',
+    cost: { capital: 5 },
+    effects: { happiness: -1, gdp_growth: -0.05 }
+  },
+  {
+    id: 'bajar_tasa_reemplazo',
+    category: 'previsional',
+    label: 'Bajar la tasa de reemplazo',
+    emoji: '📉',
+    detail: '-10 puntos sobre el ultimo salario. La reforma mas dura de la caja: mejora la cuenta, pero los futuros jubilados no perdonan.',
+    cost: { capital: 11 },
+    effects: { happiness: -4, stability: -1 }
+  },
+  {
+    id: 'mejorar_fiscalizacion',
+    category: 'previsional',
+    label: 'Mejorar la fiscalizacion previsional',
+    emoji: '🔍',
+    detail: 'Baja la morosidad y la evasion. Requiere capacidad estatal, pero no le pide sacrificio directo a nadie.',
+    cost: { capital: 3 },
+    effects: { fiscal_balance: 0.05 }
+  },
+  {
+    id: 'eliminar_privilegios',
+    category: 'previsional',
+    label: 'Eliminar jubilaciones de privilegio',
+    emoji: '👑',
+    detail: 'Popular en la poblacion general, odio intenso en el grupo afectado. Dificultad tecnica y judicial alta.',
+    cost: { capital: 7 },
+    effects: { happiness: 2, stability: 1 }
+  },
+  {
+    id: 'aumentar_cobertura',
+    category: 'previsional',
+    label: 'Plan de formalizacion y cobertura',
+    emoji: '📋',
+    detail: 'La unica reforma previsional que suma Capital Politico neto: mas gente aportando, mas empleo formal, sin sacarle nada a nadie.',
+    cost: { capital: 1 },
+    effects: { capital: 4, happiness: 1 }
   }
 ];
 
@@ -620,5 +700,6 @@ export const CATEGORIES: { id: Decision['category']; label: string; emoji: strin
   { id: 'comercio', label: 'Comercio', emoji: '🚢' },
   { id: 'diplomacia', label: 'Diplomacia', emoji: '🤝' },
   { id: 'defensa', label: 'Defensa', emoji: '🎖️' },
-  { id: 'comunicacion', label: 'Comunicacion', emoji: '📣' }
+  { id: 'comunicacion', label: 'Comunicacion', emoji: '📣' },
+  { id: 'previsional', label: 'Previsional', emoji: '👴' }
 ];

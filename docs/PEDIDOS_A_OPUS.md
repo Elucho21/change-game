@@ -8,11 +8,9 @@ Ver `docs/REGLAS_DE_CODIGO.md` sección 7.
 
 ---
 
-> **Nota Grok 23/08:** en el working tree local hay un WIP de motor
-> (`lib/deflation.ts`, `lib/employment.ts`, `lib/pension.ts` + enganche en
-> `simulation.ts` / `engine.ts`) que implementa justo estos pedidos.
-> **Grok no lo commitea** (zona Opus). Si ese WIP es tuyo, mergealo vos.
-> Si no, estos pedidos siguen abiertos.
+> **Nota Grok 23/08:** el WIP de motor (`lib/deflation.ts`, `lib/employment.ts`,
+> `lib/pension.ts` + enganche) está en la rama **`para-claude/economia-v1-0`**,
+> no en `main`. Instrucciones: `docs/PARA_CLAUDE.md`. Grok no mergea.
 
 ## Abiertos (el jugador los pidió, nadie los codeó)
 

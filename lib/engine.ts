@@ -232,6 +232,17 @@ export interface TaxRates {
   income: number;
 }
 
+/**
+ * Recaudacion dinamica (tax buoyancy), Change World Game v1.0.
+ * El PBI que crece o se contrae mueve la recaudacion mas que proporcional
+ * (elasticidad > 1): a igual carga tributaria, una economia mas grande
+ * recauda mas. `TAX_BURDEN_PROXY` es la carga tributaria total tipica
+ * (% del PBI) del paquete de diseño: no hay un dato real por pais, se usa
+ * un valor global fijo a proposito para no inventar 76 numeros.
+ */
+export const TAX_BUOYANCY = 1.15;
+export const TAX_BURDEN_PROXY = 0.28;
+
 export const ratesOf = (country: Country): TaxRates => ({
   iva: country.economy.tax_iva,
   corporate: country.economy.tax_corporate,
@@ -398,6 +409,14 @@ export function naturalDrift(
       e.fiscal_balance = round(e.fiscal_balance + (tax.fiscal - taxFiscalPrev));
       c.taxFiscalApplied = tax.fiscal;
     }
+
+    // recaudacion dinamica: el tamaño de la economia (crecer o contraerse)
+    // mueve la recaudacion con elasticidad > 1. Solo el excedente sobre 1
+    // genera efecto neto en fiscal_balance (a elasticidad 1 la recaudacion
+    // crece al mismo ritmo que el PBI y el ratio recaudacion/PBI no se mueve).
+    e.fiscal_balance = round(
+      e.fiscal_balance + (e.gdp_growth / 100 / 12) * (TAX_BUOYANCY - 1) * TAX_BURDEN_PROXY * 100
+    );
 
     // deficit sostenido acumula deuda; la recaudacion extra lo amortigua
     if (e.fiscal_balance < 0) e.debt_to_gdp = round(e.debt_to_gdp + Math.abs(e.fiscal_balance) * 0.08);

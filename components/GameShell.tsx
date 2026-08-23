@@ -11,13 +11,14 @@ import BlocsPanel from './BlocsPanel';
 import EventCatalog from './EventCatalog';
 import GovernmentPanel from './GovernmentPanel';
 import CabinetPanel from './CabinetPanel';
+import PrevisionalPanel from './PrevisionalPanel';
 import ElectionModal from './ElectionModal';
 import TurnPlan from './TurnPlan';
 import Feed from './Feed';
 import GrokBridge from './GrokBridge';
 import Onboarding from './Onboarding';
 
-type Tab = 'pais' | 'gobierno' | 'gabinete' | 'decisiones' | 'bloques' | 'eventos';
+type Tab = 'pais' | 'gobierno' | 'gabinete' | 'decisiones' | 'bloques' | 'eventos' | 'previsional';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'pais', label: '📊 Pais' },
@@ -25,7 +26,8 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'gabinete', label: '👥 Gabinete' },
   { id: 'decisiones', label: '🎯 Decisiones' },
   { id: 'bloques', label: '🧩 Bloques' },
-  { id: 'eventos', label: '📚 Eventos' }
+  { id: 'eventos', label: '📚 Eventos' },
+  { id: 'previsional', label: '👴 Previsional' }
 ];
 
 const TURN_FX_MS = 1400;
@@ -89,6 +91,7 @@ export default function GameShell() {
           {tab === 'decisiones' && <DecisionsPanel />}
           {tab === 'bloques' && <BlocsPanel />}
           {tab === 'eventos' && <EventCatalog />}
+          {tab === 'previsional' && <PrevisionalPanel />}
         </div>
 
         <GlobeView turnFx={turnFx} />

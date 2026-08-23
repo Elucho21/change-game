@@ -1,5 +1,7 @@
 # Instrucciones para agentes (Claude, Grok, Codex, quien sea)
 
+Hay un handoff vivo: **`docs/PARA_CLAUDE.md`**. Si estás en la rama `para-claude/economia-v1-0` (CHANGE WORLD GAME 1.0), **empezá por ese archivo**: analizar, compatibilidad, tests, y pushear vos. No está en `main`.
+
 Leé en este orden:
 
 1. **`docs/CAMBIOS.md`** — qué cambió en el motor últimamente y qué te habilita. **Empezá por acá si volvés después de unos días**: es corto y está en orden inverso.

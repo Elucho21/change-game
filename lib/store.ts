@@ -42,6 +42,8 @@ import {
 import { defaultImf, imfLabel, type ImfState } from './imf';
 import { defaultStreet, type StreetState } from './streetPressure';
 import { applyFx, DEVALUE_JUMP, FX_START } from './fx';
+import { defaultPension, pensionReformCostMultiplier, type PensionState } from './pension';
+import { defaultEmployment, type EmploymentState } from './employment';
 import type {
   ActiveEvent, Bloc, ChokepointCrisis, Country, Decision, Delta, FeedItem, GameEvent,
   GlobalState, Layers, MapMode, Projection
@@ -132,6 +134,10 @@ interface GameStore {
   imf: ImfState;
   /** presion de calle por inflacion/desempleo altos sostenidos */
   street: StreetState;
+  /** sistema previsional del jugador (Change World Game v1.0) */
+  pension: PensionState;
+  /** empleo formal/informal y salario real del jugador */
+  employment: EmploymentState;
   /** eleccion resuelta esperando que el jugador la lea */
   election: ElectionResult | null;
   /** candidatos a sucederte: si esta lleno, la partida espera tu eleccion */
@@ -227,6 +233,8 @@ const initial = () => ({
   lastCoalitionDemand: 0,
   imf: defaultImf(),
   street: defaultStreet(),
+  pension: defaultPension(),
+  employment: defaultEmployment(),
   election: null as ElectionResult | null,
   succession: [] as Candidate[],
   gameOver: null as { title: string; body: string } | null
@@ -263,6 +271,8 @@ function snapshot(st: GameStore): PersistedState {
     lastCoalitionDemand: st.lastCoalitionDemand,
     imf: st.imf,
     street: st.street,
+    pension: st.pension,
+    employment: st.employment,
     gameOver: st.gameOver
   };
 }
@@ -284,6 +294,16 @@ function decisionCost(st: GameStore, dec: Decision, baseCost: number): number {
     * factionCostFactor(factionsOf(st.cabinet), policyKindOf(dec.id));
   // el canciller abarata la diplomacia segun su alineamiento (docs/PEDIDOS_A_OPUS.md)
   if (dec.category === 'diplomacia') factor *= 1 - cabinetDiplomaticBonus(st.cabinet);
+  // reformas previsionales: crisis fiscal visible, superavit+inflacion baja
+  // o capital politico alto abaratan la reforma (lib/pension.ts, paquete v1.0)
+  if (dec.category === 'previsional') {
+    const e = st.countries[st.playerCode].economy;
+    factor *= pensionReformCostMultiplier({
+      crisisFiscal: e.fiscal_balance < -3,
+      surplusLowInflation: e.fiscal_balance >= 0 && e.inflation < 5,
+      capitalHigh: st.capital > 15
+    });
+  }
   return Math.max(1, Math.round(baseCost * factor));
 }
 
@@ -709,7 +729,9 @@ export const useGame = create<GameStore>((set, get) => {
     politics: st.politics,
     honeymoonUntil: st.politics.honeymoonUntil,
     imf: st.imf,
-    street: st.street
+    street: st.street,
+    pension: st.pension,
+    employment: st.employment
   });
 
   return {
@@ -745,6 +767,8 @@ export const useGame = create<GameStore>((set, get) => {
       startingGdp: player.economy.gdp_trillion_usd,
       imf: defaultImf(),
       street: defaultStreet(),
+      pension: defaultPension(),
+      employment: defaultEmployment(),
       feed: [
         {
           turn: 1,
@@ -853,6 +877,8 @@ export const useGame = create<GameStore>((set, get) => {
       lastCoalitionDemand: st.lastCoalitionDemand ?? 0,
       imf: st.imf ?? defaultImf(),
       street: st.street ?? defaultStreet(),
+      pension: st.pension ?? defaultPension(),
+      employment: st.employment ?? defaultEmployment(),
       gameOver: st.gameOver
     });
     return true;
@@ -1147,12 +1173,16 @@ export const useGame = create<GameStore>((set, get) => {
       taxBase: st.taxBase,
       cabinet: run.cabinet,
       imf: st.imf,
-      street: st.street
+      street: st.street,
+      pension: st.pension,
+      employment: st.employment
     });
     const turn = tick.state.turn;
     const active = tick.state.active;
     const imf = tick.state.imf ?? st.imf;
     const street = tick.state.street ?? st.street;
+    const pension = tick.state.pension ?? st.pension;
+    const employment = tick.state.employment ?? st.employment;
 
     if (tick.oilShockApplied > 0) {
       feed.push({
@@ -1487,6 +1517,8 @@ export const useGame = create<GameStore>((set, get) => {
       lastCoalitionDemand,
       imf,
       street,
+      pension,
+      employment,
       reactions,
       lastActions: [],
       pending: [...pending],

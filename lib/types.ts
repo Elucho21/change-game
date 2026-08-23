@@ -267,7 +267,7 @@ export interface ActiveEvent {
 
 export interface Decision {
   id: string;
-  category: 'economia' | 'diplomacia' | 'comercio' | 'interior' | 'defensa' | 'comunicacion';
+  category: 'economia' | 'diplomacia' | 'comercio' | 'interior' | 'defensa' | 'comunicacion' | 'previsional';
   label: string;
   emoji: string;
   detail: string;

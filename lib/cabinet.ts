@@ -48,6 +48,12 @@ export interface Minister {
   unionPower?: number;
   /** % extra de capital politico en decisiones de categoria diplomacia (0.1 = +10%) */
   diplomaticCapitalBonus?: number;
+  /**
+   * 0-1: cuanto atenua el dano de subir aportes previsionales sobre el
+   * empleo formal y el salario real (lib/employment.ts). Solo lo tienen
+   * los perfiles de Economia con capacidad tecnica/fiscalizadora real.
+   */
+  laborMitigation?: number;
 }
 
 export const SEATS: { id: CabinetSeat; label: string; hint: string }[] = [
@@ -249,6 +255,10 @@ export const cabinetUnionPower = (cabinet: Cabinet) =>
 /** % extra de capital politico en decisiones de categoria diplomacia. */
 export const cabinetDiplomaticBonus = (cabinet: Cabinet) =>
   Math.round(seatedMinisters(cabinet).reduce((s, m) => s + (m.diplomaticCapitalBonus ?? 0), 0) * 100) / 100;
+
+/** Cuanto atenua el gabinete el dano de subir aportes sobre empleo/salarios (lib/employment.ts). */
+export const cabinetLaborMitigation = (cabinet: Cabinet) =>
+  Math.min(1, Math.round(seatedMinisters(cabinet).reduce((s, m) => s + (m.laborMitigation ?? 0), 0) * 100) / 100);
 
 /** Drift de relacion pasivo del gabinete, sumado por target (por si dos ministros pegan al mismo). */
 export function cabinetRelationDrift(cabinet: Cabinet): { target: string; amount: number }[] {

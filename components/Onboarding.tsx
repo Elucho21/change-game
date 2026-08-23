@@ -45,6 +45,7 @@ export default function Onboarding() {
           <div className="row"><span>🎯 Decisiones</span><b className="muted">Politicas que podes tomar este turno</b></div>
           <div className="row"><span>🧩 Bloques</span><b className="muted">Alianzas y uniones economicas</b></div>
           <div className="row"><span>📚 Eventos</span><b className="muted">Lo que ya paso y lo que puede pasar</b></div>
+          <div className="row"><span>👴 Previsional</span><b className="muted">Jubilaciones, empleo formal/informal y salario real</b></div>
         </div>
 
         <p className="muted" style={{ fontSize: 12.5 }}>

@@ -12,13 +12,16 @@ import { systemOf } from './electoral';
 import { topPartnerOf, totalTrade, tradeMatrix, type TradeContext } from './trade';
 import type { Politics } from './politics';
 import {
-  cabinetInvestmentMod, cabinetPassive, cabinetRelationDrift, cabinetUnionPower,
+  cabinetInvestmentMod, cabinetLaborMitigation, cabinetPassive, cabinetRelationDrift, cabinetUnionPower,
   coalitionPartners as coalitionPartnersOf, type Cabinet
 } from './cabinet';
 import { CAPITAL_PASSIVE_BASE } from './electoral';
 import { defaultImf, tickImf, type ImfState } from './imf';
 import { applyFx, FX_START, fxInflationPassthrough, fxPressure, DEVALUE_JUMP } from './fx';
 import { defaultStreet, streetDrip, tickStreetPressure, type StreetState } from './streetPressure';
+import { applyPensionReform, defaultPension, tickPension, type PensionState } from './pension';
+import { defaultEmployment, tickEmployment, type EmploymentState } from './employment';
+import { deflationReserveGrowth } from './deflation';
 
 /**
  * Simulacion determinista del mundo: todo lo que pasa en un turno SIN azar.
@@ -58,6 +61,10 @@ export interface SimState {
   imf?: ImfState;
   /** presion de calle por inflacion/desempleo altos sostenidos. Si falta, el tick lo crea. */
   street?: StreetState;
+  /** sistema previsional del jugador (lib/pension.ts). Si falta, el tick lo crea. */
+  pension?: PensionState;
+  /** empleo formal/informal y salario real del jugador (lib/employment.ts). Si falta, el tick lo crea. */
+  employment?: EmploymentState;
 }
 
 export const cloneSim = (s: SimState): SimState => JSON.parse(JSON.stringify(s)) as SimState;
@@ -256,6 +263,37 @@ export function deterministicTick(s: SimState): TickResult {
   const importedInflation = fxInflationPassthrough(pressure);
   if (importedInflation) applyDelta(player, { inflation: importedInflation }, s.world);
 
+  // previsional + empleo/salarios (Change World Game v1.0). Despues del FX
+  // para leer inflacion/gdp_growth ya asentados del mes que se cierra.
+  const prevPension = s.pension ?? defaultPension();
+  const pensionTick = tickPension(prevPension);
+  if (pensionTick.fiscalDelta) applyDelta(player, { fiscal_balance: pensionTick.fiscalDelta }, s.world);
+  s.pension = pensionTick.state;
+
+  const prevEmployment = s.employment ?? defaultEmployment();
+  const avgAgeBefore = (prevPension.retirementAgeMen + prevPension.retirementAgeWomen) / 2;
+  const avgAgeAfter = (pensionTick.state.retirementAgeMen + pensionTick.state.retirementAgeWomen) / 2;
+  const employmentTick = tickEmployment(prevEmployment, {
+    gdpGrowth: player.economy.gdp_growth,
+    contribTotalDeltaPp:
+      ((pensionTick.state.contribWorker + pensionTick.state.contribEmployer)
+        - (prevPension.contribWorker + prevPension.contribEmployer)) * 100,
+    coverageDeltaPp: (pensionTick.state.coverage - prevPension.coverage) * 100,
+    retirementAgeDeltaYears: avgAgeAfter - avgAgeBefore,
+    inflation: player.economy.inflation,
+    laborMitigation: s.cabinet ? cabinetLaborMitigation(s.cabinet) : 0
+  });
+  applyDelta(
+    player,
+    { unemployment: employmentTick.unemploymentDelta, happiness: employmentTick.happinessDelta },
+    s.world
+  );
+  s.employment = employmentTick.state;
+
+  // deflacion: si el mes cierra con precios cayendo, las reservas crecen solas
+  const reserveGrowth = deflationReserveGrowth(player.economy.inflation, player.economy.gold_reserves_tonnes);
+  if (reserveGrowth) applyDelta(player, { gold_reserves_tonnes: reserveGrowth }, s.world);
+
   // rutas cerradas: el barril sube mientras dure el bloqueo
   const shock = oilShock(s.disruptions, s.turn);
   if (shock > 0) {
@@ -292,6 +330,9 @@ export function applyDecisionTo(s: SimState, dec: Decision, target?: string): Si
   if (dec.id === 'devaluar') {
     const c = s.countries[s.playerCode];
     c.fx = applyFx(c.fx ?? FX_START, DEVALUE_JUMP);
+  }
+  if (dec.category === 'previsional') {
+    s.pension = applyPensionReform(s.pension ?? defaultPension(), dec.id);
   }
 
   s.capital = clamp(s.capital - dec.cost.capital + (dec.effects.capital ?? 0), 0, 100);
@@ -362,7 +403,27 @@ function collectWarnings(s: SimState, base: SimState, turnOffset: number): Proje
   if (e.gdp_growth < 0 && be.gdp_growth >= 0) {
     out.push({ turn: turnOffset, severity: 'aviso', text: 'La economia entra en recesion.' });
   }
+
+  // gasto rigido (militar + deficit previsional) vs el 15-18% PBI que
+  // el diseño de v1.0 marca como techo sostenible sin crisis de deuda.
+  const c = s.countries[s.playerCode];
+  const bc = base.countries[base.playerCode];
+  const rigidNow = rigidSpendingPctGdp(c, s.pension);
+  const rigidBefore = rigidSpendingPctGdp(bc, base.pension);
+  if (crossed(rigidNow, rigidBefore, 18, false)) {
+    out.push({
+      turn: turnOffset, severity: 'grave',
+      text: 'Gasto militar + previsional supera el 18% del PBI: riesgo de crisis de deuda.'
+    });
+  }
   return out;
+}
+
+/** Gasto militar + deficit previsional, como % del PBI (0 si hay superavit previsional). */
+function rigidSpendingPctGdp(country: Country, pension?: PensionState): number {
+  const militaryPctGdp = (country.military.military_budget_bn / (country.economy.gdp_trillion_usd * 1000)) * 100;
+  const pensionDeficitPctGdp = pension ? Math.max(0, -pension.resultApplied) : 0;
+  return Math.round((militaryPctGdp + pensionDeficitPctGdp) * 100) / 100;
 }
 
 /** Paises que cambian de categoria de relacion por culpa de la decision. */

@@ -5,6 +5,8 @@ import type { TaxRates } from './engine';
 import type { Politics } from './politics';
 import type { PlannedOrder } from './orders';
 import type { Cabinet } from './cabinet';
+import type { PensionState } from './pension';
+import type { EmploymentState } from './employment';
 
 /**
  * Guardado de partida en localStorage.
@@ -71,6 +73,10 @@ export interface PersistedState {
   cooldowns?: Record<string, number>;
   cabinet?: Cabinet;
   lastCoalitionDemand?: number;
+  /** sistema previsional del jugador (Change World Game v1.0). Opcional: los saves anteriores no lo traen. */
+  pension?: PensionState;
+  /** empleo formal/informal y salario real del jugador. Opcional: los saves anteriores no lo traen. */
+  employment?: EmploymentState;
   gameOver: { title: string; body: string } | null;
 }
 
@@ -225,7 +231,7 @@ export async function importSave(file: File): Promise<{ ok: boolean; error?: str
   }
 
   if (!isPlausibleSave(parsed)) {
-    return { ok: false, error: 'El archivo no tiene la forma de una partida de Change Game' };
+    return { ok: false, error: 'El archivo no tiene la forma de una partida de Change World Game' };
   }
   if (!migrate(parsed)) {
     return { ok: false, error: `Version de save no soportada (v${parsed.version})` };

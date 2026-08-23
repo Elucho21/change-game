@@ -37,7 +37,8 @@ export const EXTRA_MINISTERS = [
     discount: { category: 'economia' as const, factor: 0.82 },
     voteBonus: -2,
     investmentMod: 0.12,
-    unionPower: -0.1
+    unionPower: -0.1,
+    laborMitigation: 0.5
   },
   {
     id: 'eco_promercado',
@@ -50,7 +51,8 @@ export const EXTRA_MINISTERS = [
     discount: { category: 'economia' as const, factor: 0.78 },
     voteBonus: -3,
     investmentMod: 0.25,
-    unionPower: -0.2
+    unionPower: -0.2,
+    laborMitigation: 0.6
   },
   {
     id: 'eco_socialista',

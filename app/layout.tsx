@@ -4,7 +4,7 @@ import './turn-fx.css';
 import ServiceWorker from '@/components/ServiceWorker';
 
 export const metadata: Metadata = {
-  title: 'Change Game - simulador geopolitico',
+  title: 'Change World Game - simulador geopolitico',
   description: 'Juego de geopolitica y gran estrategia con globo 3D, bloques, arcos diplomaticos y eventos.'
 };
 
