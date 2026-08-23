@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useGame } from '@/lib/store';
 import { damagedSectors } from '@/lib/engine';
 import GlobeView from './GlobeView';
@@ -28,24 +28,47 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'eventos', label: '📚 Eventos' }
 ];
 
+const TURN_FX_MS = 1400;
+
 export default function GameShell() {
   const [tab, setTab] = useState<Tab>('pais');
   const [grok, setGrok] = useState(false);
+  const [turnFx, setTurnFx] = useState(false);
+  const [fxLabel, setFxLabel] = useState('');
   const gameOver = useGame((s) => s.gameOver);
   const newGame = useGame((s) => s.newGame);
+  const turn = useGame((s) => s.turn);
+  const world = useGame((s) => s.world);
   const pendingCount = useGame((s) => s.pending.length);
   const damagedCount = useGame((s) => damagedSectors(s.countries[s.playerCode]).length);
+  const prevTurn = useRef(turn);
+  const skipFirst = useRef(true);
 
-  // Cuantos avisos tiene cada pestana que no es la activa: para notar que
-  // paso algo en otro lado sin tener que ir clickeando las seis a ver.
+  // Al avanzar el mes: flash global + etiqueta con el nuevo turno.
+  useEffect(() => {
+    if (skipFirst.current) {
+      skipFirst.current = false;
+      prevTurn.current = turn;
+      return;
+    }
+    if (turn === prevTurn.current) return;
+    prevTurn.current = turn;
+    const month = world.month;
+    const year = world.year;
+    setFxLabel(`Mes ${month}/${year} · turno ${turn}`);
+    setTurnFx(true);
+    const t = window.setTimeout(() => setTurnFx(false), TURN_FX_MS);
+    return () => window.clearTimeout(t);
+  }, [turn, world.month, world.year]);
+
   const BADGES: Partial<Record<Tab, number>> = {
     decisiones: pendingCount,
     pais: damagedCount
   };
 
   return (
-    <div className="app">
-      <TopBar onGrok={() => setGrok(true)} />
+    <div className={`app${turnFx ? ' turn-fx' : ''}`}>
+      <TopBar onGrok={() => setGrok(true)} turnFx={turnFx} />
 
       <div className="stage">
         <div className="col">
@@ -68,13 +91,23 @@ export default function GameShell() {
           {tab === 'eventos' && <EventCatalog />}
         </div>
 
-        <GlobeView />
+        <GlobeView turnFx={turnFx} />
 
-        <div className="col right">
+        <div className={`col right${turnFx ? ' feed-fx' : ''}`}>
           <TurnPlan />
-          <Feed />
+          <Feed turnFx={turnFx} />
         </div>
       </div>
+
+      {turnFx && (
+        <div className="turn-fx-banner" aria-live="polite">
+          <span className="turn-fx-ico">🌍</span>
+          <div>
+            <strong>Mundo reaccionando</strong>
+            <span>{fxLabel}</span>
+          </div>
+        </div>
+      )}
 
       {grok && <GrokBridge onClose={() => setGrok(false)} />}
 
