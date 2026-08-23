@@ -190,7 +190,7 @@ export const DECISIONS: Decision[] = [
     emoji: '🌎',
     detail: 'Reunis a los vecinos y capitalizas el papel de anfitrion.',
     cost: { capital: 10 },
-    effects: { capital: 3, stability: 1 },
+    effects: { capital: 13, stability: 1 },
     relations: [{ target: 'vecinos', amount: 10 }]
   },
   {
@@ -222,7 +222,7 @@ export const DECISIONS: Decision[] = [
     emoji: '🕊️',
     detail: 'Prestigio si sale bien, ridiculo si nadie te escucha.',
     cost: { capital: 8 },
-    effects: { capital: 5, global_tension: -3 },
+    effects: { capital: 10, global_tension: -3 },
     relations: [{ target: 'todos', amount: 6 }]
   },
 
@@ -350,7 +350,7 @@ export const DECISIONS: Decision[] = [
     detail: 'Plata a los gobernadores. Se compran voluntades que despues hay que sostener.',
     cost: { capital: 6, fiscal: 0.8 },
     cooldown: 2,
-    effects: { fiscal_balance: -0.8, stability: 4, capital: 4 }
+    effects: { fiscal_balance: -0.8, stability: 4, capital: 8 }
   },
   {
     id: 'reforma_educativa',
@@ -370,7 +370,7 @@ export const DECISIONS: Decision[] = [
     detail: 'Poderes excepcionales para gobernar por decreto. Rapido, efectivo y caro en legitimidad.',
     cost: { capital: 20 },
     cooldown: 3,
-    effects: { stability: 6, happiness: -6, capital: 6 }
+    effects: { stability: 6, happiness: -6, capital: 25 }
   },
 
   // ---------------- COMERCIO (ampliacion) ----------------
@@ -440,7 +440,7 @@ export const DECISIONS: Decision[] = [
     cost: { capital: 8 },
     cooldown: 3,
     needsTarget: true,
-    effects: { capital: 2 },
+    effects: { capital: 10 },
     relations: [{ target: 'TARGET', amount: 16 }]
   },
   {
@@ -451,7 +451,7 @@ export const DECISIONS: Decision[] = [
     detail: 'Rondas de negociacion para juntar votos en el organismo. Prestigio sin costo material.',
     cost: { capital: 7 },
     cooldown: 3,
-    effects: { capital: 3, global_tension: -2 },
+    effects: { capital: 9, global_tension: -2 },
     relations: [{ target: 'todos', amount: 4 }]
   },
   {
@@ -557,7 +557,7 @@ export const DECISIONS: Decision[] = [
     detail: 'Hablarle al pais de frente. Ordena el relato cuando la situacion todavia se puede explicar.',
     cost: { capital: 5 },
     cooldown: 4,
-    effects: { happiness: 4, stability: 2, capital: 3 }
+    effects: { happiness: 4, stability: 2, capital: 9 }
   },
   {
     id: 'acto_masivo',
@@ -567,7 +567,7 @@ export const DECISIONS: Decision[] = [
     detail: 'Plaza llena y escenario. Consolida a los propios y le recuerda al resto que estan enfrente.',
     cost: { capital: 8, fiscal: 0.2 },
     cooldown: 4,
-    effects: { happiness: 5, stability: -1, capital: 6, fiscal_balance: -0.2 }
+    effects: { happiness: 5, stability: -1, capital: 13, fiscal_balance: -0.2 }
   },
   {
     id: 'gira_provincias',
@@ -577,7 +577,7 @@ export const DECISIONS: Decision[] = [
     detail: 'Semanas recorriendo pueblos y obras. Rinde despacio y rinde parejo.',
     cost: { capital: 7 },
     cooldown: 4,
-    effects: { happiness: 3, stability: 3, capital: 4 }
+    effects: { happiness: 3, stability: 3, capital: 11 }
   },
   {
     id: 'entrevista_incomoda',
@@ -587,7 +587,7 @@ export const DECISIONS: Decision[] = [
     detail: 'Sentarte con un periodista hostil. Si salis bien parado, ganas respeto hasta del que no te vota.',
     cost: { capital: 4 },
     cooldown: 4,
-    effects: { happiness: 3, capital: 5 }
+    effects: { happiness: 3, capital: 8 }
   },
   {
     id: 'campana_logros',

@@ -64,7 +64,18 @@ export interface CabinetOrder {
   emoji: string;
 }
 
-export type PlannedOrder = DecisionOrder | TaxOrder | BlocOrder | EventOrder | CabinetOrder;
+/** Banco Central: comprar o vender reservas de oro. */
+export interface GoldOrder {
+  kind: 'gold';
+  action: 'comprar' | 'vender';
+  /** toneladas, siempre positivo: la accion define si suman o restan reservas */
+  tonnes: number;
+  capitalCost: number;
+  label: string;
+  emoji: string;
+}
+
+export type PlannedOrder = DecisionOrder | TaxOrder | BlocOrder | EventOrder | CabinetOrder | GoldOrder;
 
 export const TAX_LABELS: Record<TaxKind, string> = {
   iva: 'IVA',
@@ -80,6 +91,26 @@ export const TAX_FIELD: Record<TaxKind, 'tax_iva' | 'tax_corporate' | 'tax_incom
 
 /** Costo politico de mover una alicuota: retocar es barato, reformar no. */
 export const taxCost = (delta: number) => (delta === 0 ? 0 : Math.round(2 + Math.abs(delta) * 1.5));
+
+/**
+ * Banco Central: tasas de conversion oro <-> caja.
+ * Vender rinde menos por tonelada de lo que cuesta comprar (spread real de
+ * cualquier mercado): comprar y vender en el mismo turno para lucrar con la
+ * diferencia no compensa el costo politico de ida y vuelta.
+ */
+export const GOLD_BUY_RATE = { capitalPerTonne: 5 / 6, fiscalPerTonne: 0.6 / 6 };
+export const GOLD_SELL_RATE = { capitalPerTonne: 0.3, fiscalPerTonne: 0.08 };
+
+export function goldCapitalCost(action: 'comprar' | 'vender', tonnes: number): number {
+  const rate = action === 'comprar' ? GOLD_BUY_RATE.capitalPerTonne : GOLD_SELL_RATE.capitalPerTonne;
+  return Math.round(tonnes * rate);
+}
+
+/** Cuanto mueve el balance fiscal: negativo al comprar (sale caja), positivo al vender (entra caja). */
+export function goldFiscalDelta(action: 'comprar' | 'vender', tonnes: number): number {
+  const perTonne = action === 'comprar' ? -GOLD_BUY_RATE.fiscalPerTonne : GOLD_SELL_RATE.fiscalPerTonne;
+  return Math.round(tonnes * perTonne * 100) / 100;
+}
 
 /** Capital politico comprometido por el plan. */
 export const committedCapital = (orders: PlannedOrder[]) =>
@@ -105,6 +136,42 @@ export function addTaxOrder(orders: PlannedOrder[], rate: TaxKind, delta: number
       capitalCost: taxCost(total),
       label: `${TAX_LABELS[rate]} ${total > 0 ? '+' : ''}${total} puntos`,
       emoji: total > 0 ? '📈' : '📉'
+    }
+  ];
+}
+
+/**
+ * Agrega una orden del Banco Central consolidando con la que ya exista:
+ * comprar 10 y despues vender 4 en el mismo turno deja una sola orden de
+ * comprar 6, igual que pasa con los impuestos. `currentReserves` limita
+ * cuanto se puede vender: no se puede vender lo que no se tiene.
+ */
+export function addGoldOrder(
+  orders: PlannedOrder[], action: 'comprar' | 'vender', tonnes: number, currentReserves: number
+): PlannedOrder[] {
+  const rest = orders.filter((o) => o.kind !== 'gold');
+  const current = orders.find((o): o is GoldOrder => o.kind === 'gold');
+  const currentSigned = current ? (current.action === 'comprar' ? current.tonnes : -current.tonnes) : 0;
+  const deltaSigned = action === 'comprar' ? tonnes : -tonnes;
+  const totalSigned = Math.round((currentSigned + deltaSigned) * 10) / 10;
+
+  if (totalSigned === 0) return rest;
+
+  const finalAction: 'comprar' | 'vender' = totalSigned > 0 ? 'comprar' : 'vender';
+  const finalTonnes = finalAction === 'vender'
+    ? Math.min(Math.abs(totalSigned), currentReserves)
+    : Math.abs(totalSigned);
+  if (finalTonnes <= 0) return rest;
+
+  return [
+    ...rest,
+    {
+      kind: 'gold',
+      action: finalAction,
+      tonnes: finalTonnes,
+      capitalCost: goldCapitalCost(finalAction, finalTonnes),
+      label: finalAction === 'comprar' ? `Comprar ${finalTonnes} t de oro` : `Vender ${finalTonnes} t de oro`,
+      emoji: finalAction === 'comprar' ? '🪙' : '💰'
     }
   ];
 }

@@ -23,7 +23,7 @@ export const DECISIONS_ORMUZ: Decision[] = [
     cost: { capital: 12 },
     cooldown: 2,
     when: (c) => c.player.code === 'Iran',
-    effects: { global_tension: -6, oil_price: -8, stability: -1, capital: 4 },
+    effects: { global_tension: -6, oil_price: -8, stability: -1, capital: 15 },
     relations: [{ target: 'USA', amount: 8 }, { target: 'todos', amount: 3 }]
   }
 ];

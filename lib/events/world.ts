@@ -155,7 +155,7 @@ export const WORLD_EVENTS: GameEvent[] = [
         label: 'Declarar neutralidad activa y ofrecerte como mediador',
         detail: 'Ganas prestigio diplomatico si el conflicto se negocia.',
         cost: { capital: 8 },
-        effects: { capital: 4 },
+        effects: { capital: 10 },
         relations: [{ target: 'todos', amount: 5 }]
       },
       {

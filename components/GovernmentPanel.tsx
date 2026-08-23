@@ -4,17 +4,20 @@ import { useGame } from '@/lib/store';
 import { monthsToElection, needsSuccessor, oppositionCostFactor } from '@/lib/politics';
 import { systemOf } from '@/lib/electoral';
 import { damagedSectors, taxEffects } from '@/lib/engine';
-import { plannedTaxRate } from '@/lib/orders';
+import { goldCapitalCost, goldFiscalDelta, plannedTaxRate, type GoldOrder } from '@/lib/orders';
 import { oppositionSplit } from '@/lib/politics';
 import Collapsible from './Collapsible';
+
+const GOLD_STEP = 5;
 
 /**
  * Panel de gobierno: mandato, oposicion, encuesta y politica impositiva.
  * Todo lo que se muestra lo calcula el motor; aca solo se dibuja.
  */
 export default function GovernmentPanel() {
-  const { countries, playerCode, politics, turn, capital, taxBase, active } = useGame();
+  const { countries, playerCode, politics, turn, capital, taxBase, active, world } = useGame();
   const planTaxChange = useGame((s) => s.planTaxChange);
+  const planGoldOrder = useGame((s) => s.planGoldOrder);
   const orders = useGame((s) => s.orders);
   const currentPoll = useGame((s) => s.currentPoll);
 
@@ -168,6 +171,56 @@ export default function GovernmentPanel() {
                llegar a 0% para frenarla del todo. Hoy la deuda esta en ${country.economy.debt_to_gdp}%${
               country.economy.debt_to_gdp > 110 ? ', y arriba de 110% del PBI resta humor social todos los meses por si sola.' : '.'
             }`}
+        </p>
+      </Collapsible>
+
+      <Collapsible title="Banco Central">
+        <div className="row">
+          <span>Reservas de oro</span>
+          <b>{country.economy.gold_reserves_tonnes} t</b>
+        </div>
+        <div className="row">
+          <span>Precio internacional</span>
+          <b>${world.gold_price}/oz</b>
+        </div>
+
+        {(() => {
+          const goldOrder = orders.find((o): o is GoldOrder => o.kind === 'gold');
+          const planned = goldOrder
+            ? goldOrder.action === 'comprar'
+              ? country.economy.gold_reserves_tonnes + goldOrder.tonnes
+              : country.economy.gold_reserves_tonnes - goldOrder.tonnes
+            : null;
+          return (
+            <div className="row">
+              <span>Plan del turno</span>
+              <b className={goldOrder ? (goldOrder.action === 'comprar' ? 'good' : 'warn') : 'muted'}>
+                {goldOrder ? `${goldOrder.label} → ${planned} t` : 'nada planeado'}
+              </b>
+            </div>
+          );
+        })()}
+
+        <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+          <button
+            onClick={() => planGoldOrder('comprar', GOLD_STEP)}
+            disabled={capital < goldCapitalCost('comprar', GOLD_STEP)}
+            title={`Costo estimado: ${goldCapitalCost('comprar', GOLD_STEP)} cap., balance fiscal ${goldFiscalDelta('comprar', GOLD_STEP)}`}
+          >
+            🪙 Comprar {GOLD_STEP} t
+          </button>
+          <button
+            onClick={() => planGoldOrder('vender', GOLD_STEP)}
+            disabled={country.economy.gold_reserves_tonnes < GOLD_STEP || capital < goldCapitalCost('vender', GOLD_STEP)}
+            title={`Costo estimado: ${goldCapitalCost('vender', GOLD_STEP)} cap., balance fiscal +${goldFiscalDelta('vender', GOLD_STEP)}`}
+          >
+            💰 Vender {GOLD_STEP} t
+          </button>
+        </div>
+        <p className="muted" style={{ fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>
+          Comprar oro cuesta caja pero mejora el tipo de cambio (mas reservas, menos presion). Vender oro
+          entra caja al balance fiscal de inmediato (menos que lo que cuesta comprar: hay diferencia entre
+          precio de compra y venta), util para tapar un bache o financiar un plan sin subir impuestos.
         </p>
       </Collapsible>
 

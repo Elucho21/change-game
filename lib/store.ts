@@ -25,8 +25,8 @@ import {
   CAPITAL_ON_MIDTERM_WIN, CAPITAL_ON_WIN, grantHoneymoon, systemOf
 } from './electoral';
 import {
-  addBlocOrder, addCabinetOrder, addDecisionOrder, addEventOrder, addTaxOrder, committedCapital,
-  TAX_FIELD, TAX_LABELS,
+  addBlocOrder, addCabinetOrder, addDecisionOrder, addEventOrder, addGoldOrder, addTaxOrder, committedCapital,
+  goldFiscalDelta, TAX_FIELD, TAX_LABELS,
   type EventOrder, type PlannedOrder, type TaxKind
 } from './orders';
 import { cooldownKey, cooldownLeft, cooldownUntil, scaleDecision } from './diplomacy';
@@ -149,6 +149,8 @@ interface GameStore {
   previewDecision: (id: string, target?: string) => Projection | null;
   /** planifica mover una alicuota; los cambios sobre la misma se consolidan */
   planTaxChange: (kind: TaxKind, delta: number) => void;
+  /** Banco Central: planifica comprar o vender oro; se consolida igual que los impuestos */
+  planGoldOrder: (action: 'comprar' | 'vender', tonnes: number) => void;
   /** intencion de voto proyectada de hoy */
   currentPoll: () => number;
   /** elige quien te sucede cuando se te agotan los mandatos */
@@ -371,6 +373,24 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
         `${TAX_LABELS[order.rate]}: ${before}% -> ${after}%`,
         `Contra la estructura con la que arrancaste: recaudacion ${fx.fiscal >= 0 ? '+' : ''}${fx.fiscal} del PBI, `
         + `crecimiento ${fx.growth >= 0 ? '+' : ''}${fx.growth}, humor social ${fx.happiness >= 0 ? '+' : ''}${fx.happiness} por turno.`
+      );
+      continue;
+    }
+
+    // ---------------------------------------------------------- banco central
+    if (order.kind === 'gold') {
+      const e = run.countries[st.playerCode].economy;
+      const signedTonnes = order.action === 'comprar' ? order.tonnes : -order.tonnes;
+      const before = e.gold_reserves_tonnes;
+      e.gold_reserves_tonnes = Math.round(Math.max(0, before + signedTonnes) * 10) / 10;
+      const fiscalDelta = goldFiscalDelta(order.action, order.tonnes);
+      e.fiscal_balance = Math.round((e.fiscal_balance + fiscalDelta) * 100) / 100;
+      log(
+        order.emoji,
+        order.label,
+        order.action === 'comprar'
+          ? `Reservas ${before} t -> ${e.gold_reserves_tonnes} t. Balance fiscal ${fiscalDelta} del PBI (sale caja para pagar el oro).`
+          : `Reservas ${before} t -> ${e.gold_reserves_tonnes} t. Balance fiscal +${fiscalDelta} del PBI (entra caja, con descuento por vender rapido).`
       );
       continue;
     }
@@ -914,6 +934,23 @@ export const useGame = create<GameStore>((set, get) => {
     set({ orders });
     persist();
   },
+
+  /**
+   * Banco Central: planifica comprar o vender oro. Se consolida igual que
+   * los impuestos (ver addGoldOrder) y no deja vender mas reservas de las
+   * que el pais tiene.
+   */
+  planGoldOrder: (action, tonnes) => {
+    const st = get();
+    if (!st.started || st.gameOver || tonnes <= 0) return;
+
+    const reserves = st.countries[st.playerCode].economy.gold_reserves_tonnes;
+    const orders = addGoldOrder(st.orders, action, tonnes, reserves);
+    if (committedCapital(orders) > st.capital) return;
+
+    set({ orders });
+    persist();
+  },
   setMapMode: (m) => set({ mapMode: m }),
 
   // ----------------------------------------------------------
@@ -1370,6 +1407,20 @@ export const useGame = create<GameStore>((set, get) => {
       if (after.capital !== undefined) capital = after.capital;
       if (after.feed?.[0]) feed.push(after.feed[0]);
     }
+    // interes: el capital politico que se sostiene de un mes a otro rinde.
+    // Por cada 10 que quede sin gastar al cierre del turno, se suma 1 mas:
+    // ahorrar para algo grande deja de ser tiempo muerto.
+    const capitalInterest = Math.floor(capital / 10);
+    if (capitalInterest > 0) {
+      feed.push({
+        turn, date: dateLabel(world), kind: 'sistema', emoji: '💹',
+        title: 'Interes sobre el capital politico ahorrado',
+        body: `Sostener ${Math.round(capital * 10) / 10} sin gastarlo suma +${capitalInterest} este mes.`,
+        tone: 'bueno'
+      });
+      capital += capitalInterest;
+    }
+
     const gameOver = checkGameOver(p2, turn);
     if (gameOver) {
       feed.push({

@@ -16,7 +16,7 @@ export const NATIONAL_EVENTS_EXTRA: GameEvent[] = [
     ongoing: { stability: -0.5 },
     choices: [
       { id: 'cerrar_filas', label: 'Cerrar filas con cargos y presupuesto', detail: 'Compras paz interna.', cost: { capital: 12 }, effects: { stability: 3, fiscal_balance: -0.4, capital: -4 } },
-      { id: 'bancarte', label: 'Bancarte el embate y no ceder', detail: 'Ganas autoridad si aguantas.', cost: { capital: 8 }, effects: { stability: -2, capital: 3, happiness: -2 } },
+      { id: 'bancarte', label: 'Bancarte el embate y no ceder', detail: 'Ganas autoridad si aguantas.', cost: { capital: 8 }, effects: { stability: -2, capital: 10, happiness: -2 } },
       { id: 'echar', label: 'Echar a los discolos del bloque', detail: 'Orden en el mensaje.', cost: { capital: 10 }, effects: { stability: 2, happiness: -1 } }
     ]
   },
@@ -31,9 +31,9 @@ export const NATIONAL_EVENTS_EXTRA: GameEvent[] = [
     description: 'Operetas y filtraciones. Faltan pocos meses para la eleccion.',
     when: (c) => (c.politics?.monthsToElection ?? 99) <= 8,
     choices: [
-      { id: 'responder', label: 'Responder con datos y cadena corta', detail: 'Gastas capital y recuperas relato.', cost: { capital: 8 }, effects: { happiness: 2, stability: 1, capital: 2 } },
+      { id: 'responder', label: 'Responder con datos y cadena corta', detail: 'Gastas capital y recuperas relato.', cost: { capital: 8 }, effects: { happiness: 2, stability: 1, capital: 10 } },
       { id: 'ignorar', label: 'No entrar en el barro', detail: 'A veces el silencio gana.', effects: { happiness: -2 }, risk: { chance: 0.35, label: 'La opereta escala', effects: { happiness: -5, stability: -3, capital: -4 } } },
-      { id: 'contraataque', label: 'Contraatacar con archivo', detail: 'Empate en el barro.', cost: { capital: 10 }, effects: { happiness: -1, stability: -1, capital: 1 } }
+      { id: 'contraataque', label: 'Contraatacar con archivo', detail: 'Empate en el barro.', cost: { capital: 10 }, effects: { happiness: -1, stability: -1, capital: 13 } }
     ]
   },
   {
@@ -92,8 +92,8 @@ export const NATIONAL_EVENTS_EXTRA: GameEvent[] = [
     description: 'Candidato opositor envuelto en denuncia.',
     when: (c) => (c.politics?.opposition ?? 0) > 35,
     choices: [
-      { id: 'capitalizar', label: 'Capitalizar con mesura', detail: 'Subis sin mancharte.', cost: { capital: 4 }, effects: { happiness: 2, capital: 4, stability: 1 } },
-      { id: 'sobreactuar', label: 'Ir al choque mediatico', detail: 'Alto riesgo.', cost: { capital: 7 }, effects: { capital: 2 }, risk: { chance: 0.4, label: 'Efecto rebote', effects: { happiness: -3, capital: -5 } } },
+      { id: 'capitalizar', label: 'Capitalizar con mesura', detail: 'Subis sin mancharte.', cost: { capital: 4 }, effects: { happiness: 2, capital: 7, stability: 1 } },
+      { id: 'sobreactuar', label: 'Ir al choque mediatico', detail: 'Alto riesgo.', cost: { capital: 7 }, effects: { capital: 9 }, risk: { chance: 0.4, label: 'Efecto rebote', effects: { happiness: -3, capital: -5 } } },
       { id: 'silencio', label: 'Dejar que la justicia actue', detail: 'Seriedad institucional.', effects: { stability: 2 } }
     ]
   },

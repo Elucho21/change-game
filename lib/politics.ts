@@ -107,23 +107,26 @@ export type Difficulty = 'facil' | 'normal' | 'dificil';
  *  al asumir): no toca ninguna formula de la simulacion turno a turno, asi
  *  que gobernar bien o mal sigue dependiendo 100% de las decisiones del
  *  jugador, no de un multiplicador escondido corriendo por detras. */
+/** Bono fijo de arranque, va arriba de lo que ya da cada dificultad. */
+export const STARTING_CAPITAL_BONUS = 40;
+
 export const DIFFICULTY_PRESETS: Record<Difficulty, { label: string; detail: string; capital: number; oppositionDelta: number }> = {
   facil: {
     label: 'Facil',
     detail: 'Mas capital politico para arrancar y una oposicion mas debil.',
-    capital: 75,
+    capital: 75 + STARTING_CAPITAL_BONUS,
     oppositionDelta: -15
   },
   normal: {
     label: 'Normal',
     detail: 'Como viene el pais en el escenario base, sin ventajas ni penas.',
-    capital: 60,
+    capital: 60 + STARTING_CAPITAL_BONUS,
     oppositionDelta: 0
   },
   dificil: {
     label: 'Dificil',
     detail: 'Menos capital politico y una oposicion fuerte desde el primer dia.',
-    capital: 45,
+    capital: 45 + STARTING_CAPITAL_BONUS,
     oppositionDelta: 15
   }
 };

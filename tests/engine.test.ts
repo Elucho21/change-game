@@ -11,7 +11,9 @@ import {
 } from '../lib/politics';
 import { BLOCS } from '../lib/blocs';
 import { CATEGORIES, DECISIONS } from '../lib/decisions';
-import { addDecisionOrder, addTaxOrder, committedCapital } from '../lib/orders';
+import {
+  addDecisionOrder, addGoldOrder, addTaxOrder, committedCapital, goldCapitalCost, goldFiscalDelta
+} from '../lib/orders';
 import { cooldownLeft, cooldownOf, scaleDecision } from '../lib/diplomacy';
 import {
   cabinetCostFactor, cabinetPassive, cabinetVoteBonus, coalitionSeats, hasCoalition
@@ -494,6 +496,45 @@ describe('acciones de gobierno', () => {
     for (const d of DECISIONS) {
       expect(d.cost.capital, `${d.id} no cuesta capital`).toBeGreaterThan(0);
     }
+  });
+
+  it('si una decision da capital politico, da mas del que cuesta', () => {
+    for (const d of DECISIONS) {
+      const gana = d.effects.capital ?? 0;
+      if (gana <= 0) continue; // esta prueba es solo para las que SUMAN capital
+      expect(gana, `${d.id} cuesta ${d.cost.capital} y da solo ${gana} de capital`).toBeGreaterThan(d.cost.capital);
+    }
+  });
+});
+
+describe('Banco Central', () => {
+  it('vender rinde menos por tonelada de lo que cuesta comprar (spread)', () => {
+    const buyFiscalPerTonne = Math.abs(goldFiscalDelta('comprar', 10)) / 10;
+    const sellFiscalPerTonne = goldFiscalDelta('vender', 10) / 10;
+    expect(sellFiscalPerTonne).toBeLessThan(buyFiscalPerTonne);
+  });
+
+  it('comprar oro cuesta caja (fiscal negativo) y vender la mejora (fiscal positivo)', () => {
+    expect(goldFiscalDelta('comprar', 10)).toBeLessThan(0);
+    expect(goldFiscalDelta('vender', 10)).toBeGreaterThan(0);
+  });
+
+  it('addGoldOrder no deja vender mas reservas de las que el pais tiene', () => {
+    const orders = addGoldOrder([], 'vender', 50, 20);
+    expect(orders).toHaveLength(1);
+    expect(orders[0].kind).toBe('gold');
+    if (orders[0].kind === 'gold') expect(orders[0].tonnes).toBe(20);
+  });
+
+  it('comprar y despues vender la misma cantidad en el mismo turno cancela la orden', () => {
+    const first = addGoldOrder([], 'comprar', 10, 5);
+    const second = addGoldOrder(first, 'vender', 10, 5);
+    expect(second).toHaveLength(0);
+  });
+
+  it('el costo politico de comprar/vender nunca es negativo', () => {
+    expect(goldCapitalCost('comprar', 10)).toBeGreaterThanOrEqual(0);
+    expect(goldCapitalCost('vender', 10)).toBeGreaterThanOrEqual(0);
   });
 });
 
