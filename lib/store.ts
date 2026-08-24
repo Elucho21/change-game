@@ -42,7 +42,7 @@ import {
 import { defaultImf, imfLabel, type ImfState } from './imf';
 import { defaultStreet, type StreetState } from './streetPressure';
 import { applyFx, DEVALUE_JUMP, FX_START } from './fx';
-import { defaultPension, pensionFromCountry, pensionReformCostMultiplier, type PensionState } from './pension';
+import { applyPensionReform, defaultPension, pensionFromCountry, pensionReformCostMultiplier, type PensionState } from './pension';
 import { defaultEmployment, employmentFromCountry, type EmploymentState } from './employment';
 import type {
   ActiveEvent, Bloc, ChokepointCrisis, Country, Decision, Delta, FeedItem, GameEvent,
@@ -323,6 +323,8 @@ interface PlanRun {
   cooldowns: Record<string, number>;
   /** gabinete despues de los cambios del plan */
   cabinet: Cabinet;
+  /** previsional despues de las reformas del plan (para que el tick las lea este mismo turno) */
+  pension: PensionState;
 }
 
 /**
@@ -346,7 +348,8 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
     lastActions: [],
     hostility: 0,
     cooldowns: { ...st.cooldowns },
-    cabinet: { ...st.cabinet }
+    cabinet: { ...st.cabinet },
+    pension: st.pension
   };
 
   const log = (emoji: string, title: string, body: string, tone: FeedItem['tone'] = 'neutral') => {
@@ -384,6 +387,9 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
       if (dec.id === 'devaluar') {
         const c = run.countries[st.playerCode];
         c.fx = applyFx(c.fx ?? FX_START, DEVALUE_JUMP);
+      }
+      if (dec.category === 'previsional') {
+        run.pension = applyPensionReform(run.pension, dec.id);
       }
       // el canciller tambien mejora el capital que rinden las jugadas diplomaticas
       const capitalGain = dec.category === 'diplomacia' && dec.effects.capital
@@ -1174,7 +1180,10 @@ export const useGame = create<GameStore>((set, get) => {
       cabinet: run.cabinet,
       imf: st.imf,
       street: st.street,
-      pension: st.pension,
+      // run.pension ya trae las reformas del plan aplicadas (ver bug de
+      // runPlan vs applyDecisionTo en docs/PARA_CLAUDE.md): el tick tiene
+      // que leer el estado post-reforma, no el de antes de planificar.
+      pension: run.pension,
       employment: st.employment
     });
     const turn = tick.state.turn;

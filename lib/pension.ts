@@ -31,6 +31,17 @@ export interface PensionState {
   dependencyRatio: number;
   /** ultimo resultado previsional (% PBI) ya asentado en fiscal_balance */
   resultApplied: number;
+  /**
+   * Bookmarks de lo que lib/employment.ts ya "vio" de este estado, para
+   * poder calcular deltas reales entre tick y tick. Una reforma cambia
+   * contribWorker/contribEmployer/coverage/retirementAge* ANTES de que
+   * corra tickPension (runPlan la aplica sobre `s.pension` antes del tick),
+   * asi que diffear "antes vs despues de tickPension" siempre da 0 — el
+   * cambio ya paso un paso antes. Estos tres campos son el "antes" real.
+   */
+  contribTotalApplied: number;
+  coverageApplied: number;
+  retirementAgeAvgApplied: number;
 }
 
 /** Masa salarial como fraccion del PBI. Valor fijo del paquete de diseño (~60%). */
@@ -75,8 +86,18 @@ const FALLBACK_BASE = {
   dependencyRatio: 0.22
 };
 
-function withApplied(base: Omit<PensionState, 'resultApplied'>): PensionState {
-  return { ...base, resultApplied: pensionResultPctGdp({ ...base, resultApplied: 0 }) };
+type PensionBase = Omit<PensionState, 'resultApplied' | 'contribTotalApplied' | 'coverageApplied' | 'retirementAgeAvgApplied'>;
+
+function withApplied(base: PensionBase): PensionState {
+  return {
+    ...base,
+    resultApplied: pensionResultPctGdp({
+      ...base, resultApplied: 0, contribTotalApplied: 0, coverageApplied: 0, retirementAgeAvgApplied: 0
+    }),
+    contribTotalApplied: base.contribWorker + base.contribEmployer,
+    coverageApplied: base.coverage,
+    retirementAgeAvgApplied: (base.retirementAgeMen + base.retirementAgeWomen) / 2
+  };
 }
 
 /** Semilla previsional del pais elegido. Si no hay ficha social, fallback v1.0. */
@@ -87,19 +108,50 @@ export function pensionFromCountry(code: string): PensionState {
 
 export const defaultPension = (): PensionState => withApplied(FALLBACK_BASE);
 
+export interface PensionEmploymentInputs {
+  /** cambio en aporte total (trabajador+empleador) desde el ultimo tick, en puntos porcentuales */
+  contribTotalDeltaPp: number;
+  /** cambio en cobertura desde el ultimo tick, en puntos porcentuales */
+  coverageDeltaPp: number;
+  /** cambio en la edad de jubilacion promedio desde el ultimo tick, en años */
+  retirementAgeDeltaYears: number;
+}
+
 export interface PensionTickResult {
   state: PensionState;
   /** delta a aplicar sobre fiscal_balance este turno (Delta.fiscal_balance) */
   fiscalDelta: number;
+  /** para lib/employment.ts: cuanto cambiaron los parametros que mueven el empleo */
+  employmentInputs: PensionEmploymentInputs;
 }
 
-/** Avanza el sistema previsional un mes. Pura: no muta `prev`. */
+/**
+ * Avanza el sistema previsional un mes. Pura: no muta `prev`.
+ *
+ * `prev` puede llegar ya con una reforma de este mismo turno aplicada
+ * (runPlan corre `applyPensionReform` sobre `s.pension` antes del tick) —
+ * por eso los deltas de empleo se miden contra los bookmarks `*Applied`,
+ * no contra el `next` de esta misma llamada (que ya seria igual a `prev`
+ * en esos campos y el delta daria siempre 0).
+ */
 export function tickPension(prev: PensionState): PensionTickResult {
   const next: PensionState = { ...prev, dependencyRatio: prev.dependencyRatio + DEPENDENCY_DRIFT };
   const result = pensionResultPctGdp(next);
   const fiscalDelta = Math.round((result - prev.resultApplied) * 100) / 100;
   next.resultApplied = result;
-  return { state: next, fiscalDelta };
+
+  const contribTotal = next.contribWorker + next.contribEmployer;
+  const avgAge = (next.retirementAgeMen + next.retirementAgeWomen) / 2;
+  const employmentInputs: PensionEmploymentInputs = {
+    contribTotalDeltaPp: Math.round((contribTotal - prev.contribTotalApplied) * 1000) / 10,
+    coverageDeltaPp: Math.round((next.coverage - prev.coverageApplied) * 1000) / 10,
+    retirementAgeDeltaYears: Math.round((avgAge - prev.retirementAgeAvgApplied) * 100) / 100
+  };
+  next.contribTotalApplied = contribTotal;
+  next.coverageApplied = next.coverage;
+  next.retirementAgeAvgApplied = avgAge;
+
+  return { state: next, fiscalDelta, employmentInputs };
 }
 
 // ============================================================

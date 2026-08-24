@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { ALL_COUNTRIES, useGame } from '@/lib/store';
 import { DIFFICULTY_PRESETS, type Difficulty } from '@/lib/politics';
 import { exportSave, importSave } from '@/lib/persistence';
@@ -100,7 +101,7 @@ export default function StartScreen() {
       <header className="start-hero">
         <p className="start-kicker">Simulador geopolitico · mes a mes</p>
         <h1>
-          <span className="start-title-mark">Change</span> Game
+          <span className="start-title-mark">Change World</span> Game
         </h1>
         <p className="sub">
           Elegis un pais, gobernas turno a turno y el resto del mundo reacciona. Economia, calle,
@@ -136,6 +137,12 @@ export default function StartScreen() {
               Continuar {savedGame.flag} turno {savedGame.turn}
             </button>
           )}
+        </div>
+
+        <div className="start-actions" style={{ marginTop: -4 }}>
+          <Link href="/tutorial"><button type="button" className="start-cta-ghost">📖 Tutorial</button></Link>
+          <Link href="/guia"><button type="button" className="start-cta-ghost">📐 Guia y formulas</button></Link>
+          <Link href="/actualizaciones"><button type="button" className="start-cta-ghost">🌍 Actualizaciones</button></Link>
         </div>
       </header>
 

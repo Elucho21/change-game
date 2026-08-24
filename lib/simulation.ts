@@ -271,15 +271,9 @@ export function deterministicTick(s: SimState): TickResult {
   s.pension = pensionTick.state;
 
   const prevEmployment = s.employment ?? defaultEmployment();
-  const avgAgeBefore = (prevPension.retirementAgeMen + prevPension.retirementAgeWomen) / 2;
-  const avgAgeAfter = (pensionTick.state.retirementAgeMen + pensionTick.state.retirementAgeWomen) / 2;
   const employmentTick = tickEmployment(prevEmployment, {
     gdpGrowth: player.economy.gdp_growth,
-    contribTotalDeltaPp:
-      ((pensionTick.state.contribWorker + pensionTick.state.contribEmployer)
-        - (prevPension.contribWorker + prevPension.contribEmployer)) * 100,
-    coverageDeltaPp: (pensionTick.state.coverage - prevPension.coverage) * 100,
-    retirementAgeDeltaYears: avgAgeAfter - avgAgeBefore,
+    ...pensionTick.employmentInputs,
     inflation: player.economy.inflation,
     laborMitigation: s.cabinet ? cabinetLaborMitigation(s.cabinet) : 0
   });
