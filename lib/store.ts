@@ -610,9 +610,6 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
       if (!item || !choice) continue;
 
       applyDelta(run.countries[st.playerCode], choice.effects, run.world);
-      if (choice.cost?.fiscal) {
-        applyDelta(run.countries[st.playerCode], { fiscal_balance: -choice.cost.fiscal }, run.world);
-      }
       if (choice.moralEffects) {
         run.moral = applyMoralEffects(run.moral, choice.moralEffects);
       }

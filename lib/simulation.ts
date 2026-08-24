@@ -388,7 +388,6 @@ export function applyDecisionTo(s: SimState, dec: Decision, target?: string): Si
     targets.forEach((t) => adjustRelation(s.relations, s.playerCode, t, rd.amount));
   }
 
-  if (dec.cost.fiscal) applyDelta(s.countries[s.playerCode], { fiscal_balance: -dec.cost.fiscal }, s.world);
   if (dec.id === 'sancionar' && target && !s.sanctions.includes(target)) s.sanctions.push(target);
   if (dec.id === 'devaluar') {
     const c = s.countries[s.playerCode];
