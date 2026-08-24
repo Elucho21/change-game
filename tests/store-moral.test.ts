@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { useGame } from '../lib/store';
 import { ENRIQUE_ONBOARDING_TURN } from '../lib/events/enrique';
 import { eligibleEvents } from '../lib/engine';
@@ -63,10 +63,13 @@ describe('sistema moral a traves de la store real', () => {
     useGame.getState().resolveEnrique();
     expect(useGame.getState().moral.onboarded).toBe(true);
 
-    // fuerza investigacion alta: enriqueEvents() dispara seguro (no depende
-    // del roll base) apenas supera 35, asi el test no queda a merced del azar
+    // desde v1.4 la aparicion de Enrique es una rampa de probabilidad, no una
+    // puerta binaria (lib/events/enrique.ts): con investigacion 60 la chance es
+    // ~32%, asi que el test fuerza el roll en vez de quedar a merced del azar
     useGame.setState({ moral: { ...useGame.getState().moral, investigacion: 60 } });
+    const rng = vi.spyOn(Math, 'random').mockReturnValue(0);
     useGame.getState().endTurn();
+    rng.mockRestore();
     expect(useGame.getState().pendingEnrique?.kind).toBe('event');
 
     const before = { ...useGame.getState().moral };

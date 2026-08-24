@@ -1,4 +1,4 @@
-import type { GameEvent } from '../types';
+import type { GameEvent, MoralEffects } from '../types';
 import type { MoralState } from '../moral';
 
 /**
@@ -14,7 +14,8 @@ import type { MoralState } from '../moral';
  *
  * Simplificacion respecto del doc: "corrupcion subio >8 en el trimestre"
  * no se trackea (no hay historial trimestral); se cubre con los otros
- * cuatro disparadores (investigacion, escandalo, favor pendiente, roll base).
+ * disparadores (investigacion, escandalo, favor pendiente) que alimentan la
+ * rampa de `enriqueAppearChance`, mas abajo.
  */
 export const ENRIQUE_EVENTS: GameEvent[] = [
   {
@@ -515,24 +516,136 @@ const ENRIQUE_CONDITIONS: Record<string, (m: MoralState) => boolean> = {
   enrique_amigo_en_la_comision: (m) => m.investigacion > 30,
   enrique_precio_tranquilidad: (m) => m.corruption >= 30 && m.corruption <= 60,
   enrique_chiste_negro: (m) => m.corruption >= 40,
-  enrique_oferta_final: (m) => m.investigacion > 75 && m.corruption > 60
+  // la carta grande pide ademas confianza: Enrique no le ofrece el pacto final
+  // a un presidente que le viene diciendo que no (ver `enriqueTrustDelta`)
+  enrique_oferta_final: (m) =>
+    m.investigacion > 75 && m.corruption > 60 && (m.enriqueTrust ?? 0) >= 1
 };
 
 const eligible = (m: MoralState) => ENRIQUE_EVENTS.filter((e) => (ENRIQUE_CONDITIONS[e.id] ?? (() => true))(m));
 
+// ============================================================
+// CADENCIA (Change World Game v1.4)
+// ============================================================
+
 /**
- * Selector propio de Enrique (no pasa por `rollEvents`). Aparece si:
- * investigacion > 35, hay un escandalo activo, quedan favores pendientes
- * de cobrarse, o por un roll base ~30% (equivalente a "cada 4-6 meses").
- * Devuelve como mucho una carta por mes.
+ * Antes, `enriqueEvents` tenia una puerta binaria:
+ * `investigacion > 35 || scandalFactor > 0 || favoresActivos > 15` forzaba
+ * carta. Como `investigacion` sube todos los meses en `tickMoral` y casi nunca
+ * vuelve a bajar de 35, a partir de cierto turno salia UNA CARTA POR MES para
+ * el resto de la partida, y el `pick` uniforme sin memoria repetia la misma
+ * carta dos y tres meses seguidos. El jugador lo reporto como "son muchas
+ * ofertas de corrupcion y siempre las mismas".
+ *
+ * Ahora la aparicion es una rampa de probabilidad con espaciado minimo, y la
+ * eleccion de carta prioriza lo que el jugador todavia no vio. Tunear aca, no
+ * reescribir el selector.
  */
-export function enriqueEvents(moral: MoralState, onboarded: boolean): GameEvent[] {
+/** Turnos minimos entre dos cartas (1 solo si la investigacion esta desbocada). */
+export const ENRIQUE_MIN_GAP = 3;
+/** Turnos que tienen que pasar para que la MISMA carta pueda repetirse. */
+export const ENRIQUE_CARD_COOLDOWN = 12;
+/** Cuanto desaparece Enrique cuando se ofende (confianza en el piso). */
+export const ENRIQUE_OFFENDED_TURNS = 10;
+/** Confianza minima y maxima. En el piso se ofende y se va. */
+export const ENRIQUE_TRUST_RANGE = { min: -3, max: 3 } as const;
+
+const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+
+/**
+ * Probabilidad de que Enrique aparezca este mes. Rampa continua: con las manos
+ * limpias es una tentacion ocasional (12%), con investigaciones encima y
+ * escandalo activo se vuelve insistente (tope 60%), pero nunca es seguro.
+ */
+export function enriqueAppearChance(m: MoralState): number {
+  return clamp(
+    0.12
+    + m.investigacion / 300
+    + m.scandalFactor * 0.02
+    + Math.max(0, m.favoresActivos - 15) * 0.01,
+    0.12, 0.6
+  );
+}
+
+/**
+ * Cuanto mueve la confianza de Enrique la opcion elegida. No se lee del `id`
+ * de la opcion (son 40 ids distintos): se deduce de sus `moralEffects`, que es
+ * lo que de verdad distingue "le seguiste el juego" de "le dijiste que no".
+ */
+export function enriqueTrustDelta(effects?: MoralEffects): number {
+  if (!effects) return -1;
+  const sucio = (effects.corruption ?? 0) > 0
+    || (effects.favoresActivos ?? 0) > 0
+    || (effects.corteLealtad ?? 0) > 0;
+  if (sucio) return 1;
+  const limpio = (effects.corruption ?? 0) < 0
+    || (effects.corteIntegrity ?? 0) > 0
+    || (effects.investigacion ?? 0) > 0;
+  if (limpio) return -1;
+  return 0;
+}
+
+/**
+ * Aplica el resultado de una carta sobre la cadencia: mueve la confianza y, si
+ * toca el piso, lo manda a silencio unos meses. Pura: no muta `m`.
+ */
+export function applyEnriqueOutcome(m: MoralState, effects: MoralEffects | undefined, turn: number): MoralState {
+  const trust = clamp(
+    (m.enriqueTrust ?? 0) + enriqueTrustDelta(effects),
+    ENRIQUE_TRUST_RANGE.min, ENRIQUE_TRUST_RANGE.max
+  );
+  if (trust <= ENRIQUE_TRUST_RANGE.min) {
+    // se ofendio: desaparece un rato y vuelve neutral, no rencoroso para siempre
+    return { ...m, enriqueTrust: -1, enriqueSilentUntil: turn + ENRIQUE_OFFENDED_TURNS };
+  }
+  return { ...m, enriqueTrust: trust };
+}
+
+/** Deja registrada la carta que salio este turno, para cooldown y espaciado. Pura. */
+export function registerEnriqueCard(m: MoralState, cardId: string, turn: number): MoralState {
+  return {
+    ...m,
+    enriqueSeen: { ...(m.enriqueSeen ?? {}), [cardId]: turn },
+    enriqueLastTurn: turn
+  };
+}
+
+/**
+ * Selector propio de Enrique (no pasa por `rollEvents`). Devuelve como mucho
+ * una carta por mes, y solo si:
+ *  - no esta en silencio (`enriqueSilentUntil`),
+ *  - paso el espaciado minimo desde la ultima carta (`ENRIQUE_MIN_GAP`, o 1
+ *    turno si `investigacion > 70`: en plena crisis si puede apretar seguido),
+ *  - y el roll de `enriqueAppearChance` sale.
+ *
+ * Al elegir prioriza cartas que el jugador nunca vio; despues las que ya
+ * cumplieron `ENRIQUE_CARD_COOLDOWN`; y solo si todo el pool esta en cooldown,
+ * la mas vieja. Asi no se repite dos meses seguidos ni siquiera con el pool
+ * chico de las primeras partidas.
+ */
+export function enriqueEvents(moral: MoralState, onboarded: boolean, turn = 0): GameEvent[] {
   if (!onboarded) return [];
-  const forced = moral.investigacion > 35 || moral.scandalFactor > 0 || moral.favoresActivos > 15;
-  if (!forced && Math.random() >= 0.3) return [];
+  if (turn > 0 && (moral.enriqueSilentUntil ?? 0) >= turn) return [];
+
+  if (turn > 0 && moral.enriqueLastTurn !== undefined) {
+    const minGap = moral.investigacion > 70 ? 1 : ENRIQUE_MIN_GAP;
+    if (turn - moral.enriqueLastTurn < minGap) return [];
+  }
+
+  if (Math.random() >= enriqueAppearChance(moral)) return [];
 
   const pool = eligible(moral);
   if (pool.length === 0) return [];
-  const pick = pool[Math.floor(Math.random() * pool.length)];
-  return [pick];
+
+  const seen = moral.enriqueSeen ?? {};
+  const nuncaVistas = pool.filter((e) => seen[e.id] === undefined);
+  const fueraDeCooldown = pool.filter((e) => turn - (seen[e.id] ?? 0) >= ENRIQUE_CARD_COOLDOWN);
+  let candidatas = nuncaVistas.length ? nuncaVistas : fueraDeCooldown;
+  if (!candidatas.length) {
+    // todo el pool en cooldown: la que salio hace mas tiempo
+    const masVieja = Math.min(...pool.map((e) => seen[e.id] ?? 0));
+    candidatas = pool.filter((e) => (seen[e.id] ?? 0) === masVieja);
+  }
+
+  return [candidatas[Math.floor(Math.random() * candidatas.length)]];
 }

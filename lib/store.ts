@@ -55,7 +55,9 @@ import {
   corruptionCostMultiplier, defaultInfrastructure, INFRA_CONFIG, INFRA_DECISION_TYPE, startInfrastructure,
   type InfrastructureState
 } from './infrastructure';
-import { ENRIQUE_ONBOARDING_TURN, enriqueEvents } from './events/enrique';
+import {
+  applyEnriqueOutcome, ENRIQUE_ONBOARDING_TURN, enriqueEvents, registerEnriqueCard
+} from './events/enrique';
 import { buildMilestones, type Milestone } from './milestones';
 import type {
   ActiveEvent, Bloc, ChokepointCrisis, Country, Decision, Delta, FeedItem, GameEvent,
@@ -1327,7 +1329,10 @@ export const useGame = create<GameStore>((set, get) => {
       tone = 'malo';
     }
 
-    const moral = choice.moralEffects ? applyMoralEffects(st.moral, choice.moralEffects) : st.moral;
+    const moralConEfectos = choice.moralEffects ? applyMoralEffects(st.moral, choice.moralEffects) : st.moral;
+    // seguirle el juego o mandarlo a pasear mueve su confianza, y con eso la
+    // cadencia con la que vuelve a aparecer (lib/events/enrique.ts)
+    const moral = applyEnriqueOutcome(moralConEfectos, choice.moralEffects, st.turn);
     const groups = choice.groupEffects ? applyGroupEffects(st.groups, choice.groupEffects) : st.groups;
     const capital = clamp(st.capital + (choice.effects.capital ?? 0), 0, 100);
     const cardEntry: FeedItem = {
@@ -1652,7 +1657,9 @@ export const useGame = create<GameStore>((set, get) => {
       groups
     });
     if (moralTick.happinessDelta) applyDelta(player, { happiness: moralTick.happinessDelta }, world);
-    const moral = moralTick.state;
+    // `let` porque el selector de Enrique, mas abajo, le deja registrada la
+    // carta que salio este turno (cooldown + espaciado, lib/events/enrique.ts)
+    let moral = moralTick.state;
 
     // hitos institucionales del turno (mayoria, coalicion, corrupcion,
     // investigacion, presion minoritaria, FMI, calle): se recalculan al final
@@ -1678,8 +1685,11 @@ export const useGame = create<GameStore>((set, get) => {
       if (turn === ENRIQUE_ONBOARDING_TURN && !moral.onboarded) {
         pendingEnrique = { kind: 'onboarding', step: 'intro' };
       } else {
-        const [card] = enriqueEvents(moral, moral.onboarded);
-        if (card) pendingEnrique = { kind: 'event', key: `${card.id}-${turn}`, event: card };
+        const [card] = enriqueEvents(moral, moral.onboarded, turn);
+        if (card) {
+          pendingEnrique = { kind: 'event', key: `${card.id}-${turn}`, event: card };
+          moral = registerEnriqueCard(moral, card.id, turn);
+        }
       }
     }
 

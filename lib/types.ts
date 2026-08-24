@@ -206,6 +206,19 @@ export interface MoralState {
   amaliaApoyo: number;
   /** 0-9%. Apoyo a la Ultra-Derecha. */
   jhonApoyo: number;
+  /**
+   * Cadencia de las cartas de Enrique (lib/events/enrique.ts). Opcionales: los
+   * saves anteriores a v1.4 no los traen y el selector arranca de cero.
+   *  - `enriqueSeen`: id de carta -> turno en que salio, para el cooldown.
+   *  - `enriqueLastTurn`: ultimo turno con carta, para el espaciado minimo.
+   *  - `enriqueTrust`: -3..+3. Sube al aceptarle un favor, baja al rechazarlo.
+   *    En -3 se ofende y desaparece hasta `enriqueSilentUntil`.
+   *  - `enriqueSilentUntil`: turno hasta el que no aparece ninguna carta.
+   */
+  enriqueSeen?: Record<string, number>;
+  enriqueLastTurn?: number;
+  enriqueTrust?: number;
+  enriqueSilentUntil?: number;
 }
 
 /**

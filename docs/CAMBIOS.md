@@ -6,6 +6,47 @@ Bitácora corta y en orden inverso: lo último arriba. Es lo que tenés que sabe
 
 ---
 
+## motor/enrique-cadencia · 24/08/2026 · Enrique deja de ser un peaje mensual
+
+El jugador reporto "son muchas ofertas de corrupcion y siempre las mismas". Era un bug de cadencia,
+no de falta de cartas.
+
+**Que estaba mal:** `enriqueEvents()` forzaba carta si `investigacion > 35`. Como `investigacion`
+sube todos los meses en `tickMoral` y casi nunca vuelve a bajar, a partir del mes ~12 (sin mayoria)
+salia **una carta por mes para el resto de la partida**. Y el `pick` era uniforme sin memoria: la
+misma carta podia salir dos y tres meses seguidos.
+
+### Contrato nuevo
+
+```ts
+enriqueEvents(moral, onboarded, turn)          // `turn` es nuevo y define el espaciado
+enriqueAppearChance(moral)                     // rampa 0.12 -> 0.60, nunca 1
+registerEnriqueCard(moral, cardId, turn)       // deja el registro para cooldown
+applyEnriqueOutcome(moral, moralEffects, turn) // mueve la confianza tras jugar la carta
+```
+
+Campos nuevos y **opcionales** en `MoralState` (los saves viejos siguen cargando):
+`enriqueSeen`, `enriqueLastTurn`, `enriqueTrust`, `enriqueSilentUntil`.
+
+### Que hay
+
+- **Rampa de probabilidad** en vez de puerta binaria: `ENRIQUE_MIN_GAP = 3` turnos entre cartas
+  (1 solo si `investigacion > 70`), y `enriqueAppearChance` topeada en 60%.
+- **Cooldown de 12 turnos por carta** y seleccion que prioriza lo que el jugador nunca vio.
+- **Confianza (`enriqueTrust`, -3..+3)**: se deduce de los `moralEffects` de la opcion elegida.
+  Tres rechazos seguidos lo ofenden y desaparece 10 meses; ademas los `favoresActivos` se caen al
+  doble de rapido mientras esta ofendido.
+- `enrique_oferta_final` ahora **tambien pide confianza >= 1**: la carta grande no se le ofrece a
+  un presidente que le viene diciendo que no.
+
+### Que te habilita
+
+Cartas nuevas de Enrique con `moralEffects` claros (corrupcion/favores arriba = "acepto",
+corrupcion abajo o integridad arriba = "rechazo"): la confianza las lee sola, no hay que tocar
+motor para que una carta nueva entre en el arco.
+
+---
+
 ## fix/build-data · 24/08/2026 · CI (y `npm run data`) rotos desde el 13e0e89
 
 `scripts/build-data.mjs` tenia una `}` faltante (el objeto de un pais dentro del `for`

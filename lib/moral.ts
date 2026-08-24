@@ -37,7 +37,10 @@ export const defaultMoral = (): MoralState => ({
   onboarded: false,
   gustavoApoyo: 2,
   amaliaApoyo: 1,
-  jhonApoyo: 2
+  jhonApoyo: 2,
+  enriqueSeen: {},
+  enriqueTrust: 0,
+  enriqueSilentUntil: 0
 });
 
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
@@ -94,7 +97,11 @@ export function tickMoral(prev: MoralState, input: MoralTickInput): MoralTickRes
     - majorityBonus;
   const investigacion = clamp(round(prev.investigacion + deltaInvestigacion), 0, 100);
 
-  const favoresActivos = clamp(round(prev.favoresActivos - 2), 0, 40);
+  // los favores se desarman solos. Si Enrique esta ofendido (confianza en el
+  // piso, ver lib/events/enrique.ts) se caen al doble de rapido: sin el
+  // operador que los sostiene, los favores prestados se evaporan.
+  const favorDecay = (prev.enriqueTrust ?? 0) <= -2 ? 4 : 2;
+  const favoresActivos = clamp(round(prev.favoresActivos - favorDecay), 0, 40);
   const scandalFactor = clamp(round(prev.scandalFactor - 5), 0, 30);
   const environmentIndex = clamp(round(prev.environmentIndex + (50 - prev.environmentIndex) * 0.03), 0, 100);
   const securityIndex = clamp(round(prev.securityIndex + (50 - prev.securityIndex) * 0.03), 0, 100);
