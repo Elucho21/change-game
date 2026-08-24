@@ -73,6 +73,15 @@ export function buildLocalChronicle(input: ChronicleInput): TurnChronicle {
     lines.push(`El desempleo en ${input.unemployment.toFixed(0)}% marca la agenda domestica.`);
   }
 
+  // ningun disparador salto este mes (mundo tranquilo, RNG sin movidas de IA
+  // ni eventos): igual queda un renglon con el pulso del pais para que la
+  // cronica nunca quede vacia.
+  if (lines.length === 0) {
+    lines.push(
+      `Mes sin sobresaltos: estabilidad en ${input.stability.toFixed(0)}, desempleo en ${input.unemployment.toFixed(0)}%, inflacion en ${input.inflation.toFixed(0)}%.`
+    );
+  }
+
   const headline = `${input.dateLabel} — ${pickHeadline(input)}`;
 
   return {

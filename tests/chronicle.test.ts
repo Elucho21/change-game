@@ -85,6 +85,12 @@ describe('buildLocalChronicle', () => {
     expect(pickHeadline({ ...base, oilShock: 4 })).toBe('Rutas bajo tension');
   });
 
+  it('nunca queda con lineas vacias aunque no dispare ningun trigger', () => {
+    const c = buildLocalChronicle(base);
+    expect(c.lines.length).toBeGreaterThan(0);
+    expect(c.lines[0].length).toBeGreaterThan(0);
+  });
+
   it('trae el turno y source local en el resultado', () => {
     const c = buildLocalChronicle(base);
     expect(c.turn).toBe(12);
