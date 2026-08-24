@@ -145,6 +145,7 @@ for (const code of codes) {
     // composicion de clase (lib/popularGroups.ts, docs/PEDIDOS_A_GROK.md seccion 12).
     // undefined si el pais todavia no la tiene: el motor calcula un default.
     classComposition: c.class_composition
+  };
 }
 
 const out = {
