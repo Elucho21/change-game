@@ -13,6 +13,7 @@ import GovernmentPanel from './GovernmentPanel';
 import CabinetPanel from './CabinetPanel';
 import PrevisionalPanel from './PrevisionalPanel';
 import JusticiaPanel from './JusticiaPanel';
+import GroupsPanel from './GroupsPanel';
 import ElectionModal from './ElectionModal';
 import EnriqueModal from './EnriqueModal';
 import TurnPlan from './TurnPlan';
@@ -21,11 +22,13 @@ import GrokBridge from './GrokBridge';
 import Onboarding from './Onboarding';
 import EndGameScreen from './EndGameScreen';
 
-type Tab = 'pais' | 'gobierno' | 'gabinete' | 'decisiones' | 'bloques' | 'eventos' | 'previsional' | 'justicia';
+type Tab =
+  | 'pais' | 'gobierno' | 'grupos' | 'gabinete' | 'decisiones' | 'bloques' | 'eventos' | 'previsional' | 'justicia';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'pais', label: '📊 Pais' },
   { id: 'gobierno', label: '🏛️ Gobierno' },
+  { id: 'grupos', label: '📣 Grupos' },
   { id: 'gabinete', label: '👥 Gabinete' },
   { id: 'decisiones', label: '🎯 Decisiones' },
   { id: 'bloques', label: '🧩 Bloques' },
@@ -93,6 +96,7 @@ export default function GameShell() {
           </div>
           {tab === 'pais' && <CountryPanel />}
           {tab === 'gobierno' && <GovernmentPanel />}
+          {tab === 'grupos' && <GroupsPanel />}
           {tab === 'gabinete' && <CabinetPanel />}
           {tab === 'decisiones' && <DecisionsPanel />}
           {tab === 'bloques' && <BlocsPanel />}

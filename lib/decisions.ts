@@ -79,7 +79,8 @@ export const DECISIONS: Decision[] = [
     emoji: '🤲',
     detail: 'Contiene la conflictividad social y compromete la caja.',
     cost: { capital: 6, fiscal: 0.8 },
-    effects: { happiness: 5, stability: 3, fiscal_balance: -0.8, inflation: 0.3 }
+    effects: { happiness: 5, stability: 3, fiscal_balance: -0.8, inflation: 0.3 },
+    groupEffects: { deregulationIndex: -3, obrera: 2 }
   },
   {
     id: 'quitar_subsidios',
@@ -88,7 +89,8 @@ export const DECISIONS: Decision[] = [
     emoji: '⚡',
     detail: 'Sincera tarifas: ordena la caja, dispara precios y protestas.',
     cost: { capital: 15 },
-    effects: { fiscal_balance: 1.4, inflation: 1.5, happiness: -6, stability: -3 }
+    effects: { fiscal_balance: 1.4, inflation: 1.5, happiness: -6, stability: -3 },
+    groupEffects: { deregulationIndex: 4, empresarios: 2, obrera: -2 }
   },
   {
     id: 'reforma_laboral',
@@ -97,7 +99,8 @@ export const DECISIONS: Decision[] = [
     emoji: '📜',
     detail: 'Baja el costo de contratar. Los gremios van al choque.',
     cost: { capital: 20 },
-    effects: { unemployment: -0.6, gdp_growth: 0.4, happiness: -4, stability: -4 }
+    effects: { unemployment: -0.6, gdp_growth: 0.4, happiness: -4, stability: -4 },
+    groupEffects: { deregulationIndex: 6, empresarios: 4, alta: 3, obrera: -5 }
   },
   {
     id: 'mesa_dialogo',
@@ -340,7 +343,8 @@ export const DECISIONS: Decision[] = [
     detail: 'Amnistia fiscal para repatriar fondos. Entra plata rapido y el que pago siempre se siente estafado.',
     cost: { capital: 10 },
     cooldown: 3,
-    effects: { fiscal_balance: 1.2, gold_reserves_tonnes: 5, happiness: -2 }
+    effects: { fiscal_balance: 1.2, gold_reserves_tonnes: 5, happiness: -2 },
+    groupEffects: { alta: 4, claseMedia: -2 }
   },
   {
     id: 'plan_vivienda',
@@ -360,7 +364,8 @@ export const DECISIONS: Decision[] = [
     detail: 'Acuerdo forzado con las cadenas. Alivio en la gondola hoy, faltante y remarcacion despues.',
     cost: { capital: 12 },
     cooldown: 3,
-    effects: { inflation: -2, happiness: 4, gdp_growth: -0.3 }
+    effects: { inflation: -2, happiness: 4, gdp_growth: -0.3 },
+    groupEffects: { deregulationIndex: -4, empresarios: -2, claseMedia: 2 }
   },
   {
     id: 'devaluar',

@@ -154,7 +154,38 @@ Necesito una decisión en `lib/decisions.ts`, categoría `defensa`, cara (25-30 
 - Decisiones: `lib/decisions_economia.ts` (aportes temporales, credito fiscal, simplificacion, amnistia, inspeccion, impulso industria/turismo/agro/servicios)
 - Eventos: deflacion, informalidad, recaudacion vs PBI, reforma previsional
 - Diseno: `docs/LOGICAS_ECONOMICAS.md` + Excel
-- Motor pendiente: `docs/PEDIDOS_A_OPUS.md` (deflacion/reservas, tax buoyancy, leer la tabla de empleo, combo de capital politico, feed de UI)
+- Motor pendiente: `docs/PEDIDOS_A_OPUS.md` (leer la tabla de empleo, feed de UI de deflacion/superavit). Deflacion/reservas, tax buoyancy y el combo de capital politico ya estan hechos.
+
+## 12. Composicion de clase por pais — `Country.classComposition` (`engine/countries_mvp.json` → `class_composition`)
+
+**Estado**: motor listo, dato pendiente.
+
+**Qué**: 5 grupos con intereses distintos pesan distinto en la popularidad segun cuanta gente
+representan en cada país — empresarios y comerciantes, clase media, clase obrera, clase alta/
+oligarcas, y "los fieles" (la base leal). Hoy el motor calcula un default aproximado
+(`computeClassComposition` en `lib/popularGroups.ts`) a partir de PBI per cápita y el peso del
+sector comercio — es una aproximación razonable, no un dato real.
+
+**Qué pedimos**: por cada país jugable, 5 números que sumen 100 (el motor los normaliza si no dan
+justo):
+
+```json
+"class_composition": {
+  "empresarios": 8,
+  "clase_media": 35,
+  "obrera": 42,
+  "alta": 3,
+  "fieles": 12
+}
+```
+
+Fuente sugerida: distribución ocupacional/de clase de cada país (OCDE, Gallup World Poll, CEPAL
+para América Latina, o una estimación razonada si no hay dato duro). No hace falta precisión
+académica: son pesos relativos que el motor usa para ponderar cuánto pesa cada grupo en la
+encuesta y en el balance electoral.
+
+**Cómo probarlo**: `npm run data`, después `classCompositionFromCountry(country)`
+(`lib/popularGroups.ts`) devuelve el dato cargado en vez del default calculado.
 
 ## Lo que NO hace falta que toques
 

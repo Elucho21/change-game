@@ -5,6 +5,7 @@ import { CATEGORIES, DECISIONS } from '@/lib/decisions';
 import { decisionEligible } from '@/lib/diplomacy';
 import { previewDelta } from '@/lib/engine';
 import { previewMoralDelta } from '@/lib/moral';
+import { previewGroupDelta } from '@/lib/popularGroups';
 import { useGame } from '@/lib/store';
 import DecisionPreview from './DecisionPreview';
 
@@ -116,6 +117,11 @@ export default function DecisionsPanel() {
                     </em>
                   ))}
                   {d.moralEffects && previewMoralDelta(d.moralEffects).map((p) => (
+                    <em key={p.key} className={p.tone === 'bueno' ? 'good' : 'bad'}>
+                      {p.label} {p.value > 0 ? '+' : ''}{p.value}
+                    </em>
+                  ))}
+                  {d.groupEffects && previewGroupDelta(d.groupEffects).map((p) => (
                     <em key={p.key} className={p.tone === 'bueno' ? 'good' : 'bad'}>
                       {p.label} {p.value > 0 ? '+' : ''}{p.value}
                     </em>

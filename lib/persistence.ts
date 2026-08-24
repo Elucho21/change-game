@@ -1,5 +1,6 @@
 import type {
-  ActiveEvent, Bloc, Country, FeedItem, GlobalState, Layers, MapMode, MoralState, PendingEnrique
+  ActiveEvent, Bloc, Country, FeedItem, GlobalState, Layers, MapMode, MoralState, PendingEnrique,
+  PopularGroupsState
 } from './types';
 import type { TaxRates } from './engine';
 import type { Politics } from './politics';
@@ -84,6 +85,8 @@ export interface PersistedState {
   employment?: EmploymentState;
   /** sistema moral (Change World Game v1.1). Opcional: los saves anteriores no lo traen. */
   moral?: MoralState;
+  /** popularidad por sector (Change World Game v1.2). Opcional: los saves anteriores no lo traen. */
+  groups?: PopularGroupsState;
   /** onboarding/carta de Enrique esperando resolucion. Opcional: los saves anteriores no lo traen. */
   pendingEnrique?: PendingEnrique;
   /** hitos institucionales para el recap de fin de partida (lib/milestones.ts). Opcional: saves anteriores no lo traen. */

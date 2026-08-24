@@ -90,6 +90,12 @@ export interface Country {
   /** ficha previsional/empleo del pais. Semilla del tick v1.0. */
   social?: SocialStats;
   /**
+   * Composicion de clase (peso poblacional de cada grupo, lib/popularGroups.ts).
+   * Dato real pendiente de Grok (docs/PEDIDOS_A_GROK.md): si falta, se usa un
+   * default calculado desde PBI per capita y sectores (`computeClassComposition`).
+   */
+  classComposition?: ClassComposition;
+  /**
    * Salud de cada sector, 0-100. No viene del JSON: aparece cuando un evento
    * golpea un sector y se recupera sola unos puntos por turno.
    */
@@ -222,6 +228,50 @@ export interface MoralEffects {
   jhonApoyo?: number;
 }
 
+/**
+ * Popularidad por sector (lib/popularGroups.ts, Change World Game v1.2).
+ * Capa PARALELA a `population.happiness`: no lo reemplaza, y felicidad
+ * sigue con su propio motor intacto (renuncia forzada, presion de calle,
+ * regen de capital, drift de corrupcion). Vive aca por el mismo motivo que
+ * `MoralState`: EventContext y Decision/EventChoice/GameEvent lo necesitan
+ * mas abajo, y lib/popularGroups.ts a su vez importa `GroupEffects` de aca.
+ */
+export type GroupKey = 'empresarios' | 'claseMedia' | 'obrera' | 'alta' | 'fieles';
+
+export interface PopularGroupsState {
+  /** 0-100. Empresarios y comerciantes: priorizan baja inflacion, baja carga impositiva, desregulacion. */
+  empresarios: number;
+  /** 0-100. Clase media: odia corrupcion/inflacion/desempleo, quiere impuestos bajos Y buenos servicios. */
+  claseMedia: number;
+  /** 0-100. Clase obrera: en contra del desempleo y del capital, a favor de los sindicatos. */
+  obrera: number;
+  /** 0-100. Clase alta/oligarcas: quieren desregulacion y favores, les pesa el impuesto corporativo. */
+  alta: number;
+  /** 0-100. Los fieles: base leal, se mueve poco y tiene piso alto. */
+  fieles: number;
+  /** 0-100, 50=neutral. Sube con desregulacion/privatizaciones, baja con controles/estatizaciones. */
+  deregulationIndex: number;
+}
+
+/** Peso poblacional de cada grupo, 0-100, suma ~100. Estatico por pais (ver lib/popularGroups.ts). */
+export interface ClassComposition {
+  empresarios: number;
+  claseMedia: number;
+  obrera: number;
+  alta: number;
+  fieles: number;
+}
+
+/** Efectos de una Decision o EventChoice sobre la popularidad por sector. */
+export interface GroupEffects {
+  empresarios?: number;
+  claseMedia?: number;
+  obrera?: number;
+  alta?: number;
+  fieles?: number;
+  deregulationIndex?: number;
+}
+
 export interface EventChoice {
   id: string;
   label: string;
@@ -232,6 +282,8 @@ export interface EventChoice {
   risk?: { chance: number; label: string; effects: Delta };  // puede salir mal
   /** efectos sobre corrupcion/justicia/lideres minoritarios (lib/moral.ts) */
   moralEffects?: MoralEffects;
+  /** efectos sobre la popularidad por sector (lib/popularGroups.ts) */
+  groupEffects?: GroupEffects;
 }
 
 export interface GameEvent {
@@ -269,6 +321,8 @@ export interface GameEvent {
   sectorEffects?: Record<string, number>;
   /** efecto automatico sobre corrupcion/justicia/lideres minoritarios (lib/moral.ts), junto a `effects` */
   moralEffects?: MoralEffects;
+  /** efecto automatico sobre la popularidad por sector (lib/popularGroups.ts), junto a `effects` */
+  groupEffects?: GroupEffects;
   /** quien habla (lib/characters.ts): 'enrique_grook' | 'gustavo_comun' | 'amalia_verde' | 'jhon_el_duro' */
   characterId?: string;
   /** UX/UI v1.1 (components/EventCard.tsx): tag visual de urgencia. Default 'normal' si no se declara. */
@@ -405,6 +459,8 @@ export interface Decision {
   requires?: string;
   /** efectos sobre corrupcion/justicia/lideres minoritarios (lib/moral.ts) */
   moralEffects?: MoralEffects;
+  /** efectos sobre la popularidad por sector (lib/popularGroups.ts) */
+  groupEffects?: GroupEffects;
 }
 
 export interface FeedItem {

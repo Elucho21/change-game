@@ -31,8 +31,9 @@ import {
 } from './orders';
 import { cooldownKey, cooldownLeft, cooldownUntil, decisionEligible, scaleDecision } from './diplomacy';
 import {
-  cabinetCostFactor, cabinetMoralEffects, cabinetVoteBonus, coalitionDemand, coalitionPartners,
-  coalitionSeats, DEMAND_EVERY, factionsOf, ministerById, SEAT_LABEL, type Cabinet, type CabinetSeat
+  cabinetCostFactor, cabinetMoralEffects, cabinetUnionPower, cabinetVoteBonus, coalitionDemand,
+  coalitionPartners, coalitionSeats, DEMAND_EVERY, factionsOf, ministerById, SEAT_LABEL,
+  type Cabinet, type CabinetSeat
 } from './cabinet';
 import { factionCostFactor, policyKindOf } from './factions';
 import {
@@ -45,11 +46,14 @@ import { applyFx, DEVALUE_JUMP, FX_START } from './fx';
 import { applyPensionReform, defaultPension, pensionFromCountry, pensionReformCostMultiplier, type PensionState } from './pension';
 import { defaultEmployment, employmentFromCountry, type EmploymentState } from './employment';
 import { applyMoralEffects, comisionIntegrityEffective, defaultMoral, tickMoral } from './moral';
+import {
+  applyGroupEffects, defaultPopularGroups, mediaCapitalEffect, notableGroupSwing, tickPopularGroups
+} from './popularGroups';
 import { ENRIQUE_ONBOARDING_TURN, enriqueEvents } from './events/enrique';
 import { buildMilestones, type Milestone } from './milestones';
 import type {
   ActiveEvent, Bloc, ChokepointCrisis, Country, Decision, Delta, FeedItem, GameEvent,
-  GlobalState, Layers, MapMode, MoralState, PendingEnrique, Projection
+  GlobalState, Layers, MapMode, MoralState, PendingEnrique, PopularGroupsState, Projection
 } from './types';
 
 // MapMode y Layers viven en lib/types.ts (los comparten el store, la UI y el save)
@@ -149,6 +153,8 @@ interface GameStore {
   employment: EmploymentState;
   /** sistema moral: corrupcion, justicia, lideres minoritarios (Change World Game v1.1) */
   moral: MoralState;
+  /** popularidad por sector: 5 grupos con intereses distintos (Change World Game v1.2) */
+  groups: PopularGroupsState;
   /** hitos institucionales de toda la partida, para el recap de fin de partida (lib/milestones.ts, lib/recap.ts) */
   milestones: Milestone[];
   /** onboarding de Enrique (mes 4) o su carta actual, esperando al jugador en pantalla completa */
@@ -257,6 +263,7 @@ const initial = () => ({
   pension: defaultPension(),
   employment: defaultEmployment(),
   moral: defaultMoral(),
+  groups: defaultPopularGroups(),
   milestones: [] as Milestone[],
   pendingEnrique: null as PendingEnrique,
   election: null as ElectionResult | null,
@@ -300,6 +307,7 @@ function snapshot(st: GameStore): PersistedState {
     pension: st.pension,
     employment: st.employment,
     moral: st.moral,
+    groups: st.groups,
     pendingEnrique: st.pendingEnrique,
     milestones: st.milestones,
     gameOver: st.gameOver
@@ -360,6 +368,8 @@ interface PlanRun {
   usedOnce: string[];
   /** moral despues de moralEffects del plan (decisiones y elecciones de eventos) */
   moral: MoralState;
+  /** grupos populares despues de groupEffects del plan (decisiones y elecciones de eventos) */
+  groups: PopularGroupsState;
 }
 
 /**
@@ -388,7 +398,8 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
     pension: st.pension,
     politics: { ...st.politics },
     usedOnce: [...st.usedOnce],
-    moral: st.moral
+    moral: st.moral,
+    groups: st.groups
   };
 
   const log = (emoji: string, title: string, body: string, tone: FeedItem['tone'] = 'neutral') => {
@@ -444,6 +455,9 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
       }
       if (dec.moralEffects) {
         run.moral = applyMoralEffects(run.moral, dec.moralEffects);
+      }
+      if (dec.groupEffects) {
+        run.groups = applyGroupEffects(run.groups, dec.groupEffects);
       }
       // las decisiones de diplomacia rinden en capital diplomatico, no politico
       if (dec.category === 'diplomacia') {
@@ -576,6 +590,9 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
       }
       if (choice.moralEffects) {
         run.moral = applyMoralEffects(run.moral, choice.moralEffects);
+      }
+      if (choice.groupEffects) {
+        run.groups = applyGroupEffects(run.groups, choice.groupEffects);
       }
 
       let outcome = choice.detail;
@@ -950,6 +967,7 @@ export const useGame = create<GameStore>((set, get) => {
       pension: st.pension ?? pensionFromCountry(st.playerCode),
       employment: st.employment ?? employmentFromCountry(st.playerCode),
       moral: st.moral ?? defaultMoral(),
+      groups: st.groups ?? defaultPopularGroups(),
       pendingEnrique: st.pendingEnrique ?? null,
       milestones: st.milestones ?? [],
       gameOver: st.gameOver
@@ -1242,6 +1260,7 @@ export const useGame = create<GameStore>((set, get) => {
     }
 
     const moral = choice.moralEffects ? applyMoralEffects(st.moral, choice.moralEffects) : st.moral;
+    const groups = choice.groupEffects ? applyGroupEffects(st.groups, choice.groupEffects) : st.groups;
     const capital = clamp(st.capital + (choice.effects.capital ?? 0), 0, 100);
     const cardEntry: FeedItem = {
       turn: st.turn, date: dateLabel(world), kind: 'decision', emoji: event.emoji, title: event.title, body: outcome, tone
@@ -1251,6 +1270,7 @@ export const useGame = create<GameStore>((set, get) => {
       countries,
       world,
       moral,
+      groups,
       capital,
       pendingEnrique: null,
       feed: [cardEntry, ...st.feed].slice(0, 200)
@@ -1296,6 +1316,7 @@ export const useGame = create<GameStore>((set, get) => {
       const player = countries[st.playerCode];
       if (p.event.effects) applyDelta(player, p.event.effects, world);
       if (p.event.moralEffects) run.moral = applyMoralEffects(run.moral, p.event.moralEffects);
+      if (p.event.groupEffects) run.groups = applyGroupEffects(run.groups, p.event.groupEffects);
       applyDelta(player, { stability: -1 }, world);
       feed.push({
         turn: st.turn,
@@ -1485,6 +1506,7 @@ export const useGame = create<GameStore>((set, get) => {
       } else {
         if (ev.effects) applyDelta(player, ev.effects, world);
         if (ev.moralEffects) run.moral = applyMoralEffects(run.moral, ev.moralEffects);
+        if (ev.groupEffects) run.groups = applyGroupEffects(run.groups, ev.groupEffects);
         feed.push({
           turn,
           date: dateLabel(world),
@@ -1495,6 +1517,33 @@ export const useGame = create<GameStore>((set, get) => {
           tone: (ev.effects?.happiness ?? 0) >= 0 && (ev.worldEffects?.gdp_growth ?? 0) >= 0 ? 'bueno' : 'malo'
         });
       }
+    }
+
+    // 5.4b popularidad por sector (Change World Game v1.2): 5 grupos con
+    // intereses distintos, capa PARALELA a la felicidad de siempre. Corre
+    // ANTES del sistema moral (5.5) para que targetGustavo/targetJhon puedan
+    // leer el grupo obrero/clase media ya actualizados de este mismo turno.
+    const groupsTick = tickPopularGroups(run.groups, {
+      inflation: player.economy.inflation,
+      inflationTrend: st.countries[st.playerCode].economy.inflation - player.economy.inflation,
+      unemployment: player.economy.unemployment,
+      taxAvg: (player.economy.tax_iva + player.economy.tax_corporate + player.economy.tax_income_avg) / 3,
+      taxCorporate: player.economy.tax_corporate,
+      fiscalBalance: player.economy.fiscal_balance,
+      gdpGrowth: player.economy.gdp_growth,
+      corruption: run.moral.corruption,
+      unionPower: cabinetUnionPower(run.cabinet),
+      happiness: player.population.happiness
+    });
+    const groups = groupsTick;
+    const groupSwing = notableGroupSwing(run.groups, groups);
+    if (groupSwing && groupSwing.group === 'empresarios' && groupSwing.delta > 0) {
+      feed.push({
+        turn, date: dateLabel(world), kind: 'sistema', emoji: '📉',
+        title: 'Los empresarios festejan la baja de inflacion',
+        body: `Confianza empresarial +${groupSwing.delta} este mes. Menos incertidumbre de precios, mas ganas de invertir.`,
+        tone: 'bueno'
+      });
     }
 
     // 5.5 sistema moral (Change World Game v1.1): corrupcion, investigacion,
@@ -1571,6 +1620,9 @@ export const useGame = create<GameStore>((set, get) => {
     // rebalance de la generacion pasiva): el gancho que le da payoff concreto
     // a pelear la corrupcion, no solo un numero que sube.
     capital = clamp(capital - Math.max(0, moral.corruption - 60) * 0.03, 0, 100);
+    // grupo 4 (alta/oligarcas) maneja los medios: contento suma capital
+    // politico, en contra le resta al gobierno
+    capital = clamp(capital + mediaCapitalEffect(groups.alta), 0, 100);
 
     const p2 = countries[st.playerCode];
 
@@ -1645,7 +1697,7 @@ export const useGame = create<GameStore>((set, get) => {
           turn, world, countries, relations, blocs, disruptions, active, capital, capitalDiplomatico,
           politics, election, succession: [], sanctions: run.sanctions, orders: [],
           cooldowns: run.cooldowns, usedOnce: run.usedOnce, cabinet: run.cabinet,
-          imf, street, pension, employment, moral, pendingEnrique,
+          imf, street, pension, employment, moral, groups, pendingEnrique,
           reactions, lastActions: [],
           pending: [...pending],
           recentEventIds: [...rolled.map((e) => e.id), ...st.recentEventIds].slice(0, 8),
@@ -1697,7 +1749,7 @@ export const useGame = create<GameStore>((set, get) => {
             turn, world, countries, relations, blocs, disruptions, active, capital, capitalDiplomatico,
             politics, election, succession: [], sanctions: run.sanctions, orders: [],
             cooldowns: run.cooldowns, usedOnce: run.usedOnce, cabinet: run.cabinet,
-            moral, pendingEnrique,
+            moral, groups, pendingEnrique,
             reactions, lastActions: [],
             pending: [...pending],
             recentEventIds: [...rolled.map((e) => e.id), ...st.recentEventIds].slice(0, 8),
@@ -1775,6 +1827,7 @@ export const useGame = create<GameStore>((set, get) => {
       pension,
       employment,
       moral,
+      groups,
       pendingEnrique,
       reactions,
       lastActions: [],
