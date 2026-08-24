@@ -28,6 +28,7 @@ export const NATIONAL_EVENTS: GameEvent[] = [
         detail: 'Orden restablecido en 48 horas, pero la imagen del operativo da la vuelta al mundo.',
         cost: { capital: 15 },
         effects: { stability: 4, happiness: -6, gdp_growth: 0.1 },
+        groupEffects: { alta: 1, obrera: -3 },
         risk: {
           chance: 0.3,
           label: 'Un manifestante herido convierte la protesta en crisis nacional',
@@ -39,13 +40,15 @@ export const NATIONAL_EVENTS: GameEvent[] = [
         label: 'Abrir una mesa de negociacion con los dirigentes',
         detail: 'Se levantan los cortes a cambio de ampliar planes sociales. Cuesta plata y autoridad.',
         cost: { capital: 8, fiscal: 0.4 },
-        effects: { happiness: 3, stability: 1, fiscal_balance: -0.4, inflation: 0.2 }
+        effects: { happiness: 3, stability: 1, fiscal_balance: -0.4, inflation: 0.2 },
+        groupEffects: { obrera: 2 }
       },
       {
         id: 'ignorar',
         label: 'No ceder y esperar a que se desgasten',
         detail: 'Sin represion ni concesiones. El conflicto se estira y la economia lo paga.',
-        effects: { happiness: -3, stability: -3, gdp_growth: -0.3 }
+        effects: { happiness: -3, stability: -3, gdp_growth: -0.3 },
+        groupEffects: { obrera: -1, claseMedia: -1 }
       }
     ]
   },
@@ -66,21 +69,24 @@ export const NATIONAL_EVENTS: GameEvent[] = [
         label: 'Convocar a paritarias de emergencia',
         detail: 'Aumento salarial por encima de la inflacion proyectada. Calma la calle, alimenta la nominalidad.',
         cost: { capital: 10 },
-        effects: { happiness: 5, stability: 3, inflation: 1.2, fiscal_balance: -0.5 }
+        effects: { happiness: 5, stability: 3, inflation: 1.2, fiscal_balance: -0.5 },
+        groupEffects: { obrera: 3, empresarios: -2 }
       },
       {
         id: 'firmeza',
         label: 'Sostener el plan sin cambios',
         detail: 'El gobierno no se mueve. Los mercados aplauden, la calle no.',
         cost: { capital: 12 },
-        effects: { happiness: -5, stability: -4, inflation: -0.4, fiscal_balance: 0.3 }
+        effects: { happiness: -5, stability: -4, inflation: -0.4, fiscal_balance: 0.3 },
+        groupEffects: { empresarios: 2, obrera: -3 }
       },
       {
         id: 'bono',
         label: 'Bono compensatorio por unica vez',
         detail: 'Un pago extraordinario que no entra al salario base. Parche de corto plazo.',
         cost: { capital: 5, fiscal: 0.6 },
-        effects: { happiness: 3, stability: 1, fiscal_balance: -0.6, inflation: 0.4 }
+        effects: { happiness: 3, stability: 1, fiscal_balance: -0.6, inflation: 0.4 },
+        groupEffects: { obrera: 1 }
       }
     ]
   },
@@ -180,13 +186,15 @@ export const NATIONAL_EVENTS: GameEvent[] = [
         label: 'Echar a los involucrados de inmediato',
         detail: 'Corte rapido del sangrado, a costa de perder cuadros propios.',
         cost: { capital: 10 },
-        effects: { happiness: 2, stability: 2 }
+        effects: { happiness: 2, stability: 2 },
+        groupEffects: { claseMedia: 1 }
       },
       {
         id: 'defender',
         label: 'Defenderlos y hablar de persecucion mediatica',
         detail: 'Se sostiene la tropa, pero la sociedad lo lee como encubrimiento.',
-        effects: { happiness: -7, stability: -4, capital: 3 }
+        effects: { happiness: -7, stability: -4, capital: 3 },
+        groupEffects: { alta: 1, claseMedia: -2 }
       },
       {
         id: 'auditoria',
@@ -194,6 +202,7 @@ export const NATIONAL_EVENTS: GameEvent[] = [
         detail: 'Transparencia total: te expone hoy, te fortalece si sobrevivis.',
         cost: { capital: 6 },
         effects: { happiness: 4, stability: -2 },
+        groupEffects: { claseMedia: 2, alta: -1 },
         risk: {
           chance: 0.4,
           label: 'La auditoria encuentra mas de lo esperado',
@@ -224,6 +233,7 @@ export const NATIONAL_EVENTS: GameEvent[] = [
         detail: 'Frena la corrida y frena tambien la actividad. La tasa del Banco Central sube 3 puntos y pega desde el mes que viene.',
         cost: { capital: 8 },
         effects: { gdp_growth: -0.8, unemployment: 0.4, happiness: -3 },
+        groupEffects: { empresarios: -1 },
         rateEffect: 3
       },
       {
@@ -231,6 +241,7 @@ export const NATIONAL_EVENTS: GameEvent[] = [
         label: 'Vender reservas para sostener el tipo de cambio',
         detail: 'Calma inmediata, municion cada vez mas escasa.',
         effects: { gold_reserves_tonnes: -8, inflation: -1, happiness: 1 },
+        groupEffects: { alta: 1 },
         risk: {
           chance: 0.45,
           label: 'El mercado detecta la debilidad y la corrida se acelera',
@@ -242,7 +253,8 @@ export const NATIONAL_EVENTS: GameEvent[] = [
         label: 'Imponer controles de cambio',
         detail: 'Freno administrativo: la brecha aparece y el comercio se complica.',
         cost: { capital: 12 },
-        effects: { inflation: -1.5, gdp_growth: -0.5, stability: 2, happiness: -4 }
+        effects: { inflation: -1.5, gdp_growth: -0.5, stability: 2, happiness: -4 },
+        groupEffects: { alta: -3, empresarios: -2 }
       }
     ]
   },
@@ -263,7 +275,8 @@ export const NATIONAL_EVENTS: GameEvent[] = [
         label: 'Anticipar un ajuste para salir del radar',
         detail: 'Corta el riesgo. Cuesta humor y actividad.',
         cost: { capital: 10 },
-        effects: { fiscal_balance: 0.8, happiness: -4, gdp_growth: -0.3 }
+        effects: { fiscal_balance: 0.8, happiness: -4, gdp_growth: -0.3 },
+        groupEffects: { empresarios: 1 }
       },
       {
         id: 'dialogo_tecnico',
@@ -276,7 +289,8 @@ export const NATIONAL_EVENTS: GameEvent[] = [
         id: 'ignorar_reporte',
         label: 'Ignorar el reporte y seguir el rumbo',
         detail: 'Soberania retorica. El mercado cobra un recargo.',
-        effects: { happiness: 2, inflation: 0.5, fiscal_balance: -0.2 }
+        effects: { happiness: 2, inflation: 0.5, fiscal_balance: -0.2 },
+        groupEffects: { empresarios: -1 }
       }
     ]
   },
@@ -298,7 +312,8 @@ export const NATIONAL_EVENTS: GameEvent[] = [
         label: 'Firmar el acuerdo con metas de ajuste',
         detail: 'Entran los dolares, entra tambien el programa de ajuste.',
         cost: { capital: 14 },
-        effects: { fiscal_balance: 1.2, debt_to_gdp: -2, happiness: -6, gdp_growth: -0.4, inflation: -1 }
+        effects: { fiscal_balance: 1.2, debt_to_gdp: -2, happiness: -6, gdp_growth: -0.4, inflation: -1 },
+        groupEffects: { empresarios: 2, obrera: -3, claseMedia: -1 }
       },
       {
         id: 'renegociar',
@@ -313,6 +328,7 @@ export const NATIONAL_EVENTS: GameEvent[] = [
         detail: 'Alivio de caja inmediato y salida del credito internacional.',
         cost: { capital: 25 },
         effects: { fiscal_balance: 1.5, debt_to_gdp: -6, inflation: 4, gdp_growth: -1.5, happiness: -5, stability: -8 },
+        groupEffects: { empresarios: -3, alta: -2 },
         relations: [{ target: 'todos', amount: -12 }]
       }
     ]
@@ -356,14 +372,16 @@ export const NATIONAL_EVENTS: GameEvent[] = [
         id: 'gastar',
         label: 'Volcar el extra a obra publica y salarios',
         detail: 'Actividad y humor social arriba, ancla fiscal abajo.',
-        effects: { happiness: 6, gdp_growth: 0.9, inflation: 0.8, fiscal_balance: -0.3 }
+        effects: { happiness: 6, gdp_growth: 0.9, inflation: 0.8, fiscal_balance: -0.3 },
+        groupEffects: { obrera: 2, claseMedia: 1 }
       },
       {
         id: 'retenciones',
         label: 'Bajar retenciones para incentivar la siembra',
         detail: 'El campo festeja, la caja pierde.',
         cost: { capital: 6 },
-        effects: { gdp_growth: 0.7, fiscal_balance: -0.7, happiness: 2 }
+        effects: { gdp_growth: 0.7, fiscal_balance: -0.7, happiness: 2 },
+        groupEffects: { empresarios: 3 }
       }
     ]
   },

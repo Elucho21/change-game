@@ -2,6 +2,7 @@
 
 import { previewDelta } from '@/lib/engine';
 import { previewMoralDelta } from '@/lib/moral';
+import { previewGroupDelta } from '@/lib/popularGroups';
 import { chosenFor } from '@/lib/orders';
 import { useGame } from '@/lib/store';
 import EventCard from './EventCard';
@@ -34,7 +35,8 @@ export default function Feed({ turnFx = false }: { turnFx?: boolean }) {
                 const elegida = chosenFor(orders, p.key) === c.id;
                 const preview = [
                   ...previewDelta(c.effects),
-                  ...(c.moralEffects ? previewMoralDelta(c.moralEffects) : [])
+                  ...(c.moralEffects ? previewMoralDelta(c.moralEffects) : []),
+                  ...(c.groupEffects ? previewGroupDelta(c.groupEffects) : [])
                 ];
                 return {
                   id: c.id,

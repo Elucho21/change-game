@@ -269,6 +269,80 @@ export function groupSwingFeed(group: GroupKey, delta: number): {
 }
 
 // ============================================================
+// CONSECUENCIAS DURAS (Change World Game v1.4)
+// ============================================================
+
+/** Umbral por debajo del cual un grupo deja de ser paciente y actua. */
+export const GROUP_CRISIS_THRESHOLD = 30;
+
+export interface GroupConsequence {
+  group: GroupKey;
+  emoji: string;
+  title: string;
+  body: string;
+  /** delta directo sobre el pais (happiness/stability/gdp_growth/gold_reserves_tonnes) */
+  delta: { happiness?: number; stability?: number; gdp_growth?: number; gold_reserves_tonnes?: number };
+  /** capital politico que se resta este mes (cacerolazo: la calle le cobra prestigio al gobierno) */
+  capitalPenalty: number;
+}
+
+/**
+ * Hasta v1.3 los 5 grupos solo pesaban 30% de `poll()` y un ±0.6 de capital
+ * politico mensual (`mediaCapitalEffect`, solo el grupo alta): ningun grupo
+ * podia romper nada. El jugador lo reporto como "no tienen funciones o
+ * impacto". Esto le da a cada grupo un piso: cuando su humor cae por debajo
+ * de `GROUP_CRISIS_THRESHOLD`, actua de la forma que le es propia — no es
+ * solo un numero mas bajo, es un drip mensual que se siente distinto segun
+ * el grupo, y sigue mientras el jugador no lo revierta.
+ *
+ * Deliberadamente no toca `streetWeight` (lib/streetPressure.ts): ese sistema
+ * ya lee inflacion/desempleo, y sumarle otra fuente lo descalibraria. Cada
+ * consecuencia usa el canal que le corresponde a ESE grupo.
+ */
+export function groupConsequences(groups: PopularGroupsState): GroupConsequence[] {
+  const out: GroupConsequence[] = [];
+  const under = (v: number) => v < GROUP_CRISIS_THRESHOLD;
+
+  if (under(groups.obrera)) {
+    out.push({
+      group: 'obrera', emoji: '✊',
+      title: 'Huelga general no declarada',
+      body: 'Con la clase obrera al limite, el ausentismo y los paros salvajes se multiplican sin que nadie los convoque.',
+      delta: { happiness: -0.6, stability: -0.4 },
+      capitalPenalty: 0
+    });
+  }
+  if (under(groups.alta)) {
+    out.push({
+      group: 'alta', emoji: '💸',
+      title: 'Fuga de capitales',
+      body: 'Los grandes grupos economicos sacan plata del pais mientras no vean garantias. Las reservas lo sienten.',
+      delta: { gold_reserves_tonnes: -3 },
+      capitalPenalty: 0
+    });
+  }
+  if (under(groups.empresarios)) {
+    out.push({
+      group: 'empresarios', emoji: '📉',
+      title: 'Caida de la inversion privada',
+      body: 'Sin confianza empresarial, los proyectos nuevos se posponen y la economia lo nota en el margen.',
+      delta: { gdp_growth: -0.15 },
+      capitalPenalty: 0
+    });
+  }
+  if (under(groups.claseMedia)) {
+    out.push({
+      group: 'claseMedia', emoji: '🍲',
+      title: 'Cacerolazo',
+      body: 'La clase media harta sale a la calle a golpear ollas. No tumba al gobierno, pero le cuesta prestigio real.',
+      delta: {},
+      capitalPenalty: 1.5
+    });
+  }
+  return out;
+}
+
+// ============================================================
 // PREVIEW (mismo patron que previewMoralDelta, lib/moral.ts)
 // ============================================================
 

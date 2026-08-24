@@ -6,6 +6,49 @@ Bitácora corta y en orden inverso: lo último arriba. Es lo que tenés que sabe
 
 ---
 
+## motor/grupos-con-dientes · 24/08/2026 · Los 5 grupos sociales dejan de ser decoracion
+
+El jugador reporto que los 5 grupos "no aparecen en el juego ni en pantalla y no tienen funciones o
+impacto". Cierto: `groupEffects` solo estaba en 5 de ~95 decisiones y 0 eventos, el feed narraba un
+unico caso ("empresarios contentos"), y el impacto mecanico total eran 30% de `poll()` mas un
+±0.6 de capital politico al mes via `mediaCapitalEffect`. Ningun grupo podia romper nada.
+
+### Contrato nuevo (lib/popularGroups.ts)
+
+```ts
+groupConsequences(groups)  // huelga, fuga de capitales, caida de inversion, cacerolazo
+GROUP_CRISIS_THRESHOLD     // 30: bajo eso, el grupo deja de ser paciente
+groupSwingFeed(group, delta)  // copy narrable para CUALQUIER swing notable, no solo uno
+```
+
+### Que hay
+
+- **Cobertura de `groupEffects`**: ~45 decisiones (economia, interior, comercio, defensa,
+  previsional, infraestructura) y 6 eventos nacionales grandes con 18 opciones (piquete, paro
+  general, corrupcion, corrida cambiaria, FMI, boom de commodities) — antes 5 decisiones, 0
+  eventos.
+- **Consecuencias duras** (`groupConsequences`): un grupo bajo `GROUP_CRISIS_THRESHOLD` (30) gatilla
+  un efecto real todos los meses hasta que se recupere — obrera: huelga (happiness/stability), alta:
+  fuga de capitales (reservas), empresarios: caida de inversion (gdp_growth), clase media:
+  cacerolazo (capital politico). El delta pega en silencio cada mes (mismo patron que `ongoing` en
+  eventos); el feed **solo narra el mes que cruza el umbral**, para no repetir el bug de spam que se
+  corrigio en Enrique el mismo dia.
+- **Feed completo**: `groupSwingFeed` narra cualquier swing notable de cualquier grupo, no solo
+  empresarios subiendo.
+- **Preview en eventos**: `Feed.tsx` ahora arma el preview de `EventCard` con `previewGroupDelta`
+  ademas de `previewDelta`/`previewMoralDelta` — antes las opciones de evento con `groupEffects`
+  no mostraban nada.
+- **GroupsPanel.tsx**: flecha de tendencia (6 meses) + mini-sparkline por grupo (nuevos campos
+  opcionales `groupEmpresarios/groupClaseMedia/groupObrera/groupAlta/groupFieles` en `HistoryPoint`,
+  lib/store.ts) y marca ⚠️ + aviso cuando un grupo esta en crisis.
+
+### Que te habilita
+
+Contenido nuevo (decisiones, eventos, ministros) que sume `groupEffects` entra automaticamente al
+preview, al feed y a las consecuencias duras sin tocar motor.
+
+---
+
 ## motor/partidos-opositores · 24/08/2026 · Los dos partidos opositores dejan de ser dos strings
 
 El jugador reporto que "los partidos minoritarios no aparecen ni tienen impacto". Ademas de los 3

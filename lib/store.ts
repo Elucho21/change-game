@@ -53,8 +53,8 @@ import {
   minorityVoteShare, notableMinoritySwing, tickMoral
 } from './moral';
 import {
-  applyGroupEffects, defaultPopularGroups, groupSwingFeed, mediaCapitalEffect, notableGroupSwing,
-  tickPopularGroups
+  applyGroupEffects, defaultPopularGroups, GROUP_CRISIS_THRESHOLD, GROUP_KEYS, GROUP_LABEL,
+  groupConsequences, groupSwingFeed, mediaCapitalEffect, notableGroupSwing, tickPopularGroups
 } from './popularGroups';
 import { applyRateChange, defaultCentralBank, type CentralBankState } from './centralBank';
 import {
@@ -108,6 +108,16 @@ export interface HistoryPoint {
   fx?: number;
   /** capital diplomatico. Saves viejos no lo traen. */
   capitalDiplomatico?: number;
+  /**
+   * Popularidad por sector (Change World Game v1.2), snapshot del cierre de
+   * cada mes. Opcionales: los saves anteriores a v1.4 no los traen, y sin
+   * historial GroupsPanel.tsx cae a mostrar solo el nivel actual.
+   */
+  groupEmpresarios?: number;
+  groupClaseMedia?: number;
+  groupObrera?: number;
+  groupAlta?: number;
+  groupFieles?: number;
 }
 
 interface GameStore {
@@ -1773,6 +1783,41 @@ export const useGame = create<GameStore>((set, get) => {
 
     const p2 = countries[st.playerCode];
 
+    // un grupo que cae por debajo del umbral deja de ser paciente y actua
+    // (huelga, fuga de capitales, caida de inversion, cacerolazo): antes los
+    // 5 grupos no podian romper nada, solo mover 30% de una encuesta. El
+    // delta pega TODOS los meses que el grupo siga abajo del umbral (silencioso,
+    // mismo patron que `ongoing` en eventos), pero el feed solo narra el mes
+    // en que CRUZA el umbral (para abajo o de vuelta para arriba) — narrar
+    // cada mes seria el mismo bug de spam que se corrigio en Enrique.
+    const activeConsequences = groupConsequences(groups);
+    for (const consequence of activeConsequences) {
+      if (Object.keys(consequence.delta).length) applyDelta(p2, consequence.delta, world);
+      if (consequence.capitalPenalty) capital = clamp(capital - consequence.capitalPenalty, 0, 100);
+    }
+    for (const key of GROUP_KEYS) {
+      // `st.groups` (el arranque del turno), no `run.groups`: para cuando el
+      // turno empieza el jugador, `run.groups` ya tiene adentro el groupEffects
+      // de la decision que acaba de tomar, asi que comparar contra eso jamas
+      // detectaria el cruce que la propia decision provoco
+      const wasUnder = st.groups[key] < GROUP_CRISIS_THRESHOLD;
+      const isUnder = groups[key] < GROUP_CRISIS_THRESHOLD;
+      if (!wasUnder && isUnder) {
+        const c = activeConsequences.find((x) => x.group === key)!;
+        feed.push({
+          turn, date: dateLabel(world), kind: 'sistema', emoji: c.emoji,
+          title: c.title, body: c.body, tone: 'malo'
+        });
+      } else if (wasUnder && !isUnder) {
+        feed.push({
+          turn, date: dateLabel(world), kind: 'sistema', emoji: '🙂',
+          title: `${GROUP_LABEL[key]} se calma`,
+          body: 'Volvio a un nivel manejable: la consecuencia mensual se corta.',
+          tone: 'bueno'
+        });
+      }
+    }
+
     // 7b. cronica de fin de turno: informe corto de que paso, en vez de solo
     // deltas. Las "reaccion" del feed mezclan movidas de otras potencias
     // (aiCountryDecisions) con reacciones del mundo a tus propias acciones
@@ -2063,7 +2108,12 @@ export const useGame = create<GameStore>((set, get) => {
           tension: world.global_tension,
           oil: world.oil_price,
           fx: p2.fx ?? FX_START,
-          capitalDiplomatico
+          capitalDiplomatico,
+          groupEmpresarios: groups.empresarios,
+          groupClaseMedia: groups.claseMedia,
+          groupObrera: groups.obrera,
+          groupAlta: groups.alta,
+          groupFieles: groups.fieles
         }
       ],
       milestones: [

@@ -57,7 +57,8 @@ export const DECISIONS: Decision[] = [
     emoji: '📉',
     detail: 'Menos recaudacion, mas consumo y mas humor social. La inflacion mira de reojo.',
     cost: { capital: 8 },
-    effects: { fiscal_balance: -1.5, happiness: 3, gdp_growth: 0.3, inflation: 0.4 }
+    effects: { fiscal_balance: -1.5, happiness: 3, gdp_growth: 0.3, inflation: 0.4 },
+    groupEffects: { empresarios: 2, claseMedia: 1 }
   },
   {
     id: 'subir_impuestos',
@@ -66,7 +67,8 @@ export const DECISIONS: Decision[] = [
     emoji: '📈',
     detail: 'Ordena la caja y enfria la actividad. Costo politico inmediato.',
     cost: { capital: 12 },
-    effects: { fiscal_balance: 1.2, happiness: -4, gdp_growth: -0.4, stability: -1 }
+    effects: { fiscal_balance: 1.2, happiness: -4, gdp_growth: -0.4, stability: -1 },
+    groupEffects: { empresarios: -2, claseMedia: -1 }
   },
   {
     id: 'obra_publica',
@@ -75,7 +77,8 @@ export const DECISIONS: Decision[] = [
     emoji: '🏗️',
     detail: 'Empleo y actividad ahora, deficit despues.',
     cost: { capital: 8, fiscal: 1.2 },
-    effects: { fiscal_balance: -1.2, happiness: 3, gdp_growth: 0.6, unemployment: -0.4, inflation: 0.3, opposition: -2 }
+    effects: { fiscal_balance: -1.2, happiness: 3, gdp_growth: 0.6, unemployment: -0.4, inflation: 0.3, opposition: -2 },
+    groupEffects: { obrera: 2 }
   },
   {
     id: 'ajuste_fiscal',
@@ -84,7 +87,8 @@ export const DECISIONS: Decision[] = [
     emoji: '✂️',
     detail: 'Recorte de gasto corriente. El mercado lo premia, la calle lo castiga.',
     cost: { capital: 18 },
-    effects: { fiscal_balance: 1.8, happiness: -7, gdp_growth: -0.6, unemployment: 0.5, inflation: -1, stability: -3 }
+    effects: { fiscal_balance: 1.8, happiness: -7, gdp_growth: -0.6, unemployment: 0.5, inflation: -1, stability: -3 },
+    groupEffects: { empresarios: 2, alta: 2, obrera: -3, claseMedia: -2 }
   },
   {
     id: 'subir_tasa',
@@ -102,7 +106,8 @@ export const DECISIONS: Decision[] = [
     emoji: '🖨️',
     detail: 'Resuelve la caja de este mes y te la cobra en precios dentro de tres.',
     cost: { capital: 4 },
-    effects: { fiscal_balance: 1, inflation: 2.5, happiness: 1, gdp_growth: 0.2 }
+    effects: { fiscal_balance: 1, inflation: 2.5, happiness: 1, gdp_growth: 0.2 },
+    groupEffects: { empresarios: -2 }
   },
   {
     id: 'comprar_oro',
@@ -152,7 +157,8 @@ export const DECISIONS: Decision[] = [
     emoji: '🕊️',
     detail: 'Sentar a gremios, empresarios y oposicion. Baja la temperatura.',
     cost: { capital: 6 },
-    effects: { stability: 5, happiness: 2 }
+    effects: { stability: 5, happiness: 2 },
+    groupEffects: { obrera: 1, empresarios: 1 }
   },
   {
     id: 'referendum',
@@ -170,7 +176,8 @@ export const DECISIONS: Decision[] = [
     emoji: '🚓',
     detail: 'Mas presencia policial en las grandes ciudades.',
     cost: { capital: 8, fiscal: 0.5 },
-    effects: { stability: 4, happiness: 3, fiscal_balance: -0.5 }
+    effects: { stability: 4, happiness: 3, fiscal_balance: -0.5 },
+    groupEffects: { alta: 1 }
   },
 
   // ---------------- ANTICORRUPCION (siempre disponibles, sin esperar a Enrique) ----------------
@@ -182,6 +189,7 @@ export const DECISIONS: Decision[] = [
     detail: 'Obliga a publicar contratos publicos y declaraciones juradas. Corta el margen para arreglos bajo la mesa.',
     cost: { capital: 9 },
     effects: { stability: 1 },
+    groupEffects: { alta: -2, claseMedia: 2 },
     moralEffects: { corruption: -5, investigacion: 3 }
   },
   {
@@ -192,6 +200,7 @@ export const DECISIONS: Decision[] = [
     detail: 'Auditorias independientes de compras y obra publica. A la casta le molesta; el votante lo aplaude despacio.',
     cost: { capital: 11, fiscal: 0.3 },
     effects: { happiness: 1 },
+    groupEffects: { alta: -2, claseMedia: 2 },
     moralEffects: { corruption: -7, favoresActivos: -4 }
   },
   {
@@ -202,6 +211,7 @@ export const DECISIONS: Decision[] = [
     detail: 'Concursos publicos para jueces, menos discrecionalidad del Ejecutivo. Un activo a largo plazo, un dolor de cabeza hoy.',
     cost: { capital: 13 },
     effects: { stability: 1 },
+    groupEffects: { alta: -1, claseMedia: 1 },
     moralEffects: { corteIntegrity: 8, corteLealtad: -6 }
   },
   {
@@ -212,6 +222,7 @@ export const DECISIONS: Decision[] = [
     detail: 'Blindaje legal y anonimato para quien denuncia corrupcion desde adentro del propio gobierno.',
     cost: { capital: 8 },
     effects: {},
+    groupEffects: { alta: -1, claseMedia: 1 },
     moralEffects: { corruption: -4, investigacion: 5 }
   },
   {
@@ -222,6 +233,7 @@ export const DECISIONS: Decision[] = [
     detail: 'Revision retroactiva de contratos y licitaciones. Incomoda a mas de uno de tu propio espacio.',
     cost: { capital: 10 },
     effects: { happiness: 1, stability: -1 },
+    groupEffects: { alta: -2, claseMedia: 1 },
     moralEffects: { corruption: -6, favoresActivos: -3, investigacion: 4 }
   },
   {
@@ -232,6 +244,7 @@ export const DECISIONS: Decision[] = [
     detail: 'Patrimonio de funcionarios publico y auditable. Barato en plata, caro en enemigos internos.',
     cost: { capital: 8 },
     effects: {},
+    groupEffects: { alta: -2 },
     moralEffects: { corruption: -4 }
   },
 
@@ -244,6 +257,7 @@ export const DECISIONS: Decision[] = [
     detail: 'Protege la industria local, encarece todo y molesta a tus socios.',
     cost: { capital: 8 },
     effects: { gdp_growth: -0.2, inflation: 0.7, happiness: -1, fiscal_balance: 0.3 },
+    groupEffects: { obrera: 2, empresarios: -1, deregulationIndex: -3 },
     relations: [{ target: 'bloc:aduanera', amount: -8 }]
   },
   {
@@ -254,6 +268,7 @@ export const DECISIONS: Decision[] = [
     detail: 'Baja precios al consumidor y expone a la industria local.',
     cost: { capital: 10 },
     effects: { inflation: -1, gdp_growth: 0.2, unemployment: 0.4, happiness: 2 },
+    groupEffects: { empresarios: -2, claseMedia: 2, deregulationIndex: 4 },
     relations: [{ target: 'todos', amount: 5 }]
   },
   {
@@ -265,6 +280,7 @@ export const DECISIONS: Decision[] = [
     cost: { capital: 12 },
     needsTarget: true,
     effects: { gdp_growth: 0.4, inflation: -0.2 },
+    groupEffects: { empresarios: 2, deregulationIndex: 2 },
     relations: [{ target: 'TARGET', amount: 18 }]
   },
   {
@@ -343,6 +359,7 @@ export const DECISIONS: Decision[] = [
     detail: 'Mas capacidad de disuasion, mas deficit, vecinos nerviosos.',
     cost: { capital: 8, fiscal: 0.8 },
     effects: { military_budget_bn: 2, fiscal_balance: -0.8, stability: 2, happiness: -1 },
+    groupEffects: { alta: 1, obrera: -1 },
     relations: [{ target: 'vecinos', amount: -6 }]
   },
   {
@@ -353,6 +370,7 @@ export const DECISIONS: Decision[] = [
     detail: 'Libera caja y debilita tu posicion negociadora.',
     cost: { capital: 10 },
     effects: { military_budget_bn: -1.5, fiscal_balance: 0.6, stability: -2 },
+    groupEffects: { alta: -1, obrera: 1 },
     relations: [{ target: 'vecinos', amount: 5 }]
   },
   {
@@ -397,7 +415,8 @@ export const DECISIONS: Decision[] = [
     detail: 'Credito y construccion a gran escala. Empleo inmediato, deficit por varios anios.',
     cost: { capital: 12, fiscal: 1 },
     cooldown: 3,
-    effects: { fiscal_balance: -1, happiness: 5, unemployment: -0.5, gdp_growth: 0.4 }
+    effects: { fiscal_balance: -1, happiness: 5, unemployment: -0.5, gdp_growth: 0.4 },
+    groupEffects: { obrera: 2, claseMedia: 1 }
   },
   {
     id: 'congelar_precios',
@@ -418,7 +437,8 @@ export const DECISIONS: Decision[] = [
     detail: 'Mejora la competitividad de un saque y se traslada a precios en semanas.',
     cost: { capital: 15 },
     cooldown: 3,
-    effects: { inflation: 3.5, gdp_growth: 0.7, happiness: -5, fiscal_balance: 0.6 }
+    effects: { inflation: 3.5, gdp_growth: 0.7, happiness: -5, fiscal_balance: 0.6 },
+    groupEffects: { empresarios: 2, obrera: -2, claseMedia: -1 }
   },
   {
     id: 'auditoria_gasto',
@@ -428,7 +448,8 @@ export const DECISIONS: Decision[] = [
     detail: 'Revision fina de contratos y subsidios. Recorta sin motosierra y tarda en verse.',
     cost: { capital: 6 },
     cooldown: 2,
-    effects: { fiscal_balance: 0.5, stability: 1 }
+    effects: { fiscal_balance: 0.5, stability: 1 },
+    groupEffects: { claseMedia: 1 }
   },
 
   // ---------------- INTERIOR (ampliacion) ----------------
@@ -440,7 +461,8 @@ export const DECISIONS: Decision[] = [
     detail: 'Sentas a sindicatos y empresarios a acordar salarios. Baja la conflictividad y empuja precios.',
     cost: { capital: 8 },
     cooldown: 3,
-    effects: { happiness: 4, stability: 3, inflation: 0.8 }
+    effects: { happiness: 4, stability: 3, inflation: 0.8 },
+    groupEffects: { obrera: 3, empresarios: -1 }
   },
   {
     id: 'plan_salud',
@@ -450,7 +472,8 @@ export const DECISIONS: Decision[] = [
     detail: 'Insumos, camas y personal. Se nota en la calle y se nota en la caja.',
     cost: { capital: 8, fiscal: 0.7 },
     cooldown: 3,
-    effects: { happiness: 5, fiscal_balance: -0.7, stability: 2 }
+    effects: { happiness: 5, fiscal_balance: -0.7, stability: 2 },
+    groupEffects: { claseMedia: 2, obrera: 1 }
   },
   {
     id: 'obra_provincias',
@@ -460,7 +483,8 @@ export const DECISIONS: Decision[] = [
     detail: 'Plata a los gobernadores. Se compran voluntades que despues hay que sostener.',
     cost: { capital: 6, fiscal: 0.8 },
     cooldown: 2,
-    effects: { fiscal_balance: -0.8, stability: 4, capital: 8 }
+    effects: { fiscal_balance: -0.8, stability: 4, capital: 8 },
+    groupEffects: { obrera: 1 }
   },
   {
     id: 'reforma_educativa',
@@ -470,7 +494,8 @@ export const DECISIONS: Decision[] = [
     detail: 'Cambio de contenidos y evaluacion docente. Los gremios resisten; el resultado llega en anios.',
     cost: { capital: 16 },
     cooldown: 3,
-    effects: { happiness: -3, stability: -2, gdp_growth: 0.2 }
+    effects: { happiness: -3, stability: -2, gdp_growth: 0.2 },
+    groupEffects: { obrera: -2, claseMedia: 1 }
   },
   {
     id: 'estado_emergencia',
@@ -484,7 +509,8 @@ export const DECISIONS: Decision[] = [
     // queda once por partida, coherente con el resto de las estructurales
     once: true,
     cooldown: 3,
-    effects: { stability: 6, happiness: -6, capital: 25 }
+    effects: { stability: 6, happiness: -6, capital: 25 },
+    groupEffects: { alta: 2, obrera: -3, claseMedia: -1 }
   },
 
   // ---------------- COMERCIO (ampliacion) ----------------
@@ -496,7 +522,8 @@ export const DECISIONS: Decision[] = [
     detail: 'Beneficios impositivos para exportadores. Atrae inversion y resigna recaudacion.',
     cost: { capital: 10, fiscal: 0.4 },
     once: true,
-    effects: { gdp_growth: 0.5, fiscal_balance: -0.4, unemployment: -0.3 }
+    effects: { gdp_growth: 0.5, fiscal_balance: -0.4, unemployment: -0.3 },
+    groupEffects: { empresarios: 3, deregulationIndex: 3 }
   },
   {
     id: 'retenciones_export',
@@ -506,7 +533,8 @@ export const DECISIONS: Decision[] = [
     detail: 'Recaudacion inmediata sobre lo que se vende afuera. El campo lo toma como declaracion de guerra.',
     cost: { capital: 14 },
     cooldown: 3,
-    effects: { fiscal_balance: 1.3, happiness: -4, gdp_growth: -0.4 }
+    effects: { fiscal_balance: 1.3, happiness: -4, gdp_growth: -0.4 },
+    groupEffects: { empresarios: -3 }
   },
   {
     id: 'mision_comercial',
@@ -529,6 +557,7 @@ export const DECISIONS: Decision[] = [
     cost: { capital: 10 },
     cooldown: 2,
     effects: { unemployment: -0.4, inflation: 0.6, gdp_growth: -0.2 },
+    groupEffects: { obrera: 2, empresarios: -1, deregulationIndex: -4 },
     relations: [{ target: 'bloc:aduanera', amount: -6 }]
   },
   {
@@ -751,7 +780,8 @@ export const DECISIONS: Decision[] = [
     detail: '+2 anios para hombres y mujeres. Mejora el sistema a mediano plazo; los activos cercanos al retiro lo sienten ya.',
     cost: { capital: 4 },
     once: true,
-    effects: { happiness: -2, stability: -1 }
+    effects: { happiness: -2, stability: -1 },
+    groupEffects: { obrera: -2, claseMedia: -1 }
   },
   {
     id: 'igualar_edad_hm',
@@ -761,7 +791,8 @@ export const DECISIONS: Decision[] = [
     detail: 'La edad de las mujeres sube a la de los hombres. Correcto en el papel, caro en votos de un dia para el otro.',
     cost: { capital: 7 },
     once: true,
-    effects: { happiness: -3, stability: -1 }
+    effects: { happiness: -3, stability: -1 },
+    groupEffects: { claseMedia: -1 }
   },
   {
     id: 'subir_aporte_trabajador',
@@ -770,7 +801,8 @@ export const DECISIONS: Decision[] = [
     emoji: '💸',
     detail: '+2 puntos porcentuales. El trabajador lo siente en el bolsillo de inmediato; con el tiempo empuja informalidad.',
     cost: { capital: 6 },
-    effects: { happiness: -3 }
+    effects: { happiness: -3 },
+    groupEffects: { obrera: -3, claseMedia: -1 }
   },
   {
     id: 'subir_aporte_empleador',
@@ -779,7 +811,8 @@ export const DECISIONS: Decision[] = [
     emoji: '🏭',
     detail: '+2 puntos porcentuales. Menos ruido politico inmediato que subirselo al trabajador, pero encarece contratar formal.',
     cost: { capital: 5 },
-    effects: { happiness: -1, gdp_growth: -0.05 }
+    effects: { happiness: -1, gdp_growth: -0.05 },
+    groupEffects: { empresarios: -3 }
   },
   {
     id: 'bajar_tasa_reemplazo',
@@ -789,7 +822,8 @@ export const DECISIONS: Decision[] = [
     detail: '-10 puntos sobre el ultimo salario. La reforma mas dura de la caja: mejora la cuenta, pero los futuros jubilados no perdonan.',
     cost: { capital: 11 },
     once: true,
-    effects: { happiness: -4, stability: -1 }
+    effects: { happiness: -4, stability: -1 },
+    groupEffects: { obrera: -3, claseMedia: -2 }
   },
   {
     id: 'mejorar_fiscalizacion',
@@ -798,7 +832,8 @@ export const DECISIONS: Decision[] = [
     emoji: '🔍',
     detail: 'Baja la morosidad y la evasion. Requiere capacidad estatal, pero no le pide sacrificio directo a nadie.',
     cost: { capital: 3 },
-    effects: { fiscal_balance: 0.05 }
+    effects: { fiscal_balance: 0.05 },
+    groupEffects: { obrera: 1, empresarios: -1 }
   },
   {
     id: 'eliminar_privilegios',
@@ -808,7 +843,8 @@ export const DECISIONS: Decision[] = [
     detail: 'Popular en la poblacion general, odio intenso en el grupo afectado. Dificultad tecnica y judicial alta.',
     cost: { capital: 7 },
     once: true,
-    effects: { happiness: 2, stability: 1 }
+    effects: { happiness: 2, stability: 1 },
+    groupEffects: { alta: -3, claseMedia: 2 }
   },
   {
     id: 'aumentar_cobertura',
@@ -835,7 +871,8 @@ export const DECISIONS: Decision[] = [
     when: (c) =>
       c.player.population.stability >= INFRA_CONFIG.aeropuerto.minStability
       && (c.moral?.corruption ?? 0) <= INFRA_CONFIG.aeropuerto.maxCorruption,
-    effects: {}
+    effects: {},
+    groupEffects: { empresarios: 2 }
   },
   {
     id: 'construir_puerto',
@@ -848,7 +885,8 @@ export const DECISIONS: Decision[] = [
     when: (c) =>
       c.player.population.stability >= INFRA_CONFIG.puerto_aguas_profundas.minStability
       && (c.moral?.corruption ?? 0) <= INFRA_CONFIG.puerto_aguas_profundas.maxCorruption,
-    effects: {}
+    effects: {},
+    groupEffects: { empresarios: 2 }
   },
   {
     id: 'construir_base_militar',
@@ -861,7 +899,8 @@ export const DECISIONS: Decision[] = [
     when: (c) =>
       c.player.population.stability >= INFRA_CONFIG.base_militar.minStability
       && (c.moral?.corruption ?? 0) <= INFRA_CONFIG.base_militar.maxCorruption,
-    effects: {}
+    effects: {},
+    groupEffects: { alta: 1 }
   },
   {
     id: 'construir_datacenter',
@@ -874,7 +913,8 @@ export const DECISIONS: Decision[] = [
     when: (c) =>
       c.player.population.stability >= INFRA_CONFIG.centro_datos_ia.minStability
       && (c.moral?.corruption ?? 0) <= INFRA_CONFIG.centro_datos_ia.maxCorruption,
-    effects: {}
+    effects: {},
+    groupEffects: { empresarios: 2 }
   }
 ];
 

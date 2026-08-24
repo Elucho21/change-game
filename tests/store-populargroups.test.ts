@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { useGame } from '../lib/store';
-import { defaultPopularGroups } from '../lib/popularGroups';
+import { defaultPopularGroups, GROUP_CRISIS_THRESHOLD } from '../lib/popularGroups';
 
 /**
  * Popularidad por sector a traves de la store real (mismo patron que
@@ -79,4 +79,35 @@ describe('popularidad por sector a traves de la store real', () => {
     const feedTitles = useGame.getState().feed.map((f) => f.title);
     expect(feedTitles.some((t) => t.includes('empresarios'))).toBe(true);
   });
+  it('un grupo que CRUZA el umbral dentro del turno gatilla la consecuencia dura', () => {
+    useGame.getState().newGame();
+    useGame.getState().start('Argentina', 'normal');
+    // arranca apenas arriba del umbral; reforma_laboral tiene
+    // groupEffects: { obrera: -5, ... } — el propio turno lo cruza para abajo
+    useGame.setState((st) => ({ groups: { ...st.groups, obrera: GROUP_CRISIS_THRESHOLD + 2 } }));
+    const antes = useGame.getState().countries.Argentina.population.happiness;
+    useGame.getState().planDecision('reforma_laboral');
+    useGame.getState().endTurn();
+    expect(useGame.getState().groups.obrera).toBeLessThan(GROUP_CRISIS_THRESHOLD);
+    const feedTitles = useGame.getState().feed.map((f) => f.title);
+    expect(feedTitles).toContain('Huelga general no declarada');
+    // la consecuencia pega de verdad sobre el pais, no solo narra
+    expect(useGame.getState().countries.Argentina.population.happiness).toBeLessThan(antes + 0.01);
+  });
+
+  it('la narracion solo sale el mes que CRUZA el umbral, no todos los meses que sigue abajo', () => {
+    useGame.getState().newGame();
+    useGame.getState().start('Argentina', 'normal');
+    useGame.setState((st) => ({ groups: { ...st.groups, obrera: GROUP_CRISIS_THRESHOLD + 2 } }));
+    useGame.getState().planDecision('reforma_laboral');
+    useGame.getState().endTurn();
+    expect(useGame.getState().groups.obrera).toBeLessThan(GROUP_CRISIS_THRESHOLD);
+    expect(useGame.getState().feed.map((f) => f.title)).toContain('Huelga general no declarada');
+
+    // sigue abajo del umbral el mes siguiente, sin cruzar de nuevo: no se repite
+    useGame.getState().endTurn();
+    const apariciones = useGame.getState().feed.filter((f) => f.title === 'Huelga general no declarada').length;
+    expect(apariciones).toBe(1);
+  });
 });
+
