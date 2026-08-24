@@ -128,11 +128,12 @@ const DELTA_LABELS: Record<keyof Delta, string> = {
   gold_reserves_tonnes: 'Reservas de oro',
   capital: 'Capital politico',
   global_tension: 'Tension global',
-  oil_price: 'Precio del petroleo'
+  oil_price: 'Precio del petroleo',
+  opposition: 'Oposicion'
 };
 
 /** Metricas donde subir es malo (para pintar el preview en rojo/verde). */
-const BAD_WHEN_UP: (keyof Delta)[] = ['inflation', 'unemployment', 'debt_to_gdp', 'global_tension'];
+const BAD_WHEN_UP: (keyof Delta)[] = ['inflation', 'unemployment', 'debt_to_gdp', 'global_tension', 'opposition'];
 
 export function previewDelta(delta: Delta) {
   return (Object.keys(delta) as (keyof Delta)[])

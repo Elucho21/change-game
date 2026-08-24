@@ -183,12 +183,25 @@ export function driftOpposition(p: Politics, country: Country): number {
   const e = country.economy;
   const pop = country.population;
 
+  // cuanto se movio la felicidad desde el mes pasado. No es solo el nivel:
+  // una mejora sostenida (aunque el nivel absoluto todavia no sea "alto")
+  // tiene que aliviar la oposicion, si no cualquier jugada populista se
+  // diluye contra el ancla generica de felicidad antes de notarse aca.
+  const trend = pop.happiness - (country.prevHappiness ?? pop.happiness);
+
   let target = clamp(100 - pop.happiness, 15, 85);
-  if (e.inflation > 25) target += 6;
-  if (e.unemployment > 12) target += 5;
+  // rampa continua en vez de escalon fijo: mejorar de 40% a 26% de inflacion
+  // ya alivia el objetivo, no hace falta cruzar entero el viejo corte de 25%
+  target += clamp((e.inflation - 15) * 0.25, 0, 10);
+  target += clamp((e.unemployment - 8) * 0.6, 0, 6);
   if (e.gdp_growth > 3) target -= 6;
   if (pop.stability > 65) target -= 5;
+  target -= clamp(trend * 3, -8, 8);
   target = clamp(target, 10, 90);
+
+  // guardado para la proxima vez que se llame esta funcion (proximo turno):
+  // recien ahi "pop.happiness" pasa a ser el "mes pasado" de esa llamada.
+  country.prevHappiness = pop.happiness;
 
   // se mueve un 12% del camino por mes: reacciona sin dar saltos
   const next = p.opposition + (target - p.opposition) * 0.12;

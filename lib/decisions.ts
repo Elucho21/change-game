@@ -32,7 +32,7 @@ export const DECISIONS: Decision[] = [
     emoji: '🏗️',
     detail: 'Empleo y actividad ahora, deficit despues.',
     cost: { capital: 8, fiscal: 1.2 },
-    effects: { fiscal_balance: -1.2, happiness: 3, gdp_growth: 0.6, unemployment: -0.4, inflation: 0.3 }
+    effects: { fiscal_balance: -1.2, happiness: 3, gdp_growth: 0.6, unemployment: -0.4, inflation: 0.3, opposition: -2 }
   },
   {
     id: 'ajuste_fiscal',
@@ -369,6 +369,10 @@ export const DECISIONS: Decision[] = [
     emoji: '🚨',
     detail: 'Poderes excepcionales para gobernar por decreto. Rapido, efectivo y caro en legitimidad.',
     cost: { capital: 20 },
+    // el motor limita los cooldowns normales a 1-4 meses (ver tests/engine.test.ts),
+    // asi que "una vez por mandato" no se puede modelar como cooldown largo:
+    // queda once por partida, coherente con el resto de las estructurales
+    once: true,
     cooldown: 3,
     effects: { stability: 6, happiness: -6, capital: 25 }
   },
@@ -381,7 +385,7 @@ export const DECISIONS: Decision[] = [
     emoji: '🏭',
     detail: 'Beneficios impositivos para exportadores. Atrae inversion y resigna recaudacion.',
     cost: { capital: 10, fiscal: 0.4 },
-    cooldown: 3,
+    once: true,
     effects: { gdp_growth: 0.5, fiscal_balance: -0.4, unemployment: -0.3 }
   },
   {
@@ -509,7 +513,8 @@ export const DECISIONS: Decision[] = [
     emoji: '🎽',
     detail: 'Formacion para jovenes sin trabajo. Ocupa manos y divide opiniones.',
     cost: { capital: 8, fiscal: 0.4 },
-    cooldown: 3,
+    once: true,
+    unlocks: 'desmantelar_servicio_civico',
     effects: { unemployment: -0.4, stability: 2, happiness: -1, fiscal_balance: -0.4 }
   },
   {
@@ -519,7 +524,7 @@ export const DECISIONS: Decision[] = [
     emoji: '🖥️',
     detail: 'Proteccion de infraestructura critica. Invisible hasta el dia que la necesitas.',
     cost: { capital: 7, fiscal: 0.3 },
-    cooldown: 3,
+    once: true,
     effects: { stability: 2, fiscal_balance: -0.3 }
   },
   {
@@ -545,6 +550,17 @@ export const DECISIONS: Decision[] = [
     effects: { global_tension: -5, stability: 1 },
     relations: [{ target: 'TARGET', amount: 22 }]
   },
+  {
+    id: 'desmantelar_servicio_civico',
+    category: 'defensa',
+    label: 'Desmantelar el servicio civico',
+    emoji: '🚫',
+    detail: 'Se cierra el programa. Libera caja, pero pierde lo que ya construyo en participacion y estabilidad.',
+    cost: { capital: 10 },
+    once: true,
+    requires: 'servicio_civico',
+    effects: { unemployment: 0.3, stability: -1, fiscal_balance: 0.3, happiness: 1 }
+  },
 
   // ---------------- COMUNICACION ----------------
   // Actos de gobierno que no cambian la economia: cambian como la gente la
@@ -557,7 +573,7 @@ export const DECISIONS: Decision[] = [
     detail: 'Hablarle al pais de frente. Ordena el relato cuando la situacion todavia se puede explicar.',
     cost: { capital: 5 },
     cooldown: 4,
-    effects: { happiness: 4, stability: 2, capital: 9 }
+    effects: { happiness: 4, stability: 2, capital: 9, opposition: -2 }
   },
   {
     id: 'acto_masivo',
@@ -567,7 +583,7 @@ export const DECISIONS: Decision[] = [
     detail: 'Plaza llena y escenario. Consolida a los propios y le recuerda al resto que estan enfrente.',
     cost: { capital: 8, fiscal: 0.2 },
     cooldown: 4,
-    effects: { happiness: 5, stability: -1, capital: 13, fiscal_balance: -0.2 }
+    effects: { happiness: 5, stability: -1, capital: 13, fiscal_balance: -0.2, opposition: -3 }
   },
   {
     id: 'gira_provincias',
@@ -577,7 +593,7 @@ export const DECISIONS: Decision[] = [
     detail: 'Semanas recorriendo pueblos y obras. Rinde despacio y rinde parejo.',
     cost: { capital: 7 },
     cooldown: 4,
-    effects: { happiness: 3, stability: 3, capital: 11 }
+    effects: { happiness: 3, stability: 3, capital: 11, opposition: -2 }
   },
   {
     id: 'entrevista_incomoda',
@@ -587,7 +603,7 @@ export const DECISIONS: Decision[] = [
     detail: 'Sentarte con un periodista hostil. Si salis bien parado, ganas respeto hasta del que no te vota.',
     cost: { capital: 4 },
     cooldown: 4,
-    effects: { happiness: 3, capital: 8 }
+    effects: { happiness: 3, capital: 8, opposition: -1 }
   },
   {
     id: 'campana_logros',
@@ -597,7 +613,7 @@ export const DECISIONS: Decision[] = [
     detail: 'Pauta en todos lados contando lo que se hizo. Funciona si algo se hizo.',
     cost: { capital: 5, fiscal: 0.4 },
     cooldown: 4,
-    effects: { happiness: 4, fiscal_balance: -0.4 }
+    effects: { happiness: 4, fiscal_balance: -0.4, opposition: -2 }
   },
   {
     id: 'pedir_disculpas',
@@ -607,7 +623,7 @@ export const DECISIONS: Decision[] = [
     detail: 'Reconocer un error de frente. Cuesta orgullo y desactiva mas conflicto del que parece.',
     cost: { capital: 6 },
     cooldown: 4,
-    effects: { happiness: 5, stability: 4, capital: -2 }
+    effects: { happiness: 5, stability: 4, capital: -2, opposition: -1 }
   },
 
   // ---------------------------------------------------------- previsional (Change World Game v1.0)
@@ -624,6 +640,7 @@ export const DECISIONS: Decision[] = [
     emoji: '👴',
     detail: '+2 anios para hombres y mujeres. Mejora el sistema a mediano plazo; los activos cercanos al retiro lo sienten ya.',
     cost: { capital: 4 },
+    once: true,
     effects: { happiness: -2, stability: -1 }
   },
   {
@@ -633,6 +650,7 @@ export const DECISIONS: Decision[] = [
     emoji: '⚖️',
     detail: 'La edad de las mujeres sube a la de los hombres. Correcto en el papel, caro en votos de un dia para el otro.',
     cost: { capital: 7 },
+    once: true,
     effects: { happiness: -3, stability: -1 }
   },
   {
@@ -660,6 +678,7 @@ export const DECISIONS: Decision[] = [
     emoji: '📉',
     detail: '-10 puntos sobre el ultimo salario. La reforma mas dura de la caja: mejora la cuenta, pero los futuros jubilados no perdonan.',
     cost: { capital: 11 },
+    once: true,
     effects: { happiness: -4, stability: -1 }
   },
   {
@@ -678,6 +697,7 @@ export const DECISIONS: Decision[] = [
     emoji: '👑',
     detail: 'Popular en la poblacion general, odio intenso en el grupo afectado. Dificultad tecnica y judicial alta.',
     cost: { capital: 7 },
+    once: true,
     effects: { happiness: 2, stability: 1 }
   },
   {
@@ -687,7 +707,7 @@ export const DECISIONS: Decision[] = [
     emoji: '📋',
     detail: 'La unica reforma previsional que suma Capital Politico neto: mas gente aportando, mas empleo formal, sin sacarle nada a nadie.',
     cost: { capital: 1 },
-    effects: { capital: 4, happiness: 1 }
+    effects: { capital: 4, happiness: 1, opposition: -2 }
   }
 ];
 

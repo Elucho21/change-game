@@ -123,3 +123,25 @@ export function cooldownLeft(
   const until = cooldowns[cooldownKey(decisionId, target)] ?? 0;
   return Math.max(0, until - turn);
 }
+
+// ------------------------------------------------------------------
+// Decisiones "once" / toggle / requires
+// ------------------------------------------------------------------
+
+/** true si esta decision (o esta decision contra este objetivo) ya se tomo alguna vez. */
+export function isUsedOnce(usedOnce: string[], decisionId: string, target?: string): boolean {
+  return usedOnce.includes(cooldownKey(decisionId, target));
+}
+
+/**
+ * Elegibilidad estructural de una decision, mas alla del cooldown normal
+ * (eso lo resuelve `cooldownLeft` aparte): si es `once`, no puede haberse
+ * usado ya; si tiene `requires`, ese prerequisito tiene que estar usado.
+ * Es lo que hace que un par toggle (crear/desmantelar) se muestre uno a la
+ * vez en vez de los dos juntos o el usado quedando ahi para siempre.
+ */
+export function decisionEligible(dec: Decision, usedOnce: string[], target?: string): boolean {
+  if (dec.once && isUsedOnce(usedOnce, dec.id, target)) return false;
+  if (dec.requires && !isUsedOnce(usedOnce, dec.requires, target)) return false;
+  return true;
+}

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { CATEGORIES, DECISIONS } from '@/lib/decisions';
+import { decisionEligible } from '@/lib/diplomacy';
 import { previewDelta } from '@/lib/engine';
 import { useGame } from '@/lib/store';
 import DecisionPreview from './DecisionPreview';
@@ -15,14 +16,16 @@ export default function DecisionsPanel() {
   const [cat, setCat] = useState<(typeof CATEGORIES)[number]['id']>('economia');
   const [open, setOpen] = useState<string | null>(null);
 
-  const { capital, selected, playerCode, countries, orders, turn } = useGame();
+  const { capital, selected, playerCode, countries, orders, turn, usedOnce } = useGame();
   const plan = useGame((s) => s.planDecision);
   const preview = useGame((s) => s.previewDecision);
   const available = useGame((s) => s.availableCapital)();
   const quote = useGame((s) => s.quoteDecision);
   const target = selected && selected !== playerCode ? selected : undefined;
 
-  const list = DECISIONS.filter((d) => d.category === cat);
+  // las "once" ya usadas desaparecen del catalogo; la contraria de un par
+  // toggle (requires) recien aparece cuando la original ya se tomo
+  const list = DECISIONS.filter((d) => d.category === cat && decisionEligible(d, usedOnce, target));
 
   // la proyeccion simula 3 turnos por duplicado: se calcula solo para la
   // decision abierta y se recalcula unicamente si cambia el turno o el objetivo

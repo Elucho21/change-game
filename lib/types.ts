@@ -96,6 +96,8 @@ export interface Country {
   sectorHealth?: Record<string, number>;
   /** inflacion del mes anterior: sirve para saber si sube o baja */
   prevInflation?: number;
+  /** felicidad del mes anterior: sirve para medir tendencia en driftOpposition (lib/politics.ts) */
+  prevHappiness?: number;
   /** ultimo efecto fiscal por impuestos ya asentado en fiscal_balance (ver taxEffects en engine.ts) */
   taxFiscalApplied?: number;
   /**
@@ -153,6 +155,13 @@ export interface Delta {
   capital?: number;           // capital politico del jugador
   global_tension?: number;
   oil_price?: number;
+  /**
+   * Oposicion politica (lib/politics.ts `Politics.opposition`). Igual que
+   * `capital`, vive fuera de `Country` asi que `applyDelta` no lo toca: se
+   * aplica especial-caseado en `runPlan` (lib/store.ts), no en engine.ts.
+   * Negativo = baja la oposicion (lo que hace una jugada populista de verdad).
+   */
+  opposition?: number;
 }
 
 export interface RelationDelta {
@@ -309,6 +318,12 @@ export interface Decision {
    */
   cooldown?: number;
   when?: (ctx: EventContext) => boolean;
+  /** si true, se puede tomar una sola vez en toda la partida (lib/diplomacy.ts decisionEligible) */
+  once?: boolean;
+  /** id de la decision que se HABILITA al ejecutar esta (par toggle, ej. crear/desmantelar) */
+  unlocks?: string;
+  /** id de una decision que ya tiene que haberse tomado antes para que esta aparezca */
+  requires?: string;
 }
 
 export interface FeedItem {

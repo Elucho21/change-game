@@ -71,6 +71,8 @@ export interface PersistedState {
   orders?: PlannedOrder[];
   /** acciones diplomaticas en enfriamiento */
   cooldowns?: Record<string, number>;
+  /** decisiones "once" ya usadas. Opcional: los saves anteriores no lo traen. */
+  usedOnce?: string[];
   cabinet?: Cabinet;
   lastCoalitionDemand?: number;
   /** sistema previsional del jugador (Change World Game v1.0). Opcional: los saves anteriores no lo traen. */

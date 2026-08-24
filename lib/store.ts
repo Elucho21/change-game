@@ -29,7 +29,7 @@ import {
   goldFiscalDelta, TAX_FIELD, TAX_LABELS,
   type EventOrder, type PlannedOrder, type TaxKind
 } from './orders';
-import { cooldownKey, cooldownLeft, cooldownUntil, scaleDecision } from './diplomacy';
+import { cooldownKey, cooldownLeft, cooldownUntil, decisionEligible, scaleDecision } from './diplomacy';
 import {
   cabinetCostFactor, cabinetDiplomaticBonus, cabinetVoteBonus, coalitionDemand, coalitionPartners,
   coalitionSeats, DEMAND_EVERY, factionsOf, ministerById, SEAT_LABEL, type Cabinet, type CabinetSeat
@@ -126,6 +126,8 @@ interface GameStore {
   orders: PlannedOrder[];
   /** acciones diplomaticas en enfriamiento: "decision|pais" -> turno en que se liberan */
   cooldowns: Record<string, number>;
+  /** decisiones "once" ya usadas en toda la partida (id o id|target) */
+  usedOnce: string[];
   /** quien ocupa cada silla del gabinete */
   cabinet: Cabinet;
   /** turno de la ultima factura del socio de coalicion */
@@ -229,6 +231,7 @@ const initial = () => ({
   startingGdp: 0,
   orders: [] as PlannedOrder[],
   cooldowns: {} as Record<string, number>,
+  usedOnce: [] as string[],
   cabinet: {} as Cabinet,
   lastCoalitionDemand: 0,
   imf: defaultImf(),
@@ -267,6 +270,7 @@ function snapshot(st: GameStore): PersistedState {
     startingGdp: st.startingGdp,
     orders: st.orders,
     cooldowns: st.cooldowns,
+    usedOnce: st.usedOnce,
     cabinet: st.cabinet,
     lastCoalitionDemand: st.lastCoalitionDemand,
     imf: st.imf,
@@ -325,6 +329,10 @@ interface PlanRun {
   cabinet: Cabinet;
   /** previsional despues de las reformas del plan (para que el tick las lea este mismo turno) */
   pension: PensionState;
+  /** politica despues del lever directo de oposicion del plan (ver Delta.opposition) */
+  politics: Politics;
+  /** decisiones "once" ya usadas, incluyendo las de este mismo plan */
+  usedOnce: string[];
 }
 
 /**
@@ -349,7 +357,9 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
     hostility: 0,
     cooldowns: { ...st.cooldowns },
     cabinet: { ...st.cabinet },
-    pension: st.pension
+    pension: st.pension,
+    politics: { ...st.politics },
+    usedOnce: [...st.usedOnce]
   };
 
   const log = (emoji: string, title: string, body: string, tone: FeedItem['tone'] = 'neutral') => {
@@ -372,6 +382,7 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
       );
       applyDelta(run.countries[st.playerCode], scaled.effects, run.world);
       run.cooldowns[cooldownKey(order.id, order.target)] = cooldownUntil(dec, st.turn);
+      if (dec.once) run.usedOnce = [...run.usedOnce, cooldownKey(order.id, order.target)];
 
       for (const rd of dec.relations ?? []) {
         const targets = resolveRelationTargets(rd, {
@@ -390,6 +401,12 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
       }
       if (dec.category === 'previsional') {
         run.pension = applyPensionReform(run.pension, dec.id);
+      }
+      if (dec.effects.opposition) {
+        run.politics = {
+          ...run.politics,
+          opposition: clamp(run.politics.opposition + dec.effects.opposition, 0, 100)
+        };
       }
       // el canciller tambien mejora el capital que rinden las jugadas diplomaticas
       const capitalGain = dec.category === 'diplomacia' && dec.effects.capital
@@ -879,6 +896,7 @@ export const useGame = create<GameStore>((set, get) => {
       startingGdp: st.startingGdp ?? st.countries[st.playerCode].economy.gdp_trillion_usd,
       orders: st.orders ?? [],
       cooldowns: st.cooldowns ?? {},
+      usedOnce: st.usedOnce ?? [],
       cabinet: st.cabinet ?? {},
       lastCoalitionDemand: st.lastCoalitionDemand ?? 0,
       imf: st.imf ?? defaultImf(),
@@ -1014,6 +1032,9 @@ export const useGame = create<GameStore>((set, get) => {
 
     // no se puede repetir la misma jugada con el mismo pais mes a mes
     if (cooldownLeft(st.cooldowns, id, target, st.turn) > 0) return;
+    // estructurales: una vez usada no vuelve, y la contraria de un par
+    // toggle necesita que la original ya se haya tomado
+    if (!decisionEligible(dec, st.usedOnce, target)) return;
 
     // el costo sale del tamano del objetivo y de la relacion, y encima pesa
     // la oposicion: gobernar con el Congreso en contra sale mas caro
@@ -1372,11 +1393,13 @@ export const useGame = create<GameStore>((set, get) => {
 
     const p2 = countries[st.playerCode];
 
-    // 8. la oposicion se mueve todos los meses; la encuesta queda registrada
-    const encuesta = poll(p2, st.politics, capital, cabinetVoteBonus(run.cabinet));
+    // 8. la oposicion se mueve todos los meses; la encuesta queda registrada.
+    //    Parte de run.politics (no st.politics): ahi ya esta el lever directo
+    //    de las decisiones de este turno (Delta.opposition, ver runPlan).
+    const encuesta = poll(p2, run.politics, capital, cabinetVoteBonus(run.cabinet));
     let politics: Politics = {
-      ...st.politics,
-      opposition: driftOpposition(st.politics, p2),
+      ...run.politics,
+      opposition: driftOpposition(run.politics, p2),
       pollHistory: [...(st.politics.pollHistory ?? []), { turn, value: encuesta }].slice(-60),
       // la agenda electoral (campaignEvents) oferto coalicion este turno: no
       // se vuelve a ofertar en el mismo mandato, elija lo que elija el jugador
@@ -1464,7 +1487,7 @@ export const useGame = create<GameStore>((set, get) => {
           set({
             turn, world, countries, relations, blocs, disruptions, active, capital,
             politics, election, succession: [], sanctions: run.sanctions, orders: [],
-            cooldowns: run.cooldowns, cabinet: run.cabinet,
+            cooldowns: run.cooldowns, usedOnce: run.usedOnce, cabinet: run.cabinet,
             reactions, lastActions: [],
             pending: [...pending],
             recentEventIds: [...rolled.map((e) => e.id), ...st.recentEventIds].slice(0, 8),
@@ -1522,6 +1545,7 @@ export const useGame = create<GameStore>((set, get) => {
       sanctions: run.sanctions,
       orders: [],
       cooldowns: run.cooldowns,
+      usedOnce: run.usedOnce,
       cabinet: run.cabinet,
       lastCoalitionDemand,
       imf,
