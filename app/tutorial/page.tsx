@@ -38,7 +38,21 @@ const STEPS: { emoji: string; title: string; body: React.ReactNode }[] = [
         Cada decision cuesta Capital Politico. Se regenera solo, un poco cada mes (mas si tu felicidad esta alta,
         el doble durante los primeros 100 dias de mandato). Gobernar con la oposicion fuerte encarece todo; un
         gabinete bien armado lo abarata. Si te quedas sin capital, te quedas sin margen para reaccionar a una
-        crisis — mira siempre cuanto te queda libre antes de comprometerte a un plan grande.
+        crisis — mira siempre cuanto te queda libre antes de comprometerte a un plan grande. Sostener superavit
+        fiscal, inflacion baja y desempleo bajando a la vez suma un bonus extra todos los meses; la corrupcion
+        alta, en cambio, te lo drena.
+      </p>
+    )
+  },
+  {
+    emoji: '🤝',
+    title: 'Capital Diplomatico: un bolsillo aparte para el mundo',
+    body: (
+      <p>
+        Las decisiones de categoria <b>Diplomacia</b> y los movimientos de bloques (ingresar, salir, convocar
+        cumbre) no gastan tu Capital Politico: gastan <b>Capital Diplomatico</b>, un recurso propio, mas escaso,
+        que se regenera con tu presencia en bloques y el bonus pasivo de tu Canciller. Tener a alguien bueno en
+        Exterior te deja hacer mas diplomacia sin resentir tu capacidad de gobernar puertas adentro.
       </p>
     )
   },
@@ -49,6 +63,7 @@ const STEPS: { emoji: string; title: string; body: React.ReactNode }[] = [
       <ul>
         <li><b>Pais</b>: tus indicadores (economia, poblacion, sectores) y acciones bilaterales con otros paises.</li>
         <li><b>Gobierno</b>: tu mandato, intencion de voto, oposicion, politica impositiva y Banco Central.</li>
+        <li><b>Grupos</b>: la popularidad por sector — 5 grupos con intereses propios.</li>
         <li><b>Gabinete</b>: tus cinco ministros — cada uno suma un pasivo mensual y abarata una categoria.</li>
         <li><b>Decisiones</b>: el catalogo completo de acciones que podes tomar, por categoria.</li>
         <li><b>Bloques</b>: alianzas militares, uniones aduaneras y bloques economicos a los que podes sumarte.</li>
@@ -66,6 +81,22 @@ const STEPS: { emoji: string; title: string; body: React.ReactNode }[] = [
         aporta o resta algo distinto todos los meses, y abarata una categoria de decisiones. Sentar a alguien de
         la oposicion te arma una coalicion — mas votos y estabilidad, a cambio de que cada tanto te pase una
         factura que vas a tener que negociar.
+      </p>
+    )
+  },
+  {
+    emoji: '📣',
+    title: 'Grupos: el pueblo no piensa como un solo bloque',
+    body: (
+      <p>
+        Tu felicidad general convive con 5 grupos con intereses propios, visibles en la pestana{' '}
+        <b>Grupos</b>: <b>Empresarios y comerciantes</b> (priorizan inflacion baja, impuestos bajos y
+        desregulacion), <b>Clase media</b> (odia corrupcion, inflacion y desempleo por igual), <b>Clase obrera</b>
+        {' '}(en contra del desempleo y del capital concentrado, a favor de los sindicatos), <b>Clase alta/
+        oligarcas</b> (quieren favores y desregulacion hasta que les toca el bolsillo propio — y controlan los
+        medios: contentos suman Capital Politico, en contra te lo restan) y <b>Los Fieles</b> (tu base, se mueve
+        poco y es la ultima en irse). Cada grupo pesa distinto en tu intencion de voto: una misma decision puede
+        subirte con unos y bajarte con otros a la vez.
       </p>
     )
   },

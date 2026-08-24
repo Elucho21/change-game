@@ -23,6 +23,51 @@ export default function ActualizacionesPage() {
         </p>
 
         <div className="card">
+          <h2>📣 v1.2 — Capital Diplomatico y Popularidad por Sector</h2>
+          <p className="muted" style={{ fontSize: 12, marginTop: -4 }}>
+            El pueblo no piensa como un solo bloque, y la diplomacia deja de vivir del mismo bolsillo que el resto.
+          </p>
+
+          <h3>🤝 Capital Diplomatico</h3>
+          <p>
+            Nuevo recurso, separado del Capital Politico: solo lo gastan y ganan las decisiones de categoria{' '}
+            <b>Diplomacia</b> y los movimientos de bloques (ingresar, salir, convocar cumbre). Arranca mas escaso
+            (25) y se regenera solo con tu presencia en bloques y el bonus pasivo de tu Canciller, que ahora esta
+            enfocado exclusivamente en esto — antes ademas abarataba e inflaba el rendimiento de esas mismas
+            decisiones, un doble beneficio que quedo corregido.
+          </p>
+
+          <h3>📣 Popularidad por sector: 5 grupos</h3>
+          <p>
+            Tu felicidad general ahora convive con 5 grupos con intereses propios, visibles en la pestana nueva{' '}
+            <b>Grupos</b>: <b>Empresarios y comerciantes</b> (priorizan inflacion baja, impuestos bajos y
+            desregulacion), <b>Clase media</b> (odia corrupcion, inflacion y desempleo por igual),{' '}
+            <b>Clase obrera</b> (en contra del desempleo y del capital concentrado, a favor de los sindicatos),{' '}
+            <b>Clase alta/oligarcas</b> (quieren favores y desregulacion hasta que les toca el bolsillo propio —
+            y controlan los medios: contentos suman Capital Politico, en contra te lo restan) y{' '}
+            <b>Los Fieles</b> (tu base, se mueve poco y es la ultima en irse). Cada grupo pesa distinto en tu
+            intencion de voto, no solo por cuanta gente representa sino por cuanto pesa electoralmente.
+          </p>
+
+          <h3>🕵️ Mas herramientas anti-corrupcion</h3>
+          <p>
+            6 decisiones nuevas en <b>Decisiones → Interior</b>, disponibles desde el primer mes — antes, pelear
+            la corrupcion solo era posible con las cartas de Enrique desde el mes 4. Ley de transparencia,
+            organismo de control del gasto publico, independencia judicial, proteccion a denunciantes, auditoria
+            de compras publicas y declaraciones juradas obligatorias. Ninguna es gratis: todas cuestan capital
+            politico.
+          </p>
+
+          <h3>💰 Capital politico: menos bola de nieve, mas premio al buen manejo</h3>
+          <p>
+            El interes por capital ahorrado ahora tiene techo (antes escalaba sin limite con capital alto).
+            A cambio, sostener superavit fiscal, inflacion baja y desempleo bajando a la vez suma un bonus de
+            capital todos los meses. Y la corrupcion alta ahora te drena capital politico mes a mes — otra razon
+            concreta para pelearla, no solo un numero que sube.
+          </p>
+        </div>
+
+        <div className="card">
           <h2>🕵️ v1.1 — Sistema Moral</h2>
           <p className="muted" style={{ fontSize: 12, marginTop: -4 }}>Corrupcion, Justicia y los tres lideres minoritarios.</p>
 
