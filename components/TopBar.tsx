@@ -211,7 +211,7 @@ export default function TopBar({ onGrok, turnFx = false }: { onGrok: () => void;
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', flex: 1 }}>
+      <div className="topbar-stats">
         <Stat label="Capital politico" value={`${Math.round(capital)}`} metric="capital" history={history}
           tone={capital < 20 ? 'bad' : capital > 60 ? 'good' : 'warn'} />
         <Stat label="Felicidad" value={`${p.population.happiness}`} metric="happiness" history={history}

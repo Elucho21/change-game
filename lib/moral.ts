@@ -174,3 +174,46 @@ export function applyMoralEffects(state: MoralState, effects: MoralEffects): Mor
     jhonApoyo: clamp(round(state.jhonApoyo + (effects.jhonApoyo ?? 0)), 0, MINORITY_CAPS.jhon)
   };
 }
+
+// ============================================================
+// PREVIEW (docs/UX_Cartas_Personajes_Emblemas_Banderas.md: "preview de
+// impacto visible antes de confirmar" en cada opcion de EventCard)
+// ============================================================
+
+const MORAL_LABELS: Record<keyof MoralEffects, string> = {
+  corruption: 'Corrupcion',
+  investigacion: 'Investigaciones',
+  corteIntegrity: 'Integridad Corte',
+  corteLealtad: 'Lealtad Corte',
+  favoresActivos: 'Favores activos',
+  environmentIndex: 'Indice ambiental',
+  securityIndex: 'Inseguridad',
+  scandalFactor: 'Escandalo',
+  gustavoApoyo: 'Apoyo Gustavo',
+  amaliaApoyo: 'Apoyo Amalia',
+  jhonApoyo: 'Apoyo Jhon'
+};
+
+/** Subir esto es malo para el jugador (a diferencia de corteIntegrity/environmentIndex, donde subir es bueno). */
+const MORAL_BAD_WHEN_UP: (keyof MoralEffects)[] = [
+  'corruption', 'investigacion', 'corteLealtad', 'favoresActivos',
+  'securityIndex', 'scandalFactor', 'gustavoApoyo', 'amaliaApoyo', 'jhonApoyo'
+];
+
+export interface MoralPreviewItem {
+  key: string;
+  label: string;
+  value: number;
+  tone: 'bueno' | 'malo';
+}
+
+/** Mismo shape/criterio que `previewDelta` (lib/engine.ts), version MoralEffects. */
+export function previewMoralDelta(effects: MoralEffects): MoralPreviewItem[] {
+  return (Object.keys(effects) as (keyof MoralEffects)[])
+    .filter((k) => effects[k] !== undefined && effects[k] !== 0)
+    .map((k) => {
+      const v = effects[k] as number;
+      const bad = MORAL_BAD_WHEN_UP.includes(k) ? v > 0 : v < 0;
+      return { key: k, label: MORAL_LABELS[k] ?? k, value: v, tone: bad ? 'malo' : 'bueno' as const };
+    });
+}

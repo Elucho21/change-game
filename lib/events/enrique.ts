@@ -25,6 +25,7 @@ export const ENRIQUE_EVENTS: GameEvent[] = [
     tags: ['enrique', 'corrupcion'],
     weight: 0,
     duration: 1,
+    characterId: 'enrique_grook',
     description:
       'Mire que coincidencia... resulta que el primo del ministro de Obras tiene una empresa constructora excelente. '
       + 'No es la mas barata, claro. Pero es... confiable. Muy confiable. '
@@ -62,6 +63,7 @@ export const ENRIQUE_EVENTS: GameEvent[] = [
     tags: ['enrique', 'corrupcion'],
     weight: 0,
     duration: 1,
+    characterId: 'enrique_grook',
     description:
       'Hay un puesto libre. Y fijese que casualidad... su cuñado, el hijo de su ministro, el yerno de alguien importante esta "disponible". '
       + 'Podemos poner a alguien competente y que duerma tranquilo, o podemos poner a alguien de la familia y que duerma todavia mas tranquilo. '
@@ -98,6 +100,7 @@ export const ENRIQUE_EVENTS: GameEvent[] = [
     tags: ['enrique', 'corrupcion'],
     weight: 0,
     duration: 1,
+    characterId: 'enrique_grook',
     description:
       'Hay un periodista, o un medio, que esta oliendo algo que no deberia oler. '
       + 'Podemos dejarlo investigar y rezar. Podemos comprarle el silencio, caro pero efectivo. '
@@ -135,6 +138,8 @@ export const ENRIQUE_EVENTS: GameEvent[] = [
     tags: ['enrique', 'corrupcion'],
     weight: 0,
     duration: 1,
+    characterId: 'enrique_grook',
+    urgency: 'important',
     description:
       'La Comision esta tirando del hilo. Y el hilo llega hasta nosotros. '
       + 'Hay dos caminos clasicos: nos hacemos los ofendidos y sacrificamos a alguien, o intentamos enterrar todo y cruzamos los dedos. '
@@ -171,6 +176,7 @@ export const ENRIQUE_EVENTS: GameEvent[] = [
     tags: ['enrique', 'corte'],
     weight: 0,
     duration: 1,
+    characterId: 'enrique_grook',
     description:
       'La Corte tiene vacantes, o jueces que todavia no decidieron de que lado esta el sol. '
       + 'Podemos dejar que el Parlamento elija (democratico y peligroso), empujar a un amigo '
@@ -208,6 +214,7 @@ export const ENRIQUE_EVENTS: GameEvent[] = [
     tags: ['enrique', 'corrupcion'],
     weight: 0,
     duration: 1,
+    characterId: 'enrique_grook',
     description:
       'Hay carpetas. Hay expedientes. Hay testigos que todavia no hablaron. '
       + 'Podemos acelerar el archivo de algunas causas, o dejar que el tiempo haga su trabajo. '
@@ -244,6 +251,8 @@ export const ENRIQUE_EVENTS: GameEvent[] = [
     tags: ['enrique', 'corrupcion'],
     weight: 0,
     duration: 1,
+    characterId: 'enrique_grook',
+    urgency: 'important',
     description:
       'El pueblo esta empezando a oler. Y cuando el pueblo huele, la Comision se pone nerviosa. '
       + 'Podemos hacer una "limpieza de emergencia": destituir a tres o cuatro, anunciar transparencia, llorar un poco en camara. '
@@ -281,6 +290,7 @@ export const ENRIQUE_EVENTS: GameEvent[] = [
     tags: ['enrique', 'corrupcion'],
     weight: 0,
     duration: 1,
+    characterId: 'enrique_grook',
     description:
       'Existen partidas. No estan en el presupuesto oficial. Se llaman de muchas formas elegantes. Yo las llamo "el colchon". '
       + 'Podemos usarlas para cosas discretas, o dejarlas quietas y dormir con la conciencia limpia. '
@@ -317,6 +327,8 @@ export const ENRIQUE_EVENTS: GameEvent[] = [
     tags: ['enrique', 'comision'],
     weight: 0,
     duration: 1,
+    characterId: 'enrique_grook',
+    urgency: 'important',
     description:
       'Le traigo malas noticias, o buenas, segun como se mire. La Comision esta mas cerca de lo que le gustaria. '
       + 'Tienen nombres. Tienen fechas. Tienen entusiasmo. '
@@ -353,6 +365,7 @@ export const ENRIQUE_EVENTS: GameEvent[] = [
     tags: ['enrique', 'comision'],
     weight: 0,
     duration: 1,
+    characterId: 'enrique_grook',
     description:
       'Tenemos gente adentro. No muchos, pero suficientes. Podemos pedirles que diluyan, que pidan mas pruebas, '
       + 'que archiven, o que simplemente se enfermen el dia de la votacion. Eso si: cada favor se cobra, y se cobra caro. '
@@ -389,6 +402,7 @@ export const ENRIQUE_EVENTS: GameEvent[] = [
     tags: ['enrique', 'corrupcion'],
     weight: 0,
     duration: 1,
+    characterId: 'enrique_grook',
     description:
       'Todo esta relativamente calmado. Eso es peligroso: la calma es cuando mas se acumula. '
       + '¿Quiere que empecemos a mover algunas piezas preventivas? O prefiere seguir disfrutando de la ilusion '
@@ -425,6 +439,7 @@ export const ENRIQUE_EVENTS: GameEvent[] = [
     tags: ['enrique', 'ambientacion'],
     weight: 0,
     duration: 1,
+    characterId: 'enrique_grook',
     description:
       '¿Sabe que le paso al presidente de hace doce años? Tambien tenia un Enrique. '
       + 'Tambien penso que controlaba la Comision. Tambien creyo que los jueces eran "suyos". '
@@ -448,6 +463,8 @@ export const ENRIQUE_EVENTS: GameEvent[] = [
     tags: ['enrique', 'crisis'],
     weight: 0,
     duration: 1,
+    characterId: 'enrique_grook',
+    urgency: 'critical',
     description:
       'Llegamos al momento en que las opciones se reducen. Ya no hay maquillaje. Ya no hay tiempo. Quedan tres caminos: '
       + 'el sacrificio grande, el ataque total a la Comision y a la Corte, o el acuerdo secreto y caro con los que todavia se pueden comprar. '

@@ -1,8 +1,10 @@
 'use client';
 
 import { previewDelta } from '@/lib/engine';
+import { previewMoralDelta } from '@/lib/moral';
 import { chosenFor } from '@/lib/orders';
 import { useGame } from '@/lib/store';
+import EventCard from './EventCard';
 
 const TONE: Record<string, string> = { bueno: 'good', malo: 'bad', neutral: 'muted' };
 
@@ -19,36 +21,34 @@ export default function Feed({ turnFx = false }: { turnFx?: boolean }) {
             Tu respuesta queda en el plan y se resuelve al avanzar el mes. Podes cambiarla antes.
           </p>
           {pending.map((p) => (
-            <div className="card" key={p.key} style={{ borderColor: 'var(--warn)' }}>
-              <h4>{p.event.emoji} {p.event.title}</h4>
-              <p>{p.event.description}</p>
-              <div style={{ marginTop: 9 }}>
-                {p.event.choices?.map((c) => {
-                  const cost = c.cost?.capital ?? 0;
-                  const elegida = chosenFor(orders, p.key) === c.id;
-                  return (
-                    <button
-                      key={c.id}
-                      className={`decision${elegida ? ' planned' : ''}`}
-                      disabled={capital < cost}
-                      onClick={() => planChoice(p.key, c.id)}
-                      title={capital < cost ? 'Capital politico insuficiente' : 'Queda en el plan del turno'}
-                    >
-                      <strong>{elegida ? '✓ ' : ''}{c.label} {cost ? <span className="muted">({cost} cap.)</span> : null}</strong>
-                      <small>{c.detail}</small>
-                      <span className="preview">
-                        {previewDelta(c.effects).map((d) => (
-                          <em key={d.key} className={d.tone === 'bueno' ? 'good' : 'bad'}>
-                            {d.label} {d.value > 0 ? '+' : ''}{d.value}
-                          </em>
-                        ))}
-                        {c.risk && <em className="bad">riesgo {Math.round(c.risk.chance * 100)}%: {c.risk.label}</em>}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            <EventCard
+              key={p.key}
+              mode="inline"
+              characterId={p.event.characterId}
+              emoji={p.event.emoji}
+              title={p.event.title}
+              urgency={p.event.urgency}
+              body={p.event.description}
+              options={(p.event.choices ?? []).map((c) => {
+                const cost = c.cost?.capital ?? 0;
+                const elegida = chosenFor(orders, p.key) === c.id;
+                const preview = [
+                  ...previewDelta(c.effects),
+                  ...(c.moralEffects ? previewMoralDelta(c.moralEffects) : [])
+                ];
+                return {
+                  id: c.id,
+                  title: c.label,
+                  description: c.detail + (c.risk ? ` — riesgo ${Math.round(c.risk.chance * 100)}%: ${c.risk.label}` : ''),
+                  costLabel: cost ? `${cost} cap.` : undefined,
+                  preview,
+                  disabled: capital < cost,
+                  disabledReason: capital < cost ? 'Capital politico insuficiente' : undefined,
+                  selected: elegida,
+                  onConfirm: () => planChoice(p.key, c.id)
+                };
+              })}
+            />
           ))}
         </div>
       )}

@@ -24,6 +24,7 @@ export const MINORITY_LEADER_EVENTS: GameEvent[] = [
     tags: ['gustavo', 'protesta'],
     weight: 8,
     duration: 1,
+    characterId: 'gustavo_comun',
     description:
       'Gustavo Comun: "¡El pueblo tomo la plaza porque ustedes no escuchan! O abren dialogo real o esto se va a poner mucho peor."',
     when: (c) => !!c.moral?.onboarded && c.player.economy.unemployment > 12,
@@ -59,6 +60,7 @@ export const MINORITY_LEADER_EVENTS: GameEvent[] = [
     tags: ['gustavo', 'sindicatos'],
     weight: 7,
     duration: 1,
+    characterId: 'gustavo_comun',
     description: 'Gustavo Comun: "Paramos el pais. O hay respuesta o hay mas paro."',
     when: (c) => !!c.moral?.onboarded && c.player.economy.unemployment > 10,
     choices: [
@@ -93,6 +95,7 @@ export const MINORITY_LEADER_EVENTS: GameEvent[] = [
     tags: ['gustavo'],
     weight: 5,
     duration: 1,
+    characterId: 'gustavo_comun',
     description: 'Gustavo Comun: "Esa empresa tiene que ser del pueblo. Nacionalicen o van a tener el conflicto de sus vidas."',
     when: (c) => !!c.moral?.onboarded && c.player.economy.unemployment > 9,
     choices: [
@@ -127,6 +130,7 @@ export const MINORITY_LEADER_EVENTS: GameEvent[] = [
     tags: ['gustavo', 'previsional'],
     weight: 6,
     duration: 1,
+    characterId: 'gustavo_comun',
     description: 'Gustavo Comun: "Quieren robarle a los jubilados para pagarles a los bancos. ¡Esto no lo vamos a permitir!"',
     when: (c) => !!c.moral?.onboarded && c.player.economy.unemployment > 8,
     effects: { capital: -2 },
@@ -142,6 +146,7 @@ export const MINORITY_LEADER_EVENTS: GameEvent[] = [
     tags: ['amalia', 'ambiente'],
     weight: 5,
     duration: 1,
+    characterId: 'amalia_verde',
     description: 'Amalia Verde: "Ese proyecto es un crimen ambiental. Lo vamos a frenar en la calle, en la justicia y en los medios internacionales."',
     when: (c) => !!c.moral?.onboarded && (c.moral?.environmentIndex ?? 100) < 55,
     choices: [
@@ -176,6 +181,7 @@ export const MINORITY_LEADER_EVENTS: GameEvent[] = [
     tags: ['amalia'],
     weight: 4,
     duration: 1,
+    characterId: 'amalia_verde',
     description: 'Amalia Verde: "Presentamos una ley que cambia las reglas del juego. O la apoyan o quedan del lado de los que destruyen."',
     when: (c) => !!c.moral?.onboarded && (c.moral?.environmentIndex ?? 100) < 60,
     choices: [
@@ -210,6 +216,8 @@ export const MINORITY_LEADER_EVENTS: GameEvent[] = [
     tags: ['amalia'],
     weight: 3,
     duration: 1,
+    characterId: 'amalia_verde',
+    urgency: 'important',
     description: 'Amalia Verde: "Ya estamos hablando con organismos internacionales. Esto no se queda en el pais."',
     when: (c) => !!c.moral?.onboarded && (c.moral?.environmentIndex ?? 100) < 40 && (c.moral?.corruption ?? 0) > 45,
     effects: { capital: -5 },
@@ -223,6 +231,7 @@ export const MINORITY_LEADER_EVENTS: GameEvent[] = [
     tags: ['amalia'],
     weight: 4,
     duration: 1,
+    characterId: 'amalia_verde',
     description: 'Amalia Verde: "Podemos ayudarlos a limpiar su imagen. A cambio de gestos ambientales reales, no de discurso."',
     when: (c) => !!c.moral?.onboarded && (c.moral?.corruption ?? 0) > 40,
     choices: [
@@ -252,6 +261,7 @@ export const MINORITY_LEADER_EVENTS: GameEvent[] = [
     tags: ['jhon', 'seguridad'],
     weight: 8,
     duration: 1,
+    characterId: 'jhon_el_duro',
     description: 'Jhon el Duro: "La gente esta en la calle porque ustedes no la protegen. O ponen orden o lo ponemos nosotros."',
     when: (c) => !!c.moral?.onboarded && (c.moral?.securityIndex ?? 0) > 55,
     choices: [
@@ -286,6 +296,7 @@ export const MINORITY_LEADER_EVENTS: GameEvent[] = [
     tags: ['jhon', 'inmigracion'],
     weight: 5,
     duration: 1,
+    characterId: 'jhon_el_duro',
     description: 'Jhon el Duro: "Hay que expulsar a los que delinquen y cerrar la frontera de verdad. Basta de discursos."',
     when: (c) => !!c.moral?.onboarded && (c.moral?.securityIndex ?? 0) > 50,
     choices: [
@@ -320,6 +331,8 @@ export const MINORITY_LEADER_EVENTS: GameEvent[] = [
     tags: ['jhon'],
     weight: 3,
     duration: 1,
+    characterId: 'jhon_el_duro',
+    urgency: 'important',
     description: 'Jhon el Duro: "Las Fuerzas Armadas estan para defender a la patria, tambien de adentro. La gente lo sabe."',
     when: (c) => !!c.moral?.onboarded && (c.moral?.securityIndex ?? 0) > 70,
     effects: { global_tension: 5, capital: 2 },
@@ -333,6 +346,7 @@ export const MINORITY_LEADER_EVENTS: GameEvent[] = [
     tags: ['jhon'],
     weight: 4,
     duration: 1,
+    characterId: 'jhon_el_duro',
     description: 'Jhon el Duro: "Podemos bancarlos. Pero no con discursos. Con hechos. Quiero ver mano dura de verdad."',
     when: (c) => !!c.moral?.onboarded && (c.moral?.securityIndex ?? 0) > 45,
     choices: [

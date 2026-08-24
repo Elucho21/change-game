@@ -269,6 +269,10 @@ export interface GameEvent {
   sectorEffects?: Record<string, number>;
   /** efecto automatico sobre corrupcion/justicia/lideres minoritarios (lib/moral.ts), junto a `effects` */
   moralEffects?: MoralEffects;
+  /** quien habla (lib/characters.ts): 'enrique_grook' | 'gustavo_comun' | 'amalia_verde' | 'jhon_el_duro' */
+  characterId?: string;
+  /** UX/UI v1.1 (components/EventCard.tsx): tag visual de urgencia. Default 'normal' si no se declara. */
+  urgency?: 'normal' | 'important' | 'critical';
 }
 
 export interface EventContext {
