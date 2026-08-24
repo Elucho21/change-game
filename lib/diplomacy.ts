@@ -103,7 +103,8 @@ export const DEFAULT_COOLDOWN: Record<string, number> = {
   diplomacia: 2,
   defensa: 3,
   comunicacion: 4,
-  previsional: 3
+  previsional: 3,
+  infraestructura: 3
 };
 
 /** Meses de espera de una decision: los suyos, o los de su categoria. */

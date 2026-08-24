@@ -451,7 +451,9 @@ export interface ActiveEvent {
 
 export interface Decision {
   id: string;
-  category: 'economia' | 'diplomacia' | 'comercio' | 'interior' | 'defensa' | 'comunicacion' | 'previsional';
+  category:
+    | 'economia' | 'diplomacia' | 'comercio' | 'interior' | 'defensa' | 'comunicacion' | 'previsional'
+    | 'infraestructura';
   label: string;
   emoji: string;
   detail: string;
@@ -542,9 +544,10 @@ export interface Layers {
   capitals: boolean;
   ports: boolean;
   airports: boolean;
+  infraestructura: boolean;
 }
 
-export type PointKind = 'capital' | 'puerto' | 'aeropuerto' | 'chokepoint';
+export type PointKind = 'capital' | 'puerto' | 'aeropuerto' | 'chokepoint' | 'infraestructura';
 
 /** Punto dibujable sobre el globo (pointsData). */
 export interface MapPoint {

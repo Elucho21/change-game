@@ -595,7 +595,9 @@ describe('acciones de gobierno', () => {
   it('cada segmento tiene al menos ocho opciones', () => {
     for (const cat of CATEGORIES) {
       const n = DECISIONS.filter((d) => d.category === cat.id).length;
-      const minimo = cat.id === 'comunicacion' ? 5 : 8;
+      // infraestructura: 4 obras posibles en total (una por tipo, `once: true`),
+      // no un catalogo de opciones repetibles como el resto de las categorias
+      const minimo = cat.id === 'comunicacion' ? 5 : cat.id === 'infraestructura' ? 4 : 8;
       expect(n, `${cat.label} tiene solo ${n} acciones`).toBeGreaterThanOrEqual(minimo);
     }
   });

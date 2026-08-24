@@ -7,6 +7,7 @@ import { damagedSectors, taxEffects } from '@/lib/engine';
 import { goldCapitalCost, goldFiscalDelta, plannedTaxRate, rateCost, type GoldOrder, type RateOrder } from '@/lib/orders';
 import { oppositionSplit } from '@/lib/politics';
 import { confidenceLabel, RATE_MAX, RATE_MIN, RATE_STEP } from '@/lib/centralBank';
+import { INFRA_CONFIG } from '@/lib/infrastructure';
 import Collapsible from './Collapsible';
 
 const GOLD_STEP = 5;
@@ -16,7 +17,7 @@ const GOLD_STEP = 5;
  * Todo lo que se muestra lo calcula el motor; aca solo se dibuja.
  */
 export default function GovernmentPanel() {
-  const { countries, playerCode, politics, turn, capital, taxBase, active, world, centralBank } = useGame();
+  const { countries, playerCode, politics, turn, capital, taxBase, active, world, centralBank, infrastructure } = useGame();
   const planTaxChange = useGame((s) => s.planTaxChange);
   const planGoldOrder = useGame((s) => s.planGoldOrder);
   const planRateChange = useGame((s) => s.planRateChange);
@@ -270,6 +271,23 @@ export default function GovernmentPanel() {
           contrario. Pega desde el mes que viene, no de inmediato. La Confianza es informativa por ahora.
         </p>
       </Collapsible>
+
+      {infrastructure.items.length > 0 && (
+        <Collapsible title="Infraestructura">
+          {infrastructure.items.map((item) => {
+            const cfg = INFRA_CONFIG[item.type];
+            const operativa = item.turnsLeft <= 0;
+            return (
+              <div className="row" key={item.id}>
+                <span>{cfg.emoji} {cfg.label}</span>
+                <b className={operativa ? 'good' : 'warn'}>
+                  {operativa ? 'Operativo' : `${item.turnsLeft} ${item.turnsLeft === 1 ? 'mes' : 'meses'}`}
+                </b>
+              </div>
+            );
+          })}
+        </Collapsible>
+      )}
 
       {(danados.length > 0 || active.length > 0) && (
         <Collapsible title="Situacion">

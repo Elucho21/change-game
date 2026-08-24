@@ -51,7 +51,7 @@ export default function GlobeView({ turnFx = false }: { turnFx?: boolean }) {
 
   const {
     countries, relations, blocs, playerCode, selected, mapMode, sanctions, pending,
-    layers, disruptions, turn
+    layers, disruptions, turn, infrastructure
   } = useGame(
     useShallow((s) => ({
       countries: s.countries,
@@ -64,7 +64,8 @@ export default function GlobeView({ turnFx = false }: { turnFx?: boolean }) {
       pending: s.pending,
       layers: s.layers,
       disruptions: s.disruptions,
-      turn: s.turn
+      turn: s.turn,
+      infrastructure: s.infrastructure
     }))
   );
   const select = useGame((s) => s.select);
@@ -235,12 +236,12 @@ export default function GlobeView({ turnFx = false }: { turnFx?: boolean }) {
 
   const points = useMemo(() => {
     if (!layers.points) return [] as Record<string, unknown>[];
-    return visiblePoints(layers, disruptions, turn).map((pt) => ({
+    return visiblePoints(layers, disruptions, turn, infrastructure, countries[playerCode]).map((pt) => ({
       ...pt,
       color: POINT_COLORS[pt.kind] ?? '#fff',
       radius: pt.kind === 'capital' ? 0.35 : 0.25
     }));
-  }, [layers, disruptions, turn]);
+  }, [layers, disruptions, turn, infrastructure, countries, playerCode]);
 
   const rings = useMemo(() => {
     const out: Record<string, unknown>[] = [];
@@ -303,6 +304,7 @@ export default function GlobeView({ turnFx = false }: { turnFx?: boolean }) {
         <button className={layers.points && layers.capitals ? 'on' : ''} onClick={() => toggleLayer('capitals')} disabled={!layers.points}>Capitales</button>
         <button className={layers.points && layers.ports ? 'on' : ''} onClick={() => toggleLayer('ports')} disabled={!layers.points}>Puertos</button>
         <button className={layers.points && layers.airports ? 'on' : ''} onClick={() => toggleLayer('airports')} disabled={!layers.points}>Aeropuertos</button>
+        <button className={layers.points && layers.infraestructura ? 'on' : ''} onClick={() => toggleLayer('infraestructura')} disabled={!layers.points}>Infraestructura</button>
       </div>
       {features.length === 0 && (
         <div className="globe-loading">

@@ -50,6 +50,10 @@ import {
   applyGroupEffects, defaultPopularGroups, mediaCapitalEffect, notableGroupSwing, tickPopularGroups
 } from './popularGroups';
 import { applyRateChange, defaultCentralBank, type CentralBankState } from './centralBank';
+import {
+  corruptionCostMultiplier, defaultInfrastructure, INFRA_CONFIG, INFRA_DECISION_TYPE, startInfrastructure,
+  type InfrastructureState
+} from './infrastructure';
 import { ENRIQUE_ONBOARDING_TURN, enriqueEvents } from './events/enrique';
 import { buildMilestones, type Milestone } from './milestones';
 import type {
@@ -158,6 +162,8 @@ interface GameStore {
   groups: PopularGroupsState;
   /** Banco Central: tasa de interes + Confianza (Change World Game v1.2) */
   centralBank: CentralBankState;
+  /** Infraestructura del jugador: aeropuerto, puerto, base militar, centro de datos IA (Change World Game v1.3) */
+  infrastructure: InfrastructureState;
   /** hitos institucionales de toda la partida, para el recap de fin de partida (lib/milestones.ts, lib/recap.ts) */
   milestones: Milestone[];
   /** onboarding de Enrique (mes 4) o su carta actual, esperando al jugador en pantalla completa */
@@ -246,7 +252,7 @@ const initial = () => ({
   mapMode: 'relaciones' as MapMode,
   layers: {
     diplomacia: true, comercio: true, rutas: true,
-    points: true, capitals: false, ports: true, airports: true
+    points: true, capitals: false, ports: true, airports: true, infraestructura: true
   } as Layers,
   savedGame: null as SavedGame['summary'] | null,
   disruptions: {} as Record<string, number>,
@@ -270,6 +276,7 @@ const initial = () => ({
   moral: defaultMoral(),
   groups: defaultPopularGroups(),
   centralBank: defaultCentralBank(),
+  infrastructure: defaultInfrastructure(),
   milestones: [] as Milestone[],
   pendingEnrique: null as PendingEnrique,
   election: null as ElectionResult | null,
@@ -315,6 +322,7 @@ function snapshot(st: GameStore): PersistedState {
     moral: st.moral,
     groups: st.groups,
     centralBank: st.centralBank,
+    infrastructure: st.infrastructure,
     pendingEnrique: st.pendingEnrique,
     milestones: st.milestones,
     gameOver: st.gameOver
@@ -345,6 +353,11 @@ function decisionCost(st: GameStore, dec: Decision, baseCost: number): number {
       surplusLowInflation: e.fiscal_balance >= 0 && e.inflation < 5,
       capitalHigh: st.capital > 15
     });
+  }
+  // infraestructura: la coima se lleva una parte del capital politico que
+  // cuesta imponerla, igual que se lleva parte de la caja (lib/infrastructure.ts)
+  if (dec.category === 'infraestructura') {
+    factor *= corruptionCostMultiplier(st.moral.corruption);
   }
   return Math.max(1, Math.round(baseCost * factor));
 }
@@ -379,6 +392,8 @@ interface PlanRun {
   groups: PopularGroupsState;
   /** Banco Central despues de un cambio de tasa planificado (decision, orden directa, o carta de evento) */
   centralBank: CentralBankState;
+  /** infraestructura despues de una obra nueva planificada este turno */
+  infrastructure: InfrastructureState;
 }
 
 /**
@@ -409,7 +424,8 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
     usedOnce: [...st.usedOnce],
     moral: st.moral,
     groups: st.groups,
-    centralBank: st.centralBank
+    centralBank: st.centralBank,
+    infrastructure: st.infrastructure
   };
 
   const log = (emoji: string, title: string, body: string, tone: FeedItem['tone'] = 'neutral') => {
@@ -459,6 +475,14 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
       }
       if (dec.id === 'subir_tasa') {
         run.centralBank = applyRateChange(run.centralBank, 2);
+      }
+      const infraType = INFRA_DECISION_TYPE[dec.id];
+      if (infraType) {
+        const { item, fiscalCost } = startInfrastructure(infraType, run.moral.corruption);
+        run.infrastructure = { items: [...run.infrastructure.items, item] };
+        if (fiscalCost) {
+          applyDelta(run.countries[st.playerCode], { fiscal_balance: -fiscalCost }, run.world);
+        }
       }
       if (dec.effects.opposition) {
         run.politics = {
@@ -840,6 +864,7 @@ export const useGame = create<GameStore>((set, get) => {
     pension: st.pension,
     employment: st.employment,
     centralBank: st.centralBank,
+    infrastructure: st.infrastructure,
     // sin esto, el preview de "eventos que se habilitan/desactivan" nunca ve
     // los eventos gateados en moral (mismo bug que en eventExtraOf de endTurn)
     moral: st.moral
@@ -998,6 +1023,7 @@ export const useGame = create<GameStore>((set, get) => {
       moral: st.moral ?? defaultMoral(),
       groups: st.groups ?? defaultPopularGroups(),
       centralBank: st.centralBank ?? defaultCentralBank(),
+      infrastructure: st.infrastructure ?? defaultInfrastructure(),
       pendingEnrique: st.pendingEnrique ?? null,
       milestones: st.milestones ?? [],
       gameOver: st.gameOver
@@ -1397,7 +1423,9 @@ export const useGame = create<GameStore>((set, get) => {
       pension: run.pension,
       employment: st.employment,
       // idem run.pension: run.centralBank ya trae el cambio de tasa del plan
-      centralBank: run.centralBank
+      centralBank: run.centralBank,
+      // idem: run.infrastructure ya trae la obra nueva planificada este turno
+      infrastructure: run.infrastructure
     });
     const turn = tick.state.turn;
     const active = tick.state.active;
@@ -1406,6 +1434,7 @@ export const useGame = create<GameStore>((set, get) => {
     const pension = tick.state.pension ?? st.pension;
     const employment = tick.state.employment ?? st.employment;
     const centralBank = tick.state.centralBank ?? st.centralBank;
+    const infrastructure = tick.state.infrastructure ?? st.infrastructure;
 
     if (tick.oilShockApplied > 0) {
       feed.push({
@@ -1413,6 +1442,16 @@ export const useGame = create<GameStore>((set, get) => {
         title: 'Rutas maritimas interrumpidas',
         body: `El bloqueo sigue activo: el barril sube a ${world.oil_price} USD y el flete de larga distancia se encarece.`,
         tone: 'malo'
+      });
+    }
+
+    for (const item of tick.infrastructureCompleted) {
+      const cfg = INFRA_CONFIG[item.type];
+      feed.push({
+        turn, date: dateLabel(world), kind: 'sistema', emoji: cfg.emoji,
+        title: `${cfg.label}: obra terminada`,
+        body: 'Queda operativa desde este mes: entrega su bono todos los meses de ahora en mas.',
+        tone: 'bueno'
       });
     }
 
@@ -1747,7 +1786,7 @@ export const useGame = create<GameStore>((set, get) => {
           turn, world, countries, relations, blocs, disruptions, active, capital, capitalDiplomatico,
           politics, election, succession: [], sanctions: run.sanctions, orders: [],
           cooldowns: run.cooldowns, usedOnce: run.usedOnce, cabinet: run.cabinet,
-          imf, street, pension, employment, moral, groups, centralBank, pendingEnrique,
+          imf, street, pension, employment, moral, groups, centralBank, infrastructure, pendingEnrique,
           reactions, lastActions: [],
           pending: [...pending],
           recentEventIds: [...rolled.map((e) => e.id), ...st.recentEventIds].slice(0, 8),
@@ -1799,7 +1838,7 @@ export const useGame = create<GameStore>((set, get) => {
             turn, world, countries, relations, blocs, disruptions, active, capital, capitalDiplomatico,
             politics, election, succession: [], sanctions: run.sanctions, orders: [],
             cooldowns: run.cooldowns, usedOnce: run.usedOnce, cabinet: run.cabinet,
-            moral, groups, centralBank, pendingEnrique,
+            moral, groups, centralBank, infrastructure, pendingEnrique,
             reactions, lastActions: [],
             pending: [...pending],
             recentEventIds: [...rolled.map((e) => e.id), ...st.recentEventIds].slice(0, 8),
@@ -1879,6 +1918,7 @@ export const useGame = create<GameStore>((set, get) => {
       moral,
       groups,
       centralBank,
+      infrastructure,
       pendingEnrique,
       reactions,
       lastActions: [],

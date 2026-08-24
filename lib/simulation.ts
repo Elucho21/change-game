@@ -23,6 +23,10 @@ import { applyPensionReform, defaultPension, tickPension, type PensionState } fr
 import { defaultEmployment, tickEmployment, type EmploymentState } from './employment';
 import { deflationReserveGrowth } from './deflation';
 import { applyRateChange, defaultCentralBank, rateEconomicEffect, tickCentralBank, type CentralBankState } from './centralBank';
+import {
+  defaultInfrastructure, INFRA_DECISION_TYPE, startInfrastructure, tickInfrastructure,
+  type InfrastructureItem, type InfrastructureState
+} from './infrastructure';
 import type { MoralState } from './types';
 
 /**
@@ -71,6 +75,8 @@ export interface SimState {
   employment?: EmploymentState;
   /** Banco Central: tasa de interes + Confianza (lib/centralBank.ts). Si falta, el tick lo crea. */
   centralBank?: CentralBankState;
+  /** Infraestructura del jugador (lib/infrastructure.ts). Si falta, el tick lo crea. */
+  infrastructure?: InfrastructureState;
   /**
    * Sistema moral del jugador (lib/moral.ts). Se pisa/tickea en lib/store.ts
    * endTurn (no adentro de deterministicTick): solo se carga aca para que
@@ -220,6 +226,8 @@ export interface TickResult {
   state: SimState;
   /** cuanto subio el barril por rutas cerradas (0 si no hay bloqueos) */
   oilShockApplied: number;
+  /** obras de infraestructura que pasaron a operativas este turno, para narrar en el feed */
+  infrastructureCompleted: InfrastructureItem[];
 }
 
 /**
@@ -349,6 +357,12 @@ export function deterministicTick(s: SimState): TickResult {
   const reserveGrowth = deflationReserveGrowth(player.economy.inflation, player.economy.gold_reserves_tonnes);
   if (reserveGrowth) applyDelta(player, { gold_reserves_tonnes: reserveGrowth }, s.world);
 
+  // infraestructura (Change World Game v1.3): decrementa las obras en curso y
+  // aplica el bono pasivo de toda obra ya operativa (no solo la que completa este mes)
+  const infraTick = tickInfrastructure(s.infrastructure ?? defaultInfrastructure());
+  if (Object.keys(infraTick.passiveDeltas).length) applyDelta(player, infraTick.passiveDeltas, s.world);
+  s.infrastructure = infraTick.state;
+
   // rutas cerradas: el barril sube mientras dure el bloqueo
   const shock = oilShock(s.disruptions, s.turn);
   if (shock > 0) {
@@ -374,7 +388,7 @@ export function deterministicTick(s: SimState): TickResult {
     s.capitalDiplomatico, blocMemberships, s.cabinet ? cabinetDiplomaticBonus(s.cabinet) : 0, honeymoon
   );
 
-  return { state: s, oilShockApplied: shock };
+  return { state: s, oilShockApplied: shock, infrastructureCompleted: infraTick.justCompleted };
 }
 
 /** Aplica una decision sobre un estado simulado (sin tocar el store). */
@@ -398,6 +412,13 @@ export function applyDecisionTo(s: SimState, dec: Decision, target?: string): Si
   }
   if (dec.id === 'subir_tasa') {
     s.centralBank = applyRateChange(s.centralBank ?? defaultCentralBank(), 2);
+  }
+  const infraType = INFRA_DECISION_TYPE[dec.id];
+  if (infraType) {
+    const infra = s.infrastructure ?? defaultInfrastructure();
+    const { item, fiscalCost } = startInfrastructure(infraType, s.moral?.corruption ?? 0);
+    s.infrastructure = { items: [...infra.items, item] };
+    if (fiscalCost) applyDelta(s.countries[s.playerCode], { fiscal_balance: -fiscalCost }, s.world);
   }
 
   // diplomacia gasta y rinde en el pool de capital diplomatico, no en el politico

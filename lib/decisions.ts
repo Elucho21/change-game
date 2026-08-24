@@ -1,4 +1,5 @@
 import type { Decision } from './types';
+import { INFRA_CONFIG } from './infrastructure';
 
 /**
  * Decisiones que el jugador puede tomar en cualquier turno.
@@ -775,6 +776,63 @@ export const DECISIONS: Decision[] = [
     detail: 'La unica reforma previsional que suma Capital Politico neto: mas gente aportando, mas empleo formal, sin sacarle nada a nadie.',
     cost: { capital: 1 },
     effects: { capital: 4, happiness: 1, opposition: -2 }
+  },
+  // ---------------- INFRAESTRUCTURA ----------------
+  // Maximo una obra de cada tipo en toda la partida (`once: true`). El costo
+  // de caja real (corrupcion incluida) se cobra en lib/store.ts/lib/simulation.ts
+  // via lib/infrastructure.ts::startInfrastructure, no aca: `cost.fiscal` es
+  // solo el valor de referencia que se muestra en el catalogo.
+  {
+    id: 'construir_aeropuerto',
+    category: 'infraestructura',
+    label: INFRA_CONFIG.aeropuerto.label,
+    emoji: INFRA_CONFIG.aeropuerto.emoji,
+    detail: 'Conecta el pais con el mundo: mas turismo y comercio de alto valor desde que queda operativo.',
+    cost: { capital: INFRA_CONFIG.aeropuerto.costCapital, fiscal: INFRA_CONFIG.aeropuerto.costFiscal },
+    once: true,
+    when: (c) =>
+      c.player.population.stability >= INFRA_CONFIG.aeropuerto.minStability
+      && (c.moral?.corruption ?? 0) <= INFRA_CONFIG.aeropuerto.maxCorruption,
+    effects: {}
+  },
+  {
+    id: 'construir_puerto',
+    category: 'infraestructura',
+    label: INFRA_CONFIG.puerto_aguas_profundas.label,
+    emoji: INFRA_CONFIG.puerto_aguas_profundas.emoji,
+    detail: 'Terminal de aguas profundas para buques de ultima generacion: mas comercio y recaudacion aduanera.',
+    cost: { capital: INFRA_CONFIG.puerto_aguas_profundas.costCapital, fiscal: INFRA_CONFIG.puerto_aguas_profundas.costFiscal },
+    once: true,
+    when: (c) =>
+      c.player.population.stability >= INFRA_CONFIG.puerto_aguas_profundas.minStability
+      && (c.moral?.corruption ?? 0) <= INFRA_CONFIG.puerto_aguas_profundas.maxCorruption,
+    effects: {}
+  },
+  {
+    id: 'construir_base_militar',
+    category: 'infraestructura',
+    label: INFRA_CONFIG.base_militar.label,
+    emoji: INFRA_CONFIG.base_militar.emoji,
+    detail: 'Presencia militar permanente: disuasion real y estabilidad interna desde que queda operativa.',
+    cost: { capital: INFRA_CONFIG.base_militar.costCapital, fiscal: INFRA_CONFIG.base_militar.costFiscal },
+    once: true,
+    when: (c) =>
+      c.player.population.stability >= INFRA_CONFIG.base_militar.minStability
+      && (c.moral?.corruption ?? 0) <= INFRA_CONFIG.base_militar.maxCorruption,
+    effects: {}
+  },
+  {
+    id: 'construir_datacenter',
+    category: 'infraestructura',
+    label: INFRA_CONFIG.centro_datos_ia.label,
+    emoji: INFRA_CONFIG.centro_datos_ia.emoji,
+    detail: 'Computo de punta: atrae inversion tecnologica y suma crecimiento y humor social desde que queda operativo.',
+    cost: { capital: INFRA_CONFIG.centro_datos_ia.costCapital, fiscal: INFRA_CONFIG.centro_datos_ia.costFiscal },
+    once: true,
+    when: (c) =>
+      c.player.population.stability >= INFRA_CONFIG.centro_datos_ia.minStability
+      && (c.moral?.corruption ?? 0) <= INFRA_CONFIG.centro_datos_ia.maxCorruption,
+    effects: {}
   }
 ];
 
@@ -788,5 +846,6 @@ export const CATEGORIES: { id: Decision['category']; label: string; emoji: strin
   { id: 'diplomacia', label: 'Diplomacia', emoji: '🤝' },
   { id: 'defensa', label: 'Defensa', emoji: '🎖️' },
   { id: 'comunicacion', label: 'Comunicacion', emoji: '📣' },
-  { id: 'previsional', label: 'Previsional', emoji: '👴' }
+  { id: 'previsional', label: 'Previsional', emoji: '👴' },
+  { id: 'infraestructura', label: 'Infraestructura', emoji: '🏗️' }
 ];

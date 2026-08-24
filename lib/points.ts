@@ -1,5 +1,6 @@
 import data from './data/countries.gen.json';
 import { CHOKEPOINTS } from './routes';
+import { INFRA_CONFIG, type InfrastructureState } from './infrastructure';
 import type { Country, Layers, MapPoint } from './types';
 
 /**
@@ -133,8 +134,43 @@ export const POINT_COLORS: Record<MapPoint['kind'], string> = {
   capital: '#f5d76e',
   puerto: '#37c98a',
   aeropuerto: '#9b6cf5',
-  chokepoint: '#7f8ea8'
+  chokepoint: '#7f8ea8',
+  infraestructura: '#ff9f43'
 };
+
+/**
+ * Chico offset fijo por tipo, para que las 4 obras no se dibujen todas
+ * pegadas encima de la capital cuando el jugador las va terminando.
+ * No hay selector de ubicacion (el motor no tiene sub-regiones hoy):
+ * la infraestructura siempre se construye "en el pais".
+ */
+const INFRA_OFFSET: Record<InfrastructureState['items'][number]['type'], [number, number]> = {
+  aeropuerto: [0.6, 0.6],
+  puerto_aguas_profundas: [-0.6, 0.6],
+  base_militar: [0.6, -0.6],
+  centro_datos_ia: [-0.6, -0.6]
+};
+
+/** Infraestructura del jugador: en obra o ya operativa, siempre cerca de su capital. */
+export function infrastructurePoints(infra: InfrastructureState, player: Country): MapPoint[] {
+  return infra.items.map((item) => {
+    const cfg = INFRA_CONFIG[item.type];
+    const [dLat, dLng] = INFRA_OFFSET[item.type];
+    const operativa = item.turnsLeft <= 0;
+    return {
+      id: `infra-${item.id}`,
+      kind: 'infraestructura' as const,
+      name: operativa ? cfg.label : `${cfg.label} (en obra, ${item.turnsLeft} ${item.turnsLeft === 1 ? 'mes' : 'meses'})`,
+      lat: player.lat + dLat,
+      lng: player.lng + dLng,
+      country: player.code,
+      weight: operativa ? 0.8 : 0.4,
+      description: operativa
+        ? 'Operativa: entrega su bono todos los meses.'
+        : `En construccion: faltan ${item.turnsLeft} de ${item.totalTurns} meses.`
+    };
+  });
+}
 
 /**
  * Todos los puntos visibles segun las capas activas.
@@ -143,7 +179,9 @@ export const POINT_COLORS: Record<MapPoint['kind'], string> = {
 export function visiblePoints(
   layers: Layers,
   disruptions: Record<string, number>,
-  turn: number
+  turn: number,
+  infra?: InfrastructureState,
+  player?: Country
 ): MapPoint[] {
   if (!layers.points) return [];
   const out: MapPoint[] = [];
@@ -151,6 +189,7 @@ export function visiblePoints(
   if (layers.capitals) out.push(...CAPITALS);
   if (layers.ports) out.push(...PORTS);
   if (layers.airports) out.push(...AIRPORTS);
+  if (layers.infraestructura && infra && player) out.push(...infrastructurePoints(infra, player));
   return out;
 }
 
