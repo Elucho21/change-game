@@ -23,6 +23,47 @@ export default function ActualizacionesPage() {
         </p>
 
         <div className="card">
+          <h2>🏗️ v1.3 — Banco Central, Infraestructura y Decisiones Contextuales</h2>
+          <p className="muted" style={{ fontSize: 12, marginTop: -4 }}>
+            La tasa de interes ahora tiene memoria, el mapa se vuelve una herramienta de poder, y el catalogo
+            de decisiones reacciona al estado real de tu pais.
+          </p>
+
+          <h3>🏦 Banco Central: tasa de interes persistente</h3>
+          <p>
+            Subir o bajar la tasa (panel <b>Gobierno → Banco Central</b>) ya no es un golpe de una sola vez:
+            queda fija mes a mes, pega sobre inflacion y crecimiento todos los turnos mientras siga alta o baja,
+            y mueve el tipo de cambio. Un indice de <b>Confianza</b> (informativo por ahora) reacciona a
+            inflacion, deuda y reservas.
+          </p>
+
+          <h3>🏗️ Infraestructura: cuatro obras que se sienten en el mapa</h3>
+          <p>
+            Nueva categoria de decisiones <b>Infraestructura</b>: Aeropuerto Internacional, Puerto de Aguas
+            Profundas, Base Militar y Centro de Datos IA — una de cada una por partida. Cada obra tarda varios
+            meses en construirse (se ve la cuenta regresiva en <b>Gobierno → Infraestructura</b> y en el mapa),
+            cuesta capital politico y caja de una sola vez, y al quedar operativa entrega un bono pasivo todos
+            los meses (crecimiento, felicidad, estabilidad o balance fiscal segun el tipo). La corrupcion alta
+            encarece la obra y la alarga: otra razon mas para pelearla.
+          </p>
+
+          <h3>🎯 Decisiones que reaccionan a tu pais</h3>
+          <p>
+            Algunas decisiones (por ahora, las de Infraestructura) exigen condiciones minimas — estabilidad
+            suficiente, corrupcion no demasiado alta — y directamente desaparecen del catalogo si no las cumplis,
+            en vez de mostrarse deshabilitadas. La base para que mas decisiones reaccionen asi en el futuro ya
+            esta wireada.
+          </p>
+
+          <h3>🐛 Un bug de deficit corregido</h3>
+          <p>
+            Algunas elecciones de eventos con costo fiscal (por ejemplo, negociar con piqueteros) te estaban
+            cobrando el doble de lo que decia el cartel, desde antes de esta version. Ya esta corregido: lo que
+            ves es lo que se cobra.
+          </p>
+        </div>
+
+        <div className="card">
           <h2>📣 v1.2 — Capital Diplomatico y Popularidad por Sector</h2>
           <p className="muted" style={{ fontSize: 12, marginTop: -4 }}>
             El pueblo no piensa como un solo bloque, y la diplomacia deja de vivir del mismo bolsillo que el resto.

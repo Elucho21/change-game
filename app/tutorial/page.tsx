@@ -101,6 +101,33 @@ const STEPS: { emoji: string; title: string; body: React.ReactNode }[] = [
     )
   },
   {
+    emoji: '🏦',
+    title: 'Banco Central: la tasa tiene memoria',
+    body: (
+      <p>
+        En <b>Gobierno → Banco Central</b> podes subir o bajar la tasa de interes de a un punto. A diferencia de
+        una decision comun, el cambio queda fijo: pega sobre inflacion y crecimiento todos los meses mientras
+        siga alta o baja (no solo el mes que la moviste), y tambien mueve el tipo de cambio. La Confianza que se
+        ve al lado es informativa por ahora.
+      </p>
+    )
+  },
+  {
+    emoji: '🏗️',
+    title: 'Infraestructura: obras que se sienten en el mapa',
+    body: (
+      <p>
+        En <b>Decisiones → Infraestructura</b> podes construir, una vez cada una por partida, un Aeropuerto
+        Internacional, un Puerto de Aguas Profundas, una Base Militar o un Centro de Datos IA. Cada obra tarda
+        varios meses (la cuenta regresiva se ve en <b>Gobierno → Infraestructura</b> y en el mapa, capa
+        &quot;Infraestructura&quot;), cuesta capital politico y caja de una sola vez, y al terminar entrega un bono todos
+        los meses — corrupcion alta encarece y alarga la obra. Algunas de estas decisiones piden un minimo de
+        estabilidad o un maximo de corrupcion para aparecer en el catalogo: si tu pais no las cumple, no las vas
+        a ver hasta que las cumpla.
+      </p>
+    )
+  },
+  {
     emoji: '🗳️',
     title: 'Elecciones',
     body: (
