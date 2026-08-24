@@ -23,6 +23,22 @@ export default function ActualizacionesPage() {
         </p>
 
         <div className="card">
+          <h2>🗞️ v1.35 — Cronica de fin de turno</h2>
+          <p className="muted" style={{ fontSize: 12, marginTop: -4 }}>
+            Al cerrar el mes ya no solo ves numeros que subieron o bajaron: ves un informe corto de que paso.
+          </p>
+
+          <h3>🗞️ Un informe, no una lista de deltas</h3>
+          <p>
+            Cada turno arma un resumen de 4 a 6 lineas al tope del feed, con icono <b>🗞️</b>: como se movio tu
+            comercio contra el arranque de la partida y quien es tu principal socio, si hubo tension en las rutas
+            y el petroleo, que hicieron las otras potencias, que evento mundial paso, y como esta tu estabilidad
+            o tu desempleo. La idea es que en 10 segundos sepas que paso afuera y adentro, no solo que indicador
+            se movio.
+          </p>
+        </div>
+
+        <div className="card">
           <h2>🏗️ v1.3 — Banco Central, Infraestructura y Decisiones Contextuales</h2>
           <p className="muted" style={{ fontSize: 12, marginTop: -4 }}>
             La tasa de interes ahora tiene memoria, el mapa se vuelve una herramienta de poder, y el catalogo
