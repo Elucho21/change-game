@@ -9,6 +9,7 @@ import type { Cabinet } from './cabinet';
 import type { PensionState } from './pension';
 import type { EmploymentState } from './employment';
 import type { Milestone } from './milestones';
+import type { CentralBankState } from './centralBank';
 
 /**
  * Guardado de partida en localStorage.
@@ -87,6 +88,8 @@ export interface PersistedState {
   moral?: MoralState;
   /** popularidad por sector (Change World Game v1.2). Opcional: los saves anteriores no lo traen. */
   groups?: PopularGroupsState;
+  /** Banco Central: tasa de interes + Confianza (Change World Game v1.2). Opcional: saves anteriores no lo traen. */
+  centralBank?: CentralBankState;
   /** onboarding/carta de Enrique esperando resolucion. Opcional: los saves anteriores no lo traen. */
   pendingEnrique?: PendingEnrique;
   /** hitos institucionales para el recap de fin de partida (lib/milestones.ts). Opcional: saves anteriores no lo traen. */

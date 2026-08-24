@@ -100,6 +100,13 @@ describe('FX pressure', () => {
     const next = applyFx(FX_START, DEVALUE_JUMP);
     expect(next).toBeGreaterThan(FX_START);
   });
+
+  it('una tasa contractiva alta resta presion, aditivo, sin tocar el resto de la formula (v1.2)', () => {
+    const base = { inflation: 40, fiscal: -5, debt: 120, imfStage: 'program' as const, monthsRising: 3 };
+    const sinTasa = fxPressure(base);
+    const conTasaAlta = fxPressure({ ...base, rate: 25 });
+    expect(conTasaAlta).toBeLessThan(sinTasa);
+  });
 });
 
 const RAW = data as unknown as {

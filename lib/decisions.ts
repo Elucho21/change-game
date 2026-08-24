@@ -48,9 +48,9 @@ export const DECISIONS: Decision[] = [
     category: 'economia',
     label: 'Subir la tasa de interes',
     emoji: '🏦',
-    detail: 'Ancla la inflacion y frena el credito.',
+    detail: 'El Banco Central sube la tasa 2 puntos: ancla la inflacion via el motor monetario y frena el credito desde el mes que viene.',
     cost: { capital: 6 },
-    effects: { inflation: -1.8, gdp_growth: -0.5, unemployment: 0.2 }
+    effects: { unemployment: 0.15, happiness: -0.5 }
   },
   {
     id: 'emitir',

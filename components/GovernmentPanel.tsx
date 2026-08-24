@@ -4,8 +4,9 @@ import { useGame } from '@/lib/store';
 import { monthsToElection, needsSuccessor, oppositionCostFactor } from '@/lib/politics';
 import { systemOf } from '@/lib/electoral';
 import { damagedSectors, taxEffects } from '@/lib/engine';
-import { goldCapitalCost, goldFiscalDelta, plannedTaxRate, type GoldOrder } from '@/lib/orders';
+import { goldCapitalCost, goldFiscalDelta, plannedTaxRate, rateCost, type GoldOrder, type RateOrder } from '@/lib/orders';
 import { oppositionSplit } from '@/lib/politics';
+import { confidenceLabel, RATE_MAX, RATE_MIN, RATE_STEP } from '@/lib/centralBank';
 import Collapsible from './Collapsible';
 
 const GOLD_STEP = 5;
@@ -15,9 +16,10 @@ const GOLD_STEP = 5;
  * Todo lo que se muestra lo calcula el motor; aca solo se dibuja.
  */
 export default function GovernmentPanel() {
-  const { countries, playerCode, politics, turn, capital, taxBase, active, world } = useGame();
+  const { countries, playerCode, politics, turn, capital, taxBase, active, world, centralBank } = useGame();
   const planTaxChange = useGame((s) => s.planTaxChange);
   const planGoldOrder = useGame((s) => s.planGoldOrder);
+  const planRateChange = useGame((s) => s.planRateChange);
   const orders = useGame((s) => s.orders);
   const currentPoll = useGame((s) => s.currentPoll);
 
@@ -221,6 +223,51 @@ export default function GovernmentPanel() {
           Comprar oro cuesta caja pero mejora el tipo de cambio (mas reservas, menos presion). Vender oro
           entra caja al balance fiscal de inmediato (menos que lo que cuesta comprar: hay diferencia entre
           precio de compra y venta), util para tapar un bache o financiar un plan sin subir impuestos.
+        </p>
+
+        <div className="row" style={{ marginTop: 10 }}>
+          <span>Tasa de politica</span>
+          <b>{centralBank.rate}%</b>
+        </div>
+        <div className="row">
+          <span>Confianza</span>
+          <b className={centralBank.confidence < 40 ? 'bad' : centralBank.confidence > 65 ? 'good' : 'warn'}>
+            {centralBank.confidence}/100 · {confidenceLabel(centralBank.confidence)}
+          </b>
+        </div>
+
+        {(() => {
+          const rateOrder = orders.find((o): o is RateOrder => o.kind === 'rate');
+          const planned = rateOrder ? centralBank.rate + rateOrder.delta : null;
+          return (
+            <div className="row">
+              <span>Plan del turno</span>
+              <b className={rateOrder ? (rateOrder.delta > 0 ? 'warn' : 'good') : 'muted'}>
+                {rateOrder ? `${rateOrder.label} → ${planned}%` : 'nada planeado'}
+              </b>
+            </div>
+          );
+        })()}
+
+        <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+          <button
+            onClick={() => planRateChange(-RATE_STEP)}
+            disabled={capital < rateCost(RATE_STEP) || centralBank.rate <= RATE_MIN}
+            title={`Costo estimado: ${rateCost(RATE_STEP)} cap.`}
+          >
+            🏦⬇️ Bajar {RATE_STEP}pt
+          </button>
+          <button
+            onClick={() => planRateChange(RATE_STEP)}
+            disabled={capital < rateCost(RATE_STEP) || centralBank.rate >= RATE_MAX}
+            title={`Costo estimado: ${rateCost(RATE_STEP)} cap.`}
+          >
+            🏦⬆️ Subir {RATE_STEP}pt
+          </button>
+        </div>
+        <p className="muted" style={{ fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>
+          Subir la tasa ancla la inflacion y frena la depreciacion, a costa de crecimiento; bajarla hace lo
+          contrario. Pega desde el mes que viene, no de inmediato. La Confianza es informativa por ahora.
         </p>
       </Collapsible>
 

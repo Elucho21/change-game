@@ -22,6 +22,7 @@ import { defaultStreet, streetDrip, tickStreetPressure, type StreetState } from 
 import { applyPensionReform, defaultPension, tickPension, type PensionState } from './pension';
 import { defaultEmployment, tickEmployment, type EmploymentState } from './employment';
 import { deflationReserveGrowth } from './deflation';
+import { applyRateChange, defaultCentralBank, rateEconomicEffect, tickCentralBank, type CentralBankState } from './centralBank';
 import type { MoralState } from './types';
 
 /**
@@ -68,6 +69,8 @@ export interface SimState {
   pension?: PensionState;
   /** empleo formal/informal y salario real del jugador (lib/employment.ts). Si falta, el tick lo crea. */
   employment?: EmploymentState;
+  /** Banco Central: tasa de interes + Confianza (lib/centralBank.ts). Si falta, el tick lo crea. */
+  centralBank?: CentralBankState;
   /**
    * Sistema moral del jugador (lib/moral.ts). Se pisa/tickea en lib/store.ts
    * endTurn (no adentro de deterministicTick): solo se carga aca para que
@@ -294,17 +297,32 @@ export function deterministicTick(s: SimState): TickResult {
     fiscal: player.economy.fiscal_balance,
     turn: s.turn
   });
+  // Banco Central (Change World Game v1.2): la tasa pega ADITIVO sobre
+  // inflacion/crecimiento (nunca toca los coeficientes de naturalDrift) y
+  // entra como un termino mas en fxPressure, mismo patron que imfStage.
+  const cb = s.centralBank ?? defaultCentralBank();
+  const rateEffect = rateEconomicEffect(cb.rate);
+  if (rateEffect.inflation || rateEffect.gdp_growth) applyDelta(player, rateEffect, s.world);
+
   const pressure = fxPressure({
     inflation: player.economy.inflation,
     fiscal: player.economy.fiscal_balance,
     debt: player.economy.debt_to_gdp,
     imfStage: s.imf.stage,
     monthsRising: s.imf.monthsRising,
-    deltaReserves: player.economy.gold_reserves_tonnes - prevGold
+    deltaReserves: player.economy.gold_reserves_tonnes - prevGold,
+    rate: cb.rate
   });
   player.fx = applyFx(player.fx ?? FX_START, pressure);
   const importedInflation = fxInflationPassthrough(pressure);
   if (importedInflation) applyDelta(player, { inflation: importedInflation }, s.world);
+
+  s.centralBank = tickCentralBank(cb, {
+    inflation: player.economy.inflation,
+    debtToGdp: player.economy.debt_to_gdp,
+    goldReservesTonnes: player.economy.gold_reserves_tonnes,
+    imfStage: s.imf.stage
+  });
 
   // previsional + empleo/salarios (Change World Game v1.0). Despues del FX
   // para leer inflacion/gdp_growth ya asentados del mes que se cierra.
@@ -378,6 +396,9 @@ export function applyDecisionTo(s: SimState, dec: Decision, target?: string): Si
   }
   if (dec.category === 'previsional') {
     s.pension = applyPensionReform(s.pension ?? defaultPension(), dec.id);
+  }
+  if (dec.id === 'subir_tasa') {
+    s.centralBank = applyRateChange(s.centralBank ?? defaultCentralBank(), 2);
   }
 
   // diplomacia gasta y rinde en el pool de capital diplomatico, no en el politico

@@ -79,7 +79,17 @@ export interface GoldOrder {
   emoji: string;
 }
 
-export type PlannedOrder = DecisionOrder | TaxOrder | BlocOrder | EventOrder | CabinetOrder | GoldOrder;
+/** Banco Central: mover la tasa de politica (lib/centralBank.ts). */
+export interface RateOrder {
+  kind: 'rate';
+  /** cambio acumulado en puntos porcentuales */
+  delta: number;
+  capitalCost: number;
+  label: string;
+  emoji: string;
+}
+
+export type PlannedOrder = DecisionOrder | TaxOrder | BlocOrder | EventOrder | CabinetOrder | GoldOrder | RateOrder;
 
 export const TAX_LABELS: Record<TaxKind, string> = {
   iva: 'IVA',
@@ -95,6 +105,33 @@ export const TAX_FIELD: Record<TaxKind, 'tax_iva' | 'tax_corporate' | 'tax_incom
 
 /** Costo politico de mover una alicuota: retocar es barato, reformar no. */
 export const taxCost = (delta: number) => (delta === 0 ? 0 : Math.round(2 + Math.abs(delta) * 1.5));
+
+/** Costo politico de mover la tasa: un punto es un gesto, varios juntos son una decision de fondo. */
+export const rateCost = (delta: number) => (delta === 0 ? 0 : Math.round(3 + Math.abs(delta) * 2.5));
+
+/**
+ * Agrega una orden de tasa consolidando con la que ya exista, mismo patron
+ * que addTaxOrder: subir 2 puntos y despues bajar 2 en el mismo turno deja
+ * el plan como estaba.
+ */
+export function addRateOrder(orders: PlannedOrder[], delta: number): PlannedOrder[] {
+  const rest = orders.filter((o) => o.kind !== 'rate');
+  const current = orders.find((o): o is RateOrder => o.kind === 'rate');
+  const total = Math.round(((current?.delta ?? 0) + delta) * 10) / 10;
+
+  if (total === 0) return rest;
+
+  return [
+    ...rest,
+    {
+      kind: 'rate',
+      delta: total,
+      capitalCost: rateCost(total),
+      label: `Tasa de interes ${total > 0 ? '+' : ''}${total} puntos`,
+      emoji: total > 0 ? '🏦⬆️' : '🏦⬇️'
+    }
+  ];
+}
 
 /**
  * Banco Central: tasas de conversion oro <-> caja.

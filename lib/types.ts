@@ -284,6 +284,8 @@ export interface EventChoice {
   moralEffects?: MoralEffects;
   /** efectos sobre la popularidad por sector (lib/popularGroups.ts) */
   groupEffects?: GroupEffects;
+  /** golpe directo sobre la tasa de politica del Banco Central (lib/centralBank.ts) */
+  rateEffect?: number;
 }
 
 export interface GameEvent {

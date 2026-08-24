@@ -7,6 +7,7 @@
  */
 
 import type { ImfStage } from './imf';
+import { R_NATURAL } from './centralBank';
 
 export const FX_START = 100;
 export const FX_MIN = 50;
@@ -20,6 +21,8 @@ export interface FxPressureInput {
   monthsRising: number;
   /** cambio de reservas en toneladas este mes (positivo = suben) */
   deltaReserves?: number;
+  /** tasa de politica del Banco Central (lib/centralBank.ts). Contractiva (> R_NATURAL) resta presion. */
+  rate?: number;
 }
 
 /** Pressure en "puntos" suaves del indice por mes. */
@@ -34,6 +37,9 @@ export function fxPressure(input: FxPressureInput): number {
   p -= 0.2 * Math.max(0, input.fiscal);
   if (input.deltaReserves !== undefined && input.deltaReserves > 0) {
     p -= 0.05 * Math.min(input.deltaReserves, 20);
+  }
+  if (input.rate !== undefined) {
+    p -= 0.05 * Math.max(0, input.rate - R_NATURAL);
   }
   return p;
 }

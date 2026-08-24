@@ -221,9 +221,10 @@ export const NATIONAL_EVENTS: GameEvent[] = [
       {
         id: 'tasa',
         label: 'Subir fuerte la tasa de interes',
-        detail: 'Frena la corrida y frena tambien la actividad.',
+        detail: 'Frena la corrida y frena tambien la actividad. La tasa del Banco Central sube 3 puntos y pega desde el mes que viene.',
         cost: { capital: 8 },
-        effects: { inflation: -2.5, gdp_growth: -0.8, unemployment: 0.4, happiness: -3 }
+        effects: { gdp_growth: -0.8, unemployment: 0.4, happiness: -3 },
+        rateEffect: 3
       },
       {
         id: 'vender_reservas',

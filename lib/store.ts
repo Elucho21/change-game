@@ -25,8 +25,8 @@ import {
   CAPITAL_DIPLOMATICO_START, CAPITAL_ON_MIDTERM_WIN, CAPITAL_ON_WIN, grantHoneymoon, systemOf
 } from './electoral';
 import {
-  addBlocOrder, addCabinetOrder, addDecisionOrder, addEventOrder, addGoldOrder, addTaxOrder, committedCapital,
-  goldFiscalDelta, TAX_FIELD, TAX_LABELS,
+  addBlocOrder, addCabinetOrder, addDecisionOrder, addEventOrder, addGoldOrder, addRateOrder, addTaxOrder,
+  committedCapital, goldFiscalDelta, TAX_FIELD, TAX_LABELS,
   type EventOrder, type PlannedOrder, type TaxKind
 } from './orders';
 import { cooldownKey, cooldownLeft, cooldownUntil, decisionEligible, scaleDecision } from './diplomacy';
@@ -49,6 +49,7 @@ import { applyMoralEffects, comisionIntegrityEffective, defaultMoral, tickMoral 
 import {
   applyGroupEffects, defaultPopularGroups, mediaCapitalEffect, notableGroupSwing, tickPopularGroups
 } from './popularGroups';
+import { applyRateChange, defaultCentralBank, type CentralBankState } from './centralBank';
 import { ENRIQUE_ONBOARDING_TURN, enriqueEvents } from './events/enrique';
 import { buildMilestones, type Milestone } from './milestones';
 import type {
@@ -155,6 +156,8 @@ interface GameStore {
   moral: MoralState;
   /** popularidad por sector: 5 grupos con intereses distintos (Change World Game v1.2) */
   groups: PopularGroupsState;
+  /** Banco Central: tasa de interes + Confianza (Change World Game v1.2) */
+  centralBank: CentralBankState;
   /** hitos institucionales de toda la partida, para el recap de fin de partida (lib/milestones.ts, lib/recap.ts) */
   milestones: Milestone[];
   /** onboarding de Enrique (mes 4) o su carta actual, esperando al jugador en pantalla completa */
@@ -184,6 +187,8 @@ interface GameStore {
   planTaxChange: (kind: TaxKind, delta: number) => void;
   /** Banco Central: planifica comprar o vender oro; se consolida igual que los impuestos */
   planGoldOrder: (action: 'comprar' | 'vender', tonnes: number) => void;
+  /** Banco Central: planifica mover la tasa de interes; se consolida igual que los impuestos */
+  planRateChange: (delta: number) => void;
   /** intencion de voto proyectada de hoy */
   currentPoll: () => number;
   /** elige quien te sucede cuando se te agotan los mandatos */
@@ -264,6 +269,7 @@ const initial = () => ({
   employment: defaultEmployment(),
   moral: defaultMoral(),
   groups: defaultPopularGroups(),
+  centralBank: defaultCentralBank(),
   milestones: [] as Milestone[],
   pendingEnrique: null as PendingEnrique,
   election: null as ElectionResult | null,
@@ -308,6 +314,7 @@ function snapshot(st: GameStore): PersistedState {
     employment: st.employment,
     moral: st.moral,
     groups: st.groups,
+    centralBank: st.centralBank,
     pendingEnrique: st.pendingEnrique,
     milestones: st.milestones,
     gameOver: st.gameOver
@@ -370,6 +377,8 @@ interface PlanRun {
   moral: MoralState;
   /** grupos populares despues de groupEffects del plan (decisiones y elecciones de eventos) */
   groups: PopularGroupsState;
+  /** Banco Central despues de un cambio de tasa planificado (decision, orden directa, o carta de evento) */
+  centralBank: CentralBankState;
 }
 
 /**
@@ -399,7 +408,8 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
     politics: { ...st.politics },
     usedOnce: [...st.usedOnce],
     moral: st.moral,
-    groups: st.groups
+    groups: st.groups,
+    centralBank: st.centralBank
   };
 
   const log = (emoji: string, title: string, body: string, tone: FeedItem['tone'] = 'neutral') => {
@@ -446,6 +456,9 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
       }
       if (dec.category === 'previsional') {
         run.pension = applyPensionReform(run.pension, dec.id);
+      }
+      if (dec.id === 'subir_tasa') {
+        run.centralBank = applyRateChange(run.centralBank, 2);
       }
       if (dec.effects.opposition) {
         run.politics = {
@@ -501,6 +514,18 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
         order.action === 'comprar'
           ? `Reservas ${before} t -> ${e.gold_reserves_tonnes} t. Balance fiscal ${fiscalDelta} del PBI (sale caja para pagar el oro).`
           : `Reservas ${before} t -> ${e.gold_reserves_tonnes} t. Balance fiscal +${fiscalDelta} del PBI (entra caja, con descuento por vender rapido).`
+      );
+      continue;
+    }
+
+    // ---------------------------------------------------------- tasa de interes
+    if (order.kind === 'rate') {
+      const before = run.centralBank.rate;
+      run.centralBank = applyRateChange(run.centralBank, order.delta);
+      log(
+        order.emoji,
+        order.label,
+        `Tasa de politica: ${before}% -> ${run.centralBank.rate}%. Pega sobre inflacion, crecimiento y tipo de cambio desde el mes que viene.`
       );
       continue;
     }
@@ -593,6 +618,9 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
       }
       if (choice.groupEffects) {
         run.groups = applyGroupEffects(run.groups, choice.groupEffects);
+      }
+      if (choice.rateEffect) {
+        run.centralBank = applyRateChange(run.centralBank, choice.rateEffect);
       }
 
       let outcome = choice.detail;
@@ -813,7 +841,8 @@ export const useGame = create<GameStore>((set, get) => {
     imf: st.imf,
     street: st.street,
     pension: st.pension,
-    employment: st.employment
+    employment: st.employment,
+    centralBank: st.centralBank
   });
 
   return {
@@ -968,6 +997,7 @@ export const useGame = create<GameStore>((set, get) => {
       employment: st.employment ?? employmentFromCountry(st.playerCode),
       moral: st.moral ?? defaultMoral(),
       groups: st.groups ?? defaultPopularGroups(),
+      centralBank: st.centralBank ?? defaultCentralBank(),
       pendingEnrique: st.pendingEnrique ?? null,
       milestones: st.milestones ?? [],
       gameOver: st.gameOver
@@ -1081,6 +1111,17 @@ export const useGame = create<GameStore>((set, get) => {
 
     const reserves = st.countries[st.playerCode].economy.gold_reserves_tonnes;
     const orders = addGoldOrder(st.orders, action, tonnes, reserves);
+    if (committedCapital(orders) > st.capital) return;
+
+    set({ orders });
+    persist();
+  },
+
+  planRateChange: (delta) => {
+    const st = get();
+    if (!st.started || st.gameOver || !delta) return;
+
+    const orders = addRateOrder(st.orders, delta);
     if (committedCapital(orders) > st.capital) return;
 
     set({ orders });
@@ -1354,7 +1395,9 @@ export const useGame = create<GameStore>((set, get) => {
       // runPlan vs applyDecisionTo en docs/PARA_CLAUDE.md): el tick tiene
       // que leer el estado post-reforma, no el de antes de planificar.
       pension: run.pension,
-      employment: st.employment
+      employment: st.employment,
+      // idem run.pension: run.centralBank ya trae el cambio de tasa del plan
+      centralBank: run.centralBank
     });
     const turn = tick.state.turn;
     const active = tick.state.active;
@@ -1362,6 +1405,7 @@ export const useGame = create<GameStore>((set, get) => {
     const street = tick.state.street ?? st.street;
     const pension = tick.state.pension ?? st.pension;
     const employment = tick.state.employment ?? st.employment;
+    const centralBank = tick.state.centralBank ?? st.centralBank;
 
     if (tick.oilShockApplied > 0) {
       feed.push({
@@ -1698,7 +1742,7 @@ export const useGame = create<GameStore>((set, get) => {
           turn, world, countries, relations, blocs, disruptions, active, capital, capitalDiplomatico,
           politics, election, succession: [], sanctions: run.sanctions, orders: [],
           cooldowns: run.cooldowns, usedOnce: run.usedOnce, cabinet: run.cabinet,
-          imf, street, pension, employment, moral, groups, pendingEnrique,
+          imf, street, pension, employment, moral, groups, centralBank, pendingEnrique,
           reactions, lastActions: [],
           pending: [...pending],
           recentEventIds: [...rolled.map((e) => e.id), ...st.recentEventIds].slice(0, 8),
@@ -1750,7 +1794,7 @@ export const useGame = create<GameStore>((set, get) => {
             turn, world, countries, relations, blocs, disruptions, active, capital, capitalDiplomatico,
             politics, election, succession: [], sanctions: run.sanctions, orders: [],
             cooldowns: run.cooldowns, usedOnce: run.usedOnce, cabinet: run.cabinet,
-            moral, groups, pendingEnrique,
+            moral, groups, centralBank, pendingEnrique,
             reactions, lastActions: [],
             pending: [...pending],
             recentEventIds: [...rolled.map((e) => e.id), ...st.recentEventIds].slice(0, 8),
@@ -1829,6 +1873,7 @@ export const useGame = create<GameStore>((set, get) => {
       employment,
       moral,
       groups,
+      centralBank,
       pendingEnrique,
       reactions,
       lastActions: [],
