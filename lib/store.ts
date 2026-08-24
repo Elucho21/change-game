@@ -16,9 +16,9 @@ import { CHOKEPOINTS, CHOKEPOINT_OWNER, chokepointClosureRisk } from './routes';
 import { tradeBaseline } from './trade';
 import { cloneSim, deterministicTick, eventExtraOf, projectDecision, type SimState } from './simulation';
 import {
-  campaignEvents, defaultPolitics, DIFFICULTY_PRESETS, driftOpposition, isElectionDue, isMidtermDue, legacy,
-  monthsToElection, needsSuccessor, oppositionCostFactor, oppositionSplit, parliamentCostFactor, poll,
-  runElection, runMidterm, seatsFromVote, successors,
+  campaignEvents, defaultPolitics, DIFFICULTY_PRESETS, driftOpposition, hasMajority, isElectionDue, isMidtermDue,
+  legacy, monthsToElection, needsSuccessor, oppositionCostFactor, oppositionSplit, parliamentCostFactor, poll,
+  runElection, runMidterm, seatsFromVote, successors, totalSeats,
   type Candidate, type Difficulty, type ElectionResult, type Politics
 } from './politics';
 import {
@@ -44,9 +44,11 @@ import { defaultStreet, type StreetState } from './streetPressure';
 import { applyFx, DEVALUE_JUMP, FX_START } from './fx';
 import { applyPensionReform, defaultPension, pensionFromCountry, pensionReformCostMultiplier, type PensionState } from './pension';
 import { defaultEmployment, employmentFromCountry, type EmploymentState } from './employment';
+import { applyMoralEffects, comisionIntegrityEffective, defaultMoral, tickMoral } from './moral';
+import { ENRIQUE_ONBOARDING_TURN, enriqueEvents } from './events/enrique';
 import type {
   ActiveEvent, Bloc, ChokepointCrisis, Country, Decision, Delta, FeedItem, GameEvent,
-  GlobalState, Layers, MapMode, Projection
+  GlobalState, Layers, MapMode, MoralState, PendingEnrique, Projection
 } from './types';
 
 // MapMode y Layers viven en lib/types.ts (los comparten el store, la UI y el save)
@@ -140,6 +142,12 @@ interface GameStore {
   pension: PensionState;
   /** empleo formal/informal y salario real del jugador */
   employment: EmploymentState;
+  /** sistema moral: corrupcion, justicia, lideres minoritarios (Change World Game v1.1) */
+  moral: MoralState;
+  /** onboarding de Enrique (mes 4) o su carta actual, esperando al jugador en pantalla completa */
+  pendingEnrique: PendingEnrique;
+  /** resuelve la carta o el paso de onboarding de Enrique actual (aplica YA, no espera a endTurn) */
+  resolveEnrique: (choiceId?: string) => void;
   /** eleccion resuelta esperando que el jugador la lea */
   election: ElectionResult | null;
   /** candidatos a sucederte: si esta lleno, la partida espera tu eleccion */
@@ -238,6 +246,8 @@ const initial = () => ({
   street: defaultStreet(),
   pension: defaultPension(),
   employment: defaultEmployment(),
+  moral: defaultMoral(),
+  pendingEnrique: null as PendingEnrique,
   election: null as ElectionResult | null,
   succession: [] as Candidate[],
   gameOver: null as { title: string; body: string } | null
@@ -277,6 +287,8 @@ function snapshot(st: GameStore): PersistedState {
     street: st.street,
     pension: st.pension,
     employment: st.employment,
+    moral: st.moral,
+    pendingEnrique: st.pendingEnrique,
     gameOver: st.gameOver
   };
 }
@@ -333,6 +345,8 @@ interface PlanRun {
   politics: Politics;
   /** decisiones "once" ya usadas, incluyendo las de este mismo plan */
   usedOnce: string[];
+  /** moral despues de moralEffects del plan (decisiones y elecciones de eventos) */
+  moral: MoralState;
 }
 
 /**
@@ -359,7 +373,8 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
     cabinet: { ...st.cabinet },
     pension: st.pension,
     politics: { ...st.politics },
-    usedOnce: [...st.usedOnce]
+    usedOnce: [...st.usedOnce],
+    moral: st.moral
   };
 
   const log = (emoji: string, title: string, body: string, tone: FeedItem['tone'] = 'neutral') => {
@@ -407,6 +422,9 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
           ...run.politics,
           opposition: clamp(run.politics.opposition + dec.effects.opposition, 0, 100)
         };
+      }
+      if (dec.moralEffects) {
+        run.moral = applyMoralEffects(run.moral, dec.moralEffects);
       }
       // el canciller tambien mejora el capital que rinden las jugadas diplomaticas
       const capitalGain = dec.category === 'diplomacia' && dec.effects.capital
@@ -535,6 +553,9 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
       applyDelta(run.countries[st.playerCode], choice.effects, run.world);
       if (choice.cost?.fiscal) {
         applyDelta(run.countries[st.playerCode], { fiscal_balance: -choice.cost.fiscal }, run.world);
+      }
+      if (choice.moralEffects) {
+        run.moral = applyMoralEffects(run.moral, choice.moralEffects);
       }
 
       let outcome = choice.detail;
@@ -903,6 +924,8 @@ export const useGame = create<GameStore>((set, get) => {
       street: st.street ?? defaultStreet(),
       pension: st.pension ?? pensionFromCountry(st.playerCode),
       employment: st.employment ?? employmentFromCountry(st.playerCode),
+      moral: st.moral ?? defaultMoral(),
+      pendingEnrique: st.pendingEnrique ?? null,
       gameOver: st.gameOver
     });
     return true;
@@ -1133,6 +1156,76 @@ export const useGame = create<GameStore>((set, get) => {
   dismissElection: () => set({ election: null }),
 
   // ----------------------------------------------------------
+  /**
+   * Resuelve el onboarding de Enrique o una de sus cartas. A diferencia de
+   * `planEventChoice`, aplica YA: es un modal bloqueante en pantalla
+   * completa (components/EnriqueModal.tsx), no algo que se planifique para
+   * el fin del turno.
+   */
+  resolveEnrique: (choiceId) => {
+    const st = get();
+    if (!st.pendingEnrique) return;
+
+    if (st.pendingEnrique.kind === 'onboarding') {
+      if (st.pendingEnrique.step === 'intro') {
+        set({ pendingEnrique: { kind: 'onboarding', step: 'panel' } });
+        return;
+      }
+      const moral = { ...st.moral, onboarded: true, corruption: clamp(st.moral.corruption + 2, 0, 100) };
+      const onboardingEntry: FeedItem = {
+        turn: st.turn, date: dateLabel(st.world), kind: 'sistema', emoji: '🕴️',
+        title: 'El Subsecretario de la Subsecretaria hizo su aparicion',
+        body: 'Enrique Grook se presenta. A partir de ahora, el sistema moral (corrupcion, justicia, '
+          + 'lideres minoritarios) queda visible y en juego.',
+        tone: 'neutral'
+      };
+      set({
+        moral,
+        pendingEnrique: null,
+        feed: [onboardingEntry, ...st.feed].slice(0, 200)
+      });
+      persist();
+      return;
+    }
+
+    const event = st.pendingEnrique.event;
+    const choice = event.choices?.find((c) => c.id === choiceId);
+    if (!choice) {
+      set({ pendingEnrique: null });
+      return;
+    }
+
+    const countries = fresh(st.countries);
+    const world = fresh(st.world);
+    const player = countries[st.playerCode];
+    applyDelta(player, choice.effects, world);
+
+    let outcome = choice.detail;
+    let tone: FeedItem['tone'] = 'neutral';
+    if (choice.risk && Math.random() < choice.risk.chance) {
+      applyDelta(player, choice.risk.effects, world);
+      outcome = `${choice.detail} PERO: ${choice.risk.label}.`;
+      tone = 'malo';
+    }
+
+    const moral = choice.moralEffects ? applyMoralEffects(st.moral, choice.moralEffects) : st.moral;
+    const capital = clamp(st.capital + (choice.effects.capital ?? 0), 0, 100);
+    const cardEntry: FeedItem = {
+      turn: st.turn, date: dateLabel(world), kind: 'decision', emoji: event.emoji, title: event.title, body: outcome, tone
+    };
+
+    set({
+      countries,
+      world,
+      moral,
+      capital,
+      pendingEnrique: null,
+      feed: [cardEntry, ...st.feed].slice(0, 200)
+    });
+    persist();
+  },
+
+  // ----------------------------------------------------------
   /** Elige como responder a un evento abierto. Se resuelve al avanzar el mes. */
   planEventChoice: (key, choiceId) => {
     const st = get();
@@ -1169,6 +1262,7 @@ export const useGame = create<GameStore>((set, get) => {
     for (const p of run.pending) {
       const player = countries[st.playerCode];
       if (p.event.effects) applyDelta(player, p.event.effects, world);
+      if (p.event.moralEffects) run.moral = applyMoralEffects(run.moral, p.event.moralEffects);
       applyDelta(player, { stability: -1 }, world);
       feed.push({
         turn: st.turn,
@@ -1356,6 +1450,7 @@ export const useGame = create<GameStore>((set, get) => {
         });
       } else {
         if (ev.effects) applyDelta(player, ev.effects, world);
+        if (ev.moralEffects) run.moral = applyMoralEffects(run.moral, ev.moralEffects);
         feed.push({
           turn,
           date: dateLabel(world),
@@ -1365,6 +1460,30 @@ export const useGame = create<GameStore>((set, get) => {
           body: ev.description,
           tone: (ev.effects?.happiness ?? 0) >= 0 && (ev.worldEffects?.gdp_growth ?? 0) >= 0 ? 'bueno' : 'malo'
         });
+      }
+    }
+
+    // 5.5 sistema moral (Change World Game v1.1): corrupcion, investigacion,
+    // lideres minoritarios, y Enrique Grook (onboarding obligatorio mes 4 o
+    // una de sus cartas normales, en pantalla completa - no pasa por `pending`)
+    const coalitionSeatsCount = coalitionSeats(run.cabinet);
+    const moralTick = tickMoral(run.moral, {
+      happiness: player.population.happiness,
+      unemployment: player.economy.unemployment,
+      hasMajority: hasMajority(run.politics, coalitionSeatsCount),
+      strongMajority: totalSeats(run.politics, coalitionSeatsCount) > 65,
+      comisionIntegrity: comisionIntegrityEffective(run.politics, coalitionSeatsCount)
+    });
+    if (moralTick.happinessDelta) applyDelta(player, { happiness: moralTick.happinessDelta }, world);
+    const moral = moralTick.state;
+
+    let pendingEnrique: PendingEnrique = st.pendingEnrique;
+    if (!pendingEnrique) {
+      if (turn === ENRIQUE_ONBOARDING_TURN && !moral.onboarded) {
+        pendingEnrique = { kind: 'onboarding', step: 'intro' };
+      } else {
+        const [card] = enriqueEvents(moral, moral.onboarded);
+        if (card) pendingEnrique = { kind: 'event', key: `${card.id}-${turn}`, event: card };
       }
     }
 
@@ -1488,6 +1607,7 @@ export const useGame = create<GameStore>((set, get) => {
             turn, world, countries, relations, blocs, disruptions, active, capital,
             politics, election, succession: [], sanctions: run.sanctions, orders: [],
             cooldowns: run.cooldowns, usedOnce: run.usedOnce, cabinet: run.cabinet,
+            moral, pendingEnrique,
             reactions, lastActions: [],
             pending: [...pending],
             recentEventIds: [...rolled.map((e) => e.id), ...st.recentEventIds].slice(0, 8),
@@ -1552,6 +1672,8 @@ export const useGame = create<GameStore>((set, get) => {
       street,
       pension,
       employment,
+      moral,
+      pendingEnrique,
       reactions,
       lastActions: [],
       pending: [...pending],

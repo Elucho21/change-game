@@ -169,6 +169,59 @@ export interface RelationDelta {
   amount: number;
 }
 
+/**
+ * Sistema Moral (Corrupcion, Justicia, lideres minoritarios), lib/moral.ts,
+ * Change World Game v1.1. Vive en lib/types.ts (no en lib/moral.ts) porque
+ * EventContext.moral lo necesita mas abajo y lib/moral.ts a su vez importa
+ * `MoralEffects` de este archivo — ponerlo en moral.ts armaria un ciclo.
+ */
+export interface MoralState {
+  /** 0-100. Nivel general de corrupcion del gobierno. */
+  corruption: number;
+  /** 0-100. Progreso de Investigaciones (Corte/Comision "tirando del hilo"). */
+  investigacion: number;
+  /** 0-100. Independencia de la Suprema Corte (agregado de los 5 jueces). */
+  corteIntegrity: number;
+  /** 0-100. Lealtad de la Corte al oficialismo. */
+  corteLealtad: number;
+  /** 0-40. Favores vigentes a jueces/parlamentarios: frenan investigaciones, cuestan a largo plazo. */
+  favoresActivos: number;
+  /** 0-100. Indice ambiental liviano (Amalia Verde). Alto = mejor. */
+  environmentIndex: number;
+  /** 0-100. Indice de inseguridad liviano (Jhon el Duro). Alto = peor. */
+  securityIndex: number;
+  /** 0 / 15 / 30. Factor de escandalo activo, decae solo. */
+  scandalFactor: number;
+  /** true despues del onboarding de Enrique (mes 4). Antes, todo esto no se ve. */
+  onboarded: boolean;
+  /** 0-8%. Apoyo al Partido Comunista. */
+  gustavoApoyo: number;
+  /** 0-5%. Apoyo al Partido Verde. */
+  amaliaApoyo: number;
+  /** 0-9%. Apoyo a la Ultra-Derecha. */
+  jhonApoyo: number;
+}
+
+/**
+ * Efectos de una Decision o EventChoice sobre el sistema moral (lib/moral.ts,
+ * Change World Game v1.1). Separado de `Delta` a proposito: son campos que
+ * solo usa un puñado de cartas (Enrique Grook, lideres minoritarios), no
+ * tiene sentido que las otras 100+ decisiones del juego carguen con ellos.
+ */
+export interface MoralEffects {
+  corruption?: number;
+  investigacion?: number;
+  corteIntegrity?: number;
+  corteLealtad?: number;
+  favoresActivos?: number;
+  environmentIndex?: number;
+  securityIndex?: number;
+  scandalFactor?: number;
+  gustavoApoyo?: number;
+  amaliaApoyo?: number;
+  jhonApoyo?: number;
+}
+
 export interface EventChoice {
   id: string;
   label: string;
@@ -177,6 +230,8 @@ export interface EventChoice {
   effects: Delta;
   relations?: RelationDelta[];
   risk?: { chance: number; label: string; effects: Delta };  // puede salir mal
+  /** efectos sobre corrupcion/justicia/lideres minoritarios (lib/moral.ts) */
+  moralEffects?: MoralEffects;
 }
 
 export interface GameEvent {
@@ -212,6 +267,8 @@ export interface GameEvent {
    * asi una sequia castiga a Argentina (agricultura 8%) y no a Japon (1%).
    */
   sectorEffects?: Record<string, number>;
+  /** efecto automatico sobre corrupcion/justicia/lideres minoritarios (lib/moral.ts), junto a `effects` */
+  moralEffects?: MoralEffects;
 }
 
 export interface EventContext {
@@ -286,7 +343,25 @@ export interface EventContext {
     unemploymentMonthsHigh: number;
     streetWeight: number;
   };
+  /**
+   * Sistema moral del jugador (lib/moral.ts), Change World Game v1.1.
+   * Solo existe (para el jugador) despues del onboarding de Enrique, mes 4.
+   *   when: (c) => (c.moral?.environmentIndex ?? 100) < 40
+   */
+  moral?: MoralState;
 }
+
+/**
+ * Onboarding de Enrique (mes 4, obligatorio, 2 pasos) o una de sus cartas
+ * normales, esperando en pantalla completa (components/EnriqueModal.tsx).
+ * Se resuelve YA al click (`resolveEnrique` en lib/store.ts), no pasa por
+ * `pending`/orders: es modal bloqueante, no algo que se planifique como el
+ * resto de los eventos.
+ */
+export type PendingEnrique =
+  | { kind: 'onboarding'; step: 'intro' | 'panel' }
+  | { kind: 'event'; key: string; event: GameEvent }
+  | null;
 
 export interface ActiveEvent {
   key: string;
@@ -324,6 +399,8 @@ export interface Decision {
   unlocks?: string;
   /** id de una decision que ya tiene que haberse tomado antes para que esta aparezca */
   requires?: string;
+  /** efectos sobre corrupcion/justicia/lideres minoritarios (lib/moral.ts) */
+  moralEffects?: MoralEffects;
 }
 
 export interface FeedItem {

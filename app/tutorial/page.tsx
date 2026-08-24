@@ -104,6 +104,20 @@ const STEPS: { emoji: string; title: string; body: React.ReactNode }[] = [
         <Link href="/guia">Guia y formulas</Link>.
       </p>
     )
+  },
+  {
+    emoji: '🕴️',
+    title: 'Justicia: corrupcion, Enrique Grook y los lideres minoritarios',
+    body: (
+      <p>
+        En el mes 4 de cada partida se presenta <b>Enrique Grook</b>, el Subsecretario de la Subsecretaria
+        de Presidencia — un onboarding obligatorio que explica el sistema y desbloquea la pestana
+        <b> Justicia</b> (no existe antes de ese momento). Ahi ves tu nivel de corrupcion, el Progreso de
+        Investigaciones de la Suprema Corte y la Comision Anticorrupcion, y el apoyo de los tres lideres
+        minoritarios (Gustavo Comun, Amalia Verde, Jhon el Duro). Enrique vuelve despues con cartas propias
+        en pantalla completa, ofreciendo siempre el camino facil — con consecuencias reales.
+      </p>
+    )
   }
 ];
 

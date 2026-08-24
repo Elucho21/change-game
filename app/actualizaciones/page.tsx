@@ -23,6 +23,45 @@ export default function ActualizacionesPage() {
         </p>
 
         <div className="card">
+          <h2>🕵️ v1.1 — Sistema Moral</h2>
+          <p className="muted" style={{ fontSize: 12, marginTop: -4 }}>Corrupcion, Justicia y los tres lideres minoritarios.</p>
+
+          <h3>🕴️ Enrique Grook</h3>
+          <p>
+            En el mes 4 de cada partida se presenta Enrique Grook, Subsecretario de la Subsecretaria de
+            Presidencia — un onboarding obligatorio que explica el sistema y desbloquea la pestana{' '}
+            <b>Justicia</b>. De ahi en mas, Enrique vuelve con cartas propias (14 en total) ofreciendo el
+            camino facil: contratos amigos, favores a la Corte, silencios mediaticos, sacrificar a alguien
+            cuando la Comision aprieta. Cada carta tiene consecuencias reales sobre tu corrupcion y las
+            investigaciones — nunca es gratis.
+          </p>
+
+          <h3>🧾 Corrupcion y Progreso de Investigaciones</h3>
+          <p>
+            Dos indicadores nuevos en la pestana Justicia. La corrupcion sube con favores y arreglos, baja
+            sola si el pueblo esta contento y no haces nada nuevo. El Progreso de Investigaciones mide que
+            tan cerca esta la Justicia de tirar del hilo: sube con corrupcion alta, pueblo infeliz y
+            escandalos; una mayoria parlamentaria solida lo frena, pero nunca lo anula del todo.
+          </p>
+
+          <h3>⚖️ Suprema Corte y Comision Anticorrupcion</h3>
+          <p>
+            La independencia de la Corte y la integridad de la Comision (esta ultima depende de cuantos
+            escanos propios tenes) determinan que tan rapido avanzan las causas. Podes empujar jueces amigos
+            o dejar que el Parlamento elija libremente — cada camino tiene su precio.
+          </p>
+
+          <h3>🚩🌿🎖️ Los tres lideres minoritarios</h3>
+          <p>
+            Gustavo Comun (Partido Comunista, techo 8%), Amalia Verde (Partido Verde, techo 5%) y Jhon el
+            Duro (Ultra-Derecha, techo 9%) — no son oposicion tradicional, son ruido y presion permanente.
+            Gustavo crece con desempleo y descontento social; Amalia con el deterioro ambiental; Jhon con la
+            inseguridad en alza. Cada uno trae sus propias cartas de eventos y nunca superan su techo
+            electoral, pero complican mayorias y suman costo politico si los dejas crecer.
+          </p>
+        </div>
+
+        <div className="card">
           <h2>🌍 v1.0 — Change World Game</h2>
           <p className="muted" style={{ fontSize: 12, marginTop: -4 }}>El juego se renombra: de aca en mas, Change World Game.</p>
 

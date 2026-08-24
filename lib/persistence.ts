@@ -1,5 +1,5 @@
 import type {
-  ActiveEvent, Bloc, Country, FeedItem, GlobalState, Layers, MapMode
+  ActiveEvent, Bloc, Country, FeedItem, GlobalState, Layers, MapMode, MoralState, PendingEnrique
 } from './types';
 import type { TaxRates } from './engine';
 import type { Politics } from './politics';
@@ -79,6 +79,10 @@ export interface PersistedState {
   pension?: PensionState;
   /** empleo formal/informal y salario real del jugador. Opcional: los saves anteriores no lo traen. */
   employment?: EmploymentState;
+  /** sistema moral (Change World Game v1.1). Opcional: los saves anteriores no lo traen. */
+  moral?: MoralState;
+  /** onboarding/carta de Enrique esperando resolucion. Opcional: los saves anteriores no lo traen. */
+  pendingEnrique?: PendingEnrique;
   gameOver: { title: string; body: string } | null;
 }
 

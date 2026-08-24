@@ -12,13 +12,15 @@ import EventCatalog from './EventCatalog';
 import GovernmentPanel from './GovernmentPanel';
 import CabinetPanel from './CabinetPanel';
 import PrevisionalPanel from './PrevisionalPanel';
+import JusticiaPanel from './JusticiaPanel';
 import ElectionModal from './ElectionModal';
+import EnriqueModal from './EnriqueModal';
 import TurnPlan from './TurnPlan';
 import Feed from './Feed';
 import GrokBridge from './GrokBridge';
 import Onboarding from './Onboarding';
 
-type Tab = 'pais' | 'gobierno' | 'gabinete' | 'decisiones' | 'bloques' | 'eventos' | 'previsional';
+type Tab = 'pais' | 'gobierno' | 'gabinete' | 'decisiones' | 'bloques' | 'eventos' | 'previsional' | 'justicia';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'pais', label: '📊 Pais' },
@@ -27,7 +29,8 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'decisiones', label: '🎯 Decisiones' },
   { id: 'bloques', label: '🧩 Bloques' },
   { id: 'eventos', label: '📚 Eventos' },
-  { id: 'previsional', label: '👴 Previsional' }
+  { id: 'previsional', label: '👴 Previsional' },
+  { id: 'justicia', label: '⚖️ Justicia' }
 ];
 
 const TURN_FX_MS = 1400;
@@ -43,6 +46,7 @@ export default function GameShell() {
   const world = useGame((s) => s.world);
   const pendingCount = useGame((s) => s.pending.length);
   const damagedCount = useGame((s) => damagedSectors(s.countries[s.playerCode]).length);
+  const moralOnboarded = useGame((s) => s.moral.onboarded);
   const prevTurn = useRef(turn);
   const skipFirst = useRef(true);
 
@@ -68,6 +72,9 @@ export default function GameShell() {
     pais: damagedCount
   };
 
+  // la pestana Justicia no existe hasta el onboarding de Enrique (mes 4)
+  const visibleTabs = moralOnboarded ? TABS : TABS.filter((t) => t.id !== 'justicia');
+
   return (
     <div className={`app${turnFx ? ' turn-fx' : ''}`}>
       <TopBar onGrok={() => setGrok(true)} turnFx={turnFx} />
@@ -75,7 +82,7 @@ export default function GameShell() {
       <div className="stage">
         <div className="col">
           <div className="tabs">
-            {TABS.map((t) => {
+            {visibleTabs.map((t) => {
               const badge = BADGES[t.id];
               return (
                 <button key={t.id} className={tab === t.id ? 'on' : ''} onClick={() => setTab(t.id)}>
@@ -92,6 +99,7 @@ export default function GameShell() {
           {tab === 'bloques' && <BlocsPanel />}
           {tab === 'eventos' && <EventCatalog />}
           {tab === 'previsional' && <PrevisionalPanel />}
+          {tab === 'justicia' && moralOnboarded && <JusticiaPanel />}
         </div>
 
         <GlobeView turnFx={turnFx} />
@@ -117,6 +125,8 @@ export default function GameShell() {
       <Onboarding />
 
       <ElectionModal />
+
+      <EnriqueModal />
 
       {gameOver && (
         <div className="overlay">

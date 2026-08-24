@@ -155,6 +155,57 @@ export default function GuiaPage() {
           </ul>
         </div>
 
+        <div className="card">
+          <h2>🕵️ Corrupcion y Progreso de Investigaciones</h2>
+          <p>
+            Aparecen recien despues del onboarding de Enrique Grook (mes 4). La corrupcion decae o crece
+            despacio segun el humor del pueblo, y los actos puntuales (cartas de Enrique) la mueven directo:
+          </p>
+          <code className="page-formula">
+            Δcorrupcion = felicidad {'>'} 55 ? −0.3 : felicidad {'<'} 40 ? +0.2 : −0.05
+          </code>
+          <p>El Progreso de Investigaciones es mensual y esta pensado para que la corrupcion PROPIA sea el driver principal, no un ruido de fondo:</p>
+          <code className="page-formula">
+            Δinvestigacion = (corrupcion/100) × 3.5{'\n'}
+            {'                '}+ (100 − felicidad) × 0.02{'\n'}
+            {'                '}+ integridadCorte × 0.015 + integridadComision × 0.01{'\n'}
+            {'                '}+ escandalo × 0.06 − favoresActivos × 0.07 − bonusMayoria
+          </code>
+          <p>
+            <b>bonusMayoria</b> es 1.2 si tenes mayoria parlamentaria, +0.6 mas si es solida ({'>'}65 escanos
+            totales). La integridad de la Comision no se guarda como dato propio: se deriva de tus escanos
+            (<code>clamp(70 − escanosTotales×0.4, 20, 90)</code>) — mas mayoria, Comision mas controlable,
+            nunca a 0.
+          </p>
+          <ul>
+            <li><b>0-15</b> Limpio · <b>16-35</b> Manchas menores · <b>36-55</b> Corrupcion estructural</li>
+            <li><b>56-75</b> Sistema capturado · <b>76-100</b> Putrefaccion</li>
+          </ul>
+          <p>
+            Corrupcion arriba de 55 resta felicidad todos los meses (−0.15, −0.4 arriba de 75) — la unica
+            forma de bajarla de golpe son las cartas de Enrique (sacrificios, limpiezas, archivos), no el
+            paso del tiempo solo.
+          </p>
+        </div>
+
+        <div className="card">
+          <h2>🚩🌿🎖️ Lideres minoritarios</h2>
+          <p>
+            Gustavo Comun (techo 8%), Amalia Verde (techo 5%) y Jhon el Duro (techo 9%) convergen 10%/mes
+            hacia un objetivo calculado por sus propios drivers — mismo patron que usa la oposicion:
+          </p>
+          <code className="page-formula">
+            targetGustavo = (desempleo − 5) × 0.6 + (60 − felicidad) × 0.05{'\n'}
+            targetAmalia  = (60 − indiceAmbiental) × 0.08 + max(0, corrupcion − 20) × 0.02{'\n'}
+            targetJhon    = (indiceInseguridad − 30) × 0.15 + max(0, corrupcion − 30) × 0.03
+          </code>
+          <p>
+            El indice ambiental y el de inseguridad son dos diales livianos nuevos (0-100, arrancan ~55/45),
+            que derivan solos hacia 50 y se mueven fuerte con decisiones y las propias cartas de cada lider.
+            Ninguno de los tres supera su techo por mas que sus drivers esten al maximo.
+          </p>
+        </div>
+
         <p className="muted" style={{ fontSize: 12 }}>
           Todo lo de arriba es diseño de juego, no estadistica real de ningun pais — pensado para que las
           decisiones tengan trade-offs claros, no para simular economia con precision academica.

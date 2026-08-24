@@ -22,6 +22,7 @@ import { defaultStreet, streetDrip, tickStreetPressure, type StreetState } from 
 import { applyPensionReform, defaultPension, tickPension, type PensionState } from './pension';
 import { defaultEmployment, tickEmployment, type EmploymentState } from './employment';
 import { deflationReserveGrowth } from './deflation';
+import type { MoralState } from './types';
 
 /**
  * Simulacion determinista del mundo: todo lo que pasa en un turno SIN azar.
@@ -65,6 +66,13 @@ export interface SimState {
   pension?: PensionState;
   /** empleo formal/informal y salario real del jugador (lib/employment.ts). Si falta, el tick lo crea. */
   employment?: EmploymentState;
+  /**
+   * Sistema moral del jugador (lib/moral.ts). Se pisa/tickea en lib/store.ts
+   * endTurn (no adentro de deterministicTick): solo se carga aca para que
+   * eventExtraOf pueda armar EventContext.moral para las cartas de los
+   * lideres minoritarios en el sorteo real y en el preview.
+   */
+  moral?: MoralState;
 }
 
 export const cloneSim = (s: SimState): SimState => JSON.parse(JSON.stringify(s)) as SimState;
@@ -80,7 +88,7 @@ export function eventExtraOf(s: SimState) {
   const street = s.street;
 
   if (!s.politics) {
-    return { imf, fx, street };
+    return { imf, fx, street, moral: s.moral };
   }
 
   const sys = systemOf(s.playerCode);
@@ -114,7 +122,8 @@ export function eventExtraOf(s: SimState) {
     },
     imf,
     fx,
-    street
+    street,
+    moral: s.moral
   };
 }
 

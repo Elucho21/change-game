@@ -183,7 +183,7 @@ function Stat({
 
 export default function TopBar({ onGrok, turnFx = false }: { onGrok: () => void; turnFx?: boolean }) {
   const {
-    countries, playerCode, turn, capital, world, pending, politics, active, orders, history
+    countries, playerCode, turn, capital, world, pending, politics, active, orders, history, moral
   } = useGame();
   const endTurn = useGame((s) => s.endTurn);
   const newGame = useGame((s) => s.newGame);
@@ -249,6 +249,14 @@ export default function TopBar({ onGrok, turnFx = false }: { onGrok: () => void;
         <Stat label="Oposicion" value={`${politics.opposition}`} metric="opposition" history={history}
           tone={politics.opposition > 60 ? 'bad' : politics.opposition < 35 ? 'good' : ''}
           insight={statInsight('opposition', insightCtx)} />
+        {moral.onboarded && (
+          <>
+            <Stat label="Corrupcion" value={`${moral.corruption}`}
+              tone={moral.corruption > 55 ? 'bad' : moral.corruption > 35 ? 'warn' : 'good'} />
+            <Stat label="Investigaciones" value={`${moral.investigacion}`}
+              tone={moral.investigacion > 65 ? 'bad' : moral.investigacion > 25 ? 'warn' : 'good'} />
+          </>
+        )}
       </div>
 
       <ActiveEvents active={active} />
