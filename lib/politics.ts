@@ -1,4 +1,6 @@
-import type { Country, Delta, GameEvent, GroupKey, MoralState, PopularGroupsState } from './types';
+import type {
+  Country, Decision, Delta, GameEvent, GroupKey, MoralState, PopularGroupsState
+} from './types';
 import { clamp } from './engine';
 import {
   CAPITAL_ON_WIN, decideBallotage, decideRound, grantHoneymoon, systemOf
@@ -41,12 +43,118 @@ export interface Politics {
   pendingBallotage: boolean;
   /**
    * Los dos partidos que componen la oposicion, de mayor a menor peso.
-   * Opcional: los saves viejos no lo traen (ver `oppositionSplit` para
-   * completarlo al vuelo sin romper compatibilidad).
+   * Opcional y con dos formas historicas: hasta v1.3 eran dos strings sueltos
+   * (solo el nombre), desde v1.4 son `OppositionParty` con ideologia, humor y
+   * pertenencia a la coalicion. `normalizeOppositionParties` acepta las dos y
+   * devuelve siempre la nueva, asi los saves viejos siguen cargando.
    */
-  oppositionParties?: [string, string];
+  oppositionParties?: [OppositionParty, OppositionParty] | [string, string];
   /** true si ya se le oferto una coalicion a la oposicion este mandato */
   coalitionOffered?: boolean;
+}
+
+/**
+ * Los partidos de la oposicion.
+ *
+ * Hasta v1.3 esto eran DOS STRINGS: un nombre sorteado de un pool de diez, que
+ * aparecia en el panel y en un unico evento (la oferta de coalicion, a 3 meses
+ * de la eleccion). No tenian ideologia, ni escaños, ni humor, ni conducta: la
+ * "oposicion" era un solo numero 0-100. El jugador lo reporto como "los
+ * partidos minoritarios no aparecen ni tienen impacto".
+ *
+ * Ahora cada partido tiene ideologia (define que decisiones acompaña y cuales
+ * bloquea, via `partyCostFactor`), humor propio que se mueve mes a mes segun lo
+ * que hace el gobierno, y puede sentarse en la coalicion en cualquier momento,
+ * no solo en la ventana de campaña.
+ */
+export type PartyIdeology =
+  | 'liberal' | 'conservador' | 'socialdemocrata' | 'nacionalista' | 'progresista';
+
+export interface OppositionParty {
+  name: string;
+  ideology: PartyIdeology;
+  /** 0-100. Que tan dispuesto esta a acompañar al oficialismo. 50 = indiferente. */
+  mood: number;
+  /** true si acepto sumarse a la coalicion: sus escaños cuentan para la mayoria. */
+  inCoalition: boolean;
+}
+
+export const IDEOLOGY_LABEL: Record<PartyIdeology, string> = {
+  liberal: 'Liberal',
+  conservador: 'Conservador',
+  socialdemocrata: 'Socialdemocrata',
+  nacionalista: 'Nacionalista',
+  progresista: 'Progresista'
+};
+
+/**
+ * Que acompaña y que bloquea cada ideologia, por categoria de decision.
+ * Es deliberadamente corto: dos o tres categorias por lado, para que el jugador
+ * pueda tener el mapa en la cabeza en vez de consultar una tabla de 40 celdas.
+ */
+const PARTY_STANCE: Record<PartyIdeology, {
+  favor: Decision['category'][]; contra: Decision['category'][]; blurb: string;
+}> = {
+  liberal: {
+    favor: ['economia', 'comercio'],
+    contra: ['previsional', 'interior'],
+    blurb: 'Acompaña ajuste y apertura comercial. Bloquea gasto social y mano dura estatal.'
+  },
+  conservador: {
+    favor: ['defensa', 'interior'],
+    contra: ['comunicacion', 'previsional'],
+    blurb: 'Acompaña seguridad y defensa. Desconfia del gasto social y de la propaganda oficial.'
+  },
+  socialdemocrata: {
+    favor: ['previsional', 'infraestructura'],
+    contra: ['defensa'],
+    blurb: 'Acompaña obra publica y jubilaciones. Bloquea todo lo que huela a presupuesto militar.'
+  },
+  nacionalista: {
+    favor: ['defensa', 'infraestructura'],
+    contra: ['diplomacia', 'comercio'],
+    blurb: 'Acompaña soberania y obra propia. Bloquea concesiones diplomaticas y apertura.'
+  },
+  progresista: {
+    favor: ['comunicacion', 'previsional'],
+    contra: ['defensa', 'interior'],
+    blurb: 'Acompaña agenda social y derechos. Bloquea represion y gasto militar.'
+  }
+};
+
+export const partyStance = (ideology: PartyIdeology) => PARTY_STANCE[ideology];
+
+/** Nombres de partidos opositores con la ideologia que les corresponde. */
+const OPPOSITION_POOL_V2: { name: string; ideology: PartyIdeology }[] = [
+  { name: 'Alianza Ciudadana', ideology: 'liberal' },
+  { name: 'Union por el Cambio', ideology: 'liberal' },
+  { name: 'Bloque Federal', ideology: 'conservador' },
+  { name: 'Coalicion Civica', ideology: 'progresista' },
+  { name: 'Nuevo Espacio', ideology: 'progresista' },
+  { name: 'Frente Amplio', ideology: 'socialdemocrata' },
+  { name: 'Partido Justicialista', ideology: 'socialdemocrata' },
+  { name: 'Convergencia Nacional', ideology: 'nacionalista' },
+  { name: 'Movimiento Progresista', ideology: 'progresista' },
+  { name: 'Union Democratica', ideology: 'conservador' }
+];
+
+const ideologyOfName = (name: string): PartyIdeology =>
+  OPPOSITION_POOL_V2.find((o) => o.name === name)?.ideology ?? 'conservador';
+
+/**
+ * Acepta las dos formas historicas de `oppositionParties` (dos strings de los
+ * saves <= v1.3, o dos `OppositionParty`) y devuelve siempre la nueva. Si no
+ * hay nada, sortea dos partidos: es el caso de un save realmente viejo.
+ */
+export function normalizeOppositionParties(
+  raw: Politics['oppositionParties'], partyName = ''
+): [OppositionParty, OppositionParty] {
+  if (!raw) return pickOppositionParties(partyName);
+  const build = (v: OppositionParty | string): OppositionParty =>
+    typeof v === 'string'
+      ? { name: v, ideology: ideologyOfName(v), mood: PARTY_MOOD_START, inCoalition: false }
+      : { ...v, mood: v.mood ?? PARTY_MOOD_START, inCoalition: !!v.inCoalition };
+  return [build(raw[0]), build(raw[1])];
 }
 
 export interface Candidate {
@@ -89,18 +197,20 @@ const PARTY_BY_IDEOLOGY: Record<string, string> = {
 
 /** Nombres de partidos opositores: los dos que le tocan a cada partida se
  *  sortean de aca, evitando repetir el nombre del oficialismo. */
-const OPPOSITION_POOL = [
-  'Alianza Ciudadana', 'Union por el Cambio', 'Bloque Federal', 'Coalicion Civica',
-  'Nuevo Espacio', 'Frente Amplio', 'Partido Justicialista', 'Convergencia Nacional',
-  'Movimiento Progresista', 'Union Democratica'
-];
+/** Humor con el que arranca un partido opositor: apenas por debajo de neutral. */
+export const PARTY_MOOD_START = 40;
 
-function pickOppositionParties(exclude: string): [string, string] {
-  const pool = OPPOSITION_POOL.filter((n) => n !== exclude);
+function pickOppositionParties(exclude: string): [OppositionParty, OppositionParty] {
+  const pool = OPPOSITION_POOL_V2.filter((o) => o.name !== exclude);
   const a = pool[Math.floor(Math.random() * pool.length)];
-  const rest = pool.filter((n) => n !== a);
-  const b = rest[Math.floor(Math.random() * rest.length)];
-  return [a, b];
+  // el segundo nunca comparte ideologia con el primero: dos partidos que
+  // quieren exactamente lo mismo no dan ninguna decision interesante
+  const rest = pool.filter((o) => o.name !== a.name && o.ideology !== a.ideology);
+  const from = rest.length ? rest : pool.filter((o) => o.name !== a.name);
+  const b = from[Math.floor(Math.random() * from.length)];
+  const seed = (o: { name: string; ideology: PartyIdeology }): OppositionParty =>
+    ({ name: o.name, ideology: o.ideology, mood: PARTY_MOOD_START, inCoalition: false });
+  return [seed(a), seed(b)];
 }
 
 export type Difficulty = 'facil' | 'normal' | 'dificil';
@@ -240,6 +350,126 @@ export const hasMajority = (p: Politics, coalitionSeats = 0) =>
 export function parliamentCostFactor(p: Politics, capitalCost: number, coalitionSeats = 0): number {
   if (capitalCost < 15) return 1;
   return hasMajority(p, coalitionSeats) ? 1 : 1.4;
+}
+
+/**
+ * Reparto completo del parlamento de 100 bancas. Todo DERIVADO, nada guardado:
+ * `p.seats` (oficialismo) y los escaños prestados por la coalicion de gabinete
+ * ya existen, los minoritarios salen de su apoyo (lib/moral.ts) y lo que sobra
+ * se reparte entre los dos partidos opositores con el mismo 58/42 que ya usaba
+ * `oppositionSplit`. Un partido opositor sentado en la coalicion aporta sus
+ * bancas al gobierno en vez de restarlas.
+ *
+ * Derivado y no persistido a proposito: un reparto guardado se desincroniza
+ * apenas cambia cualquiera de sus tres fuentes, y despues no hay forma de saber
+ * cual de los dos numeros es el bueno.
+ */
+export interface ParliamentSeats {
+  /** oficialismo + coalicion de gabinete + partidos opositores aliados */
+  gobierno: number;
+  partyA: number;
+  partyB: number;
+  minoritarios: number;
+  /** bancas que aportan los partidos opositores sentados en la coalicion */
+  aliados: number;
+}
+
+export function parliament(
+  p: Politics, moral?: MoralState, cabinetCoalitionSeats = 0
+): ParliamentSeats {
+  const [a, b] = normalizeOppositionParties(p.oppositionParties, p.partyName);
+  const propios = clamp(p.seats + cabinetCoalitionSeats, 0, 100);
+  const minoritarios = clamp(Math.round(minorityVoteShare(moral)), 0, 100 - propios);
+  const restoOposicion = Math.max(0, 100 - propios - minoritarios);
+  const bancasA = Math.round(restoOposicion * 0.58);
+  const bancasB = restoOposicion - bancasA;
+
+  const aliados = (a.inCoalition ? bancasA : 0) + (b.inCoalition ? bancasB : 0);
+  return {
+    gobierno: propios + aliados,
+    partyA: a.inCoalition ? 0 : bancasA,
+    partyB: b.inCoalition ? 0 : bancasB,
+    minoritarios,
+    aliados
+  };
+}
+
+/**
+ * Bancas que aportan los partidos opositores aliados. Se suma a lo que ya
+ * devuelve `coalitionSeats` (lib/cabinet.ts) en todos los lugares donde el
+ * motor pregunta "cuantas bancas tengo": mayoria, costo de decisiones grandes
+ * e integridad de la Comision.
+ */
+export const partyAllySeats = (p: Politics, moral?: MoralState, cabinetCoalitionSeats = 0): number =>
+  parliament(p, moral, cabinetCoalitionSeats).aliados;
+
+/**
+ * Cuanto abarata o encarece una decision el humor de los partidos opositores.
+ * Un partido que acompaña esa categoria y esta de buen humor te presta los
+ * votos; uno que la bloquea y esta enojado te los cobra. Rango util ~0.85-1.25:
+ * pesa, pero no decide sola (se multiplica con oposicion, parlamento, gabinete
+ * y facciones en `decisionCost`, lib/store.ts).
+ */
+export function partyCostFactor(p: Politics, category: Decision['category']): number {
+  const parties = normalizeOppositionParties(p.oppositionParties, p.partyName);
+  let factor = 1;
+  for (const party of parties) {
+    if (party.inCoalition) continue;
+    const stance = PARTY_STANCE[party.ideology];
+    const alineado = stance.favor.includes(category);
+    const opuesto = stance.contra.includes(category);
+    if (!alineado && !opuesto) continue;
+    // el humor modula: un aliado ideologico enojado no te presta nada
+    const humor = (party.mood - 50) / 50; // -1 .. +1
+    factor += (alineado ? -0.12 : 0.12) * (alineado ? Math.max(0, humor) + 0.4 : Math.max(0, -humor) + 0.4);
+  }
+  return Math.round(clamp(factor, 0.8, 1.3) * 100) / 100;
+}
+
+export interface PartyMoodInput {
+  /** categorias de las decisiones que el jugador ejecuto este turno */
+  categories: Decision['category'][];
+  corruption: number;
+  happiness: number;
+}
+
+/**
+ * Mueve el humor de los dos partidos un mes. Mismo patron de convergencia que
+ * `tickMoral` y `tickPopularGroups`: un objetivo que sale de lo que hizo el
+ * gobierno este mes, y un 20% del camino por turno.
+ *
+ * Un partido sentado en la coalicion tiene piso alto (esta adentro, no se
+ * enoja de golpe) pero igual se desgasta si el gobierno hace lo contrario de
+ * lo que el partido defiende.
+ */
+export function tickOppositionParties(
+  parties: [OppositionParty, OppositionParty], input: PartyMoodInput
+): [OppositionParty, OppositionParty] {
+  const move = (party: OppositionParty): OppositionParty => {
+    const stance = PARTY_STANCE[party.ideology];
+    let target = 45;
+    for (const cat of input.categories) {
+      if (stance.favor.includes(cat)) target += 12;
+      else if (stance.contra.includes(cat)) target -= 14;
+    }
+    // la corrupcion a la vista le da argumentos a cualquier opositor
+    target -= Math.max(0, input.corruption - 35) * 0.35;
+    // y un gobierno con la gente contenta es mas caro de confrontar
+    target += Math.max(0, input.happiness - 60) * 0.2;
+    if (party.inCoalition) target = Math.max(target, 45);
+    const next = party.mood + (clamp(target, 0, 100) - party.mood) * 0.2;
+    return { ...party, mood: Math.round(clamp(next, 0, 100) * 10) / 10 };
+  };
+  return [move(parties[0]), move(parties[1])];
+}
+
+/**
+ * Cuanto capital politico pide un partido para sentarse en la coalicion.
+ * Cuanto peor humor tiene y cuanto mas grande es, mas caro sale.
+ */
+export function coalitionPrice(party: OppositionParty, seats: number): number {
+  const humor = (50 - party.mood) / 50; // 0 = indiferente, 1 = te odia
+  return Math.max(6, Math.round(seats * 0.5 + humor * 18));
 }
 
 /**
@@ -424,10 +654,13 @@ export function runMidterm(
 export function campaignEvents(p: Politics, turn: number): GameEvent[] {
   const out: GameEvent[] = [];
   const meses = monthsToElection(p, turn);
-  const [partyA, partyB] = p.oppositionParties ?? ['la oposicion mayor', 'la oposicion menor'];
+  const [a, b] = normalizeOppositionParties(p.oppositionParties, p.partyName);
+  const partyA = a.name;
+  const partyB = b.name;
   const [shareA, shareB] = oppositionSplit(p.opposition);
 
-  if (meses === 3 && !p.coalitionOffered) {
+  // ya no se puede negociar en campaña con un partido que ya esta adentro
+  if (meses === 3 && !p.coalitionOffered && !(a.inCoalition && b.inCoalition)) {
     out.push({
       id: 'oferta_coalicion',
       scope: 'nacional',

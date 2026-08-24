@@ -6,7 +6,49 @@ import { INFRA_CONFIG } from './infrastructure';
  * Cada una cuesta capital politico (0-100, se recupera segun felicidad) y
  * muestra un PREVIEW de impacto antes de confirmar.
  */
+/**
+ * Pacto parlamentario (Change World Game v1.4).
+ *
+ * Hasta v1.3 la unica forma de sumar un partido opositor a la coalicion era el
+ * evento `oferta_coalicion`, que aparece a 3 meses de la eleccion y una sola
+ * vez por mandato: durante 45 de los 48 meses del mandato el tablero
+ * parlamentario era intocable. Estas dos decisiones lo abren a todo el mandato.
+ *
+ * El costo NO es el `capital: 0` de aca: lo pone el partido segun sus bancas y
+ * su humor (`coalitionPrice`, lib/politics.ts), y se calcula en `decisionCost`
+ * (lib/store.ts) igual que el precio variable de una reforma previsional.
+ */
+const pactoDecision = (idx: 0 | 1): Decision => ({
+  id: idx === 0 ? 'pacto_parlamentario_a' : 'pacto_parlamentario_b',
+  category: 'comunicacion',
+  label: idx === 0 ? 'Pacto con el bloque opositor mayor' : 'Pacto con el bloque opositor menor',
+  emoji: '🤝',
+  detail:
+    'Le ofreces lugares en el gobierno a cambio de sus votos en el Congreso. Sus bancas pasan a '
+    + 'contar para tu mayoria, pero te vas a comer la acusacion de haber pactado con la casta.',
+  // el catalogo exige un cost.capital > 0 (tests/engine.test.ts, invariante
+  // "ninguna decision es gratis") pero el numero real lo ignora por completo:
+  // decisionCost (lib/store.ts) detecta PACT_DECISION_INDEX y usa
+  // coalitionPrice en su lugar. Este 8 es solo simbolico.
+  cost: { capital: 8 },
+  effects: { stability: 2, happiness: -1.5 },
+  cooldown: 4,
+  when: (c) => {
+    const party = c.politics?.parties?.[idx];
+    // no se le puede ofrecer a alguien que ya esta adentro, ni a un partido
+    // que te odia (por debajo de 35 de humor no se sientan a la mesa)
+    return !!party && !party.inCoalition && party.mood >= 35 && party.seats >= 5;
+  }
+});
+
+export const PACT_DECISION_INDEX: Record<string, 0 | 1> = {
+  pacto_parlamentario_a: 0,
+  pacto_parlamentario_b: 1
+};
+
 export const DECISIONS: Decision[] = [
+  pactoDecision(0),
+  pactoDecision(1),
   // ---------------- ECONOMIA ----------------
   {
     id: 'bajar_impuestos',

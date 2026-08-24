@@ -7,13 +7,14 @@ import {
   naturalDrift, relLabel, resolveDriftTarget, resolveRelationTargets, type TaxRates
 } from './engine';
 import { oilShock } from './routes';
-import { monthsToElection, needsSuccessor, poll } from './politics';
+import { monthsToElection, needsSuccessor, normalizeOppositionParties, parliament, poll } from './politics';
 import { systemOf } from './electoral';
 import { topPartnerOf, totalTrade, tradeMatrix, type TradeContext } from './trade';
 import type { Politics } from './politics';
 import {
   cabinetDiplomaticBonus, cabinetInvestmentMod, cabinetLaborMitigation, cabinetPassive, cabinetRelationDrift,
-  cabinetUnionPower, coalitionPartners as coalitionPartnersOf, type Cabinet
+  cabinetUnionPower, coalitionPartners as coalitionPartnersOf, coalitionSeats as coalitionSeatsOf,
+  type Cabinet
 } from './cabinet';
 import { CAPITAL_PASSIVE_BASE, DIPLOMATIC_CAPITAL_PASSIVE_BASE } from './electoral';
 import { defaultImf, tickImf, type ImfState } from './imf';
@@ -125,7 +126,18 @@ export function eventExtraOf(s: SimState) {
       capital: s.capital,
       seats: s.politics.seats,
       coalition: !!s.cabinet && Object.values(s.cabinet).length > 0
-        && !!coalitionPartnersOf(s.cabinet).length
+        && !!coalitionPartnersOf(s.cabinet).length,
+      parties: (() => {
+        const seats = parliament(s.politics, s.moral, s.cabinet ? coalitionSeatsOf(s.cabinet) : 0);
+        return normalizeOppositionParties(s.politics.oppositionParties, s.politics.partyName)
+          .map((party, i) => ({
+            name: party.name,
+            ideology: party.ideology,
+            mood: party.mood,
+            inCoalition: party.inCoalition,
+            seats: i === 0 ? seats.partyA : seats.partyB
+          }));
+      })()
     },
     trade: {
       total: Math.round(total),

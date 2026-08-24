@@ -3,7 +3,7 @@
 import { create } from 'zustand';
 import data from './data/countries.gen.json';
 import { BLOCS } from './blocs';
-import { DECISIONS } from './decisions';
+import { DECISIONS, PACT_DECISION_INDEX } from './decisions';
 import {
   ARC_COLORS, adjustRelation, aiCountryDecisions, aiReactions, aiRoster, applyDelta, applySectorShock,
   applyWorldShock, blocEffects,
@@ -18,9 +18,11 @@ import { buildLocalChronicle } from './chronicle';
 import { cloneSim, deterministicTick, eventExtraOf, projectDecision, type SimState } from './simulation';
 import {
   campaignEvents, defaultPolitics, DIFFICULTY_PRESETS, driftOpposition, hasMajority, isElectionDue, isMidtermDue,
-  legacy, monthsToElection, needsSuccessor, oppositionCostFactor, oppositionSplit, parliamentCostFactor, poll,
-  runElection, runMidterm, seatsFromVote, successors, totalSeats,
-  type Candidate, type Difficulty, type ElectionResult, type Politics
+  coalitionPrice, legacy, monthsToElection, needsSuccessor, normalizeOppositionParties,
+  oppositionCostFactor, oppositionSplit, parliament, parliamentCostFactor, partyAllySeats,
+  partyCostFactor, poll,
+  runElection, runMidterm, seatsFromVote, successors, tickOppositionParties, totalSeats,
+  type Candidate, type Difficulty, type ElectionResult, type OppositionParty, type Politics
 } from './politics';
 import {
   CAPITAL_DIPLOMATICO_START, CAPITAL_ON_MIDTERM_WIN, CAPITAL_ON_WIN, grantHoneymoon, systemOf
@@ -345,12 +347,28 @@ function snapshot(st: GameStore): PersistedState {
  *    (un sindical abarata gasto y encarece ajuste; un liberal, al reves)
  */
 function decisionCost(st: GameStore, dec: Decision, baseCost: number): number {
-  const seats = coalitionSeats(st.cabinet);
+  // el pacto parlamentario no tiene un costo fijo en el catalogo (cost.capital
+  // es 0): lo pone el partido segun sus bancas y su humor (coalitionPrice),
+  // igual que la reforma previsional tiene precio variable mas abajo
+  const pactIdx = PACT_DECISION_INDEX[dec.id];
+  if (pactIdx !== undefined) {
+    const party = normalizeOppositionParties(st.politics.oppositionParties, st.politics.partyName)[pactIdx];
+    const seats = parliament(st.politics, st.moral, coalitionSeats(st.cabinet))[pactIdx === 0 ? 'partyA' : 'partyB'];
+    return coalitionPrice(party, seats);
+  }
+  // los escaños que aporta un partido opositor aliado cuentan igual que los que
+  // presta un ministro de coalicion: son bancas propias a la hora de votar
+  const seats = coalitionSeats(st.cabinet)
+    + partyAllySeats(st.politics, st.moral, coalitionSeats(st.cabinet));
   let factor =
     oppositionCostFactor(st.politics.opposition)
     * parliamentCostFactor(st.politics, baseCost, seats)
     * cabinetCostFactor(st.cabinet, dec.category)
-    * factionCostFactor(factionsOf(st.cabinet), policyKindOf(dec.id));
+    * factionCostFactor(factionsOf(st.cabinet), policyKindOf(dec.id))
+    // ...y la ideologia de los dos partidos opositores: el que acompaña esa
+    // categoria y esta de buen humor te presta los votos, el que la bloquea
+    // y esta enojado te los cobra (lib/politics.ts)
+    * partyCostFactor(st.politics, dec.category);
   // reformas previsionales: crisis fiscal visible, superavit+inflacion baja
   // o capital politico alto abaratan la reforma (lib/pension.ts, paquete v1.0)
   if (dec.category === 'previsional') {
@@ -401,6 +419,13 @@ interface PlanRun {
   centralBank: CentralBankState;
   /** infraestructura despues de una obra nueva planificada este turno */
   infrastructure: InfrastructureState;
+  /**
+   * Categorias de las decisiones que se ejecutaron este turno. Las lee
+   * `tickOppositionParties` (lib/politics.ts) para mover el humor de los dos
+   * partidos opositores segun su ideologia: un liberal se enoja con cada
+   * reforma previsional y se entusiasma con cada apertura comercial.
+   */
+  decisionCategories: Decision['category'][];
 }
 
 /**
@@ -429,6 +454,7 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
     pension: st.pension,
     politics: { ...st.politics },
     usedOnce: [...st.usedOnce],
+    decisionCategories: [],
     moral: st.moral,
     groups: st.groups,
     centralBank: st.centralBank,
@@ -477,6 +503,7 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
         const c = run.countries[st.playerCode];
         c.fx = applyFx(c.fx ?? FX_START, DEVALUE_JUMP);
       }
+      run.decisionCategories.push(dec.category);
       if (dec.category === 'previsional') {
         run.pension = applyPensionReform(run.pension, dec.id);
       }
@@ -1646,7 +1673,8 @@ export const useGame = create<GameStore>((set, get) => {
     // 5.5 sistema moral (Change World Game v1.1): corrupcion, investigacion,
     // lideres minoritarios, y Enrique Grook (onboarding obligatorio mes 4 o
     // una de sus cartas normales, en pantalla completa - no pasa por `pending`)
-    const coalitionSeatsCount = coalitionSeats(run.cabinet);
+    const coalitionSeatsCount = coalitionSeats(run.cabinet)
+      + partyAllySeats(run.politics, run.moral, coalitionSeats(run.cabinet));
     // el gabinete tambien pesa pasivo sobre el sistema moral (ej. "La fiscalizadora"
     // baja corrupcion de a poco) antes de que corra el drift del mes
     const cabinetMoral = cabinetMoralEffects(run.cabinet);
@@ -1787,8 +1815,21 @@ export const useGame = create<GameStore>((set, get) => {
     //    Parte de run.politics (no st.politics): ahi ya esta el lever directo
     //    de las decisiones de este turno (Delta.opposition, ver runPlan).
     const encuesta = poll(p2, run.politics, capital, cabinetVoteBonus(run.cabinet), groups, moral);
+    // el humor de los dos partidos opositores se mueve con lo que hizo el
+    // gobierno este mes (su ideologia decide si suma o resta), con la
+    // corrupcion a la vista y con la felicidad general (lib/politics.ts)
+    const oppositionParties = tickOppositionParties(
+      normalizeOppositionParties(run.politics.oppositionParties, run.politics.partyName),
+      {
+        categories: run.decisionCategories,
+        corruption: moral.corruption,
+        happiness: p2.population.happiness
+      }
+    );
+
     let politics: Politics = {
       ...run.politics,
+      oppositionParties,
       opposition: driftOpposition(run.politics, p2, moral),
       pollHistory: [...(st.politics.pollHistory ?? []), { turn, value: encuesta }].slice(-60),
       // la agenda electoral (campaignEvents) oferto coalicion este turno: no
@@ -1803,17 +1844,29 @@ export const useGame = create<GameStore>((set, get) => {
       (o): o is EventOrder => o.kind === 'event' && o.eventKey.startsWith('oferta_coalicion-')
     );
     if (coalitionOrder?.choiceId === 'partyA' || coalitionOrder?.choiceId === 'partyB') {
-      const [partyA, partyB] = politics.oppositionParties ?? ['la oposicion mayor', 'la oposicion menor'];
+      const parties = normalizeOppositionParties(politics.oppositionParties, politics.partyName);
       const [shareA, shareB] = oppositionSplit(politics.opposition);
       // no se lleva TODO el peso del partido a tu coalicion, solo una parte:
       // negociar peina votos y legisladores sueltos, no borra al partido.
-      const cut = Math.round((coalitionOrder.choiceId === 'partyA' ? shareA : shareB) * 0.5 * 10) / 10;
-      const name = coalitionOrder.choiceId === 'partyA' ? partyA : partyB;
-      politics = { ...politics, opposition: clamp(politics.opposition - cut, 5, 100) };
+      const idx = coalitionOrder.choiceId === 'partyA' ? 0 : 1;
+      const cut = Math.round((idx === 0 ? shareA : shareB) * 0.5 * 10) / 10;
+      const name = parties[idx].name;
+      // desde v1.4 el partido queda SENTADO: sus bancas pasan a contar para la
+      // mayoria (lib/politics.ts `parliament`), no solo baja el numero de
+      // "oposicion". Y arranca la coalicion de buen humor.
+      const sentados = [...parties] as [OppositionParty, OppositionParty];
+      sentados[idx] = { ...sentados[idx], inCoalition: true, mood: Math.max(60, sentados[idx].mood) };
+      politics = {
+        ...politics,
+        opposition: clamp(politics.opposition - cut, 5, 100),
+        oppositionParties: sentados
+      };
+      const bancas = idx === 0 ? parliament(politics, moral, coalitionSeats(run.cabinet)).aliados : 0;
       feed.push({
         turn, date: dateLabel(world), kind: 'sistema', emoji: '🤝',
         title: `${name} se suma a tu coalicion`,
-        body: `La oposicion pierde ${cut} puntos de fuerza parlamentaria y de calle.`,
+        body: `La oposicion pierde ${cut} puntos de fuerza y sus bancas pasan a contar para tu mayoria`
+          + `${bancas ? ` (+${bancas} escaños)` : ''}.`,
         tone: 'bueno'
       });
     }

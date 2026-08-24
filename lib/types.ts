@@ -379,6 +379,21 @@ export interface EventContext {
     seats: number;
     /** true si hay algun ministro de otro partido en el gabinete */
     coalition: boolean;
+    /**
+     * Los dos partidos opositores con su ideologia, humor y si estan sentados
+     * en la coalicion (lib/politics.ts). Sirve para condicionar decisiones y
+     * eventos por el tablero parlamentario, no solo por el numero agregado de
+     * `opposition`.
+     */
+    parties?: {
+      name: string;
+      ideology: string;
+      /** 0-100, 50 = indiferente */
+      mood: number;
+      inCoalition: boolean;
+      /** bancas propias en el parlamento de 100 */
+      seats: number;
+    }[];
   };
   /**
    * Comercio del jugador, para eventos que reaccionen a la economia externa.

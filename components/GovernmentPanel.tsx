@@ -5,7 +5,8 @@ import { monthsToElection, needsSuccessor, oppositionCostFactor } from '@/lib/po
 import { systemOf } from '@/lib/electoral';
 import { damagedSectors, taxEffects } from '@/lib/engine';
 import { goldCapitalCost, goldFiscalDelta, plannedTaxRate, rateCost, type GoldOrder, type RateOrder } from '@/lib/orders';
-import { oppositionSplit } from '@/lib/politics';
+import { coalitionSeats } from '@/lib/cabinet';
+import { IDEOLOGY_LABEL, normalizeOppositionParties, parliament, partyStance } from '@/lib/politics';
 import { MINORITY_CAPS, MINORITY_LEADERS, minorityApoyo, minorityVoteShare } from '@/lib/moral';
 import { confidenceLabel, RATE_MAX, RATE_MIN, RATE_STEP } from '@/lib/centralBank';
 import { INFRA_CONFIG } from '@/lib/infrastructure';
@@ -18,7 +19,9 @@ const GOLD_STEP = 5;
  * Todo lo que se muestra lo calcula el motor; aca solo se dibuja.
  */
 export default function GovernmentPanel() {
-  const { countries, playerCode, politics, turn, capital, taxBase, active, world, centralBank, infrastructure } = useGame();
+  const {
+    countries, playerCode, politics, turn, capital, taxBase, active, world, centralBank, infrastructure, cabinet
+  } = useGame();
   const planTaxChange = useGame((s) => s.planTaxChange);
   const planGoldOrder = useGame((s) => s.planGoldOrder);
   const planRateChange = useGame((s) => s.planRateChange);
@@ -35,6 +38,8 @@ export default function GovernmentPanel() {
   const costFactor = oppositionCostFactor(politics.opposition);
   const danados = damagedSectors(country);
   const fuga = minorityVoteShare(moral);
+  const oppositionParties = normalizeOppositionParties(politics.oppositionParties, politics.partyName);
+  const seats = parliament(politics, moral, coalitionSeats(cabinet));
 
   const TAXES: { kind: 'iva' | 'corporate' | 'income'; label: string; value: number; hint: string }[] = [
     { kind: 'iva', label: 'IVA', value: country.economy.tax_iva, hint: 'Recauda facil, empuja precios y castiga a los que menos tienen.' },
@@ -108,21 +113,36 @@ export default function GovernmentPanel() {
           <div style={{ width: `${politics.opposition}%`, background: 'var(--bad)' }} />
         </div>
 
-        {politics.oppositionParties && (() => {
-          const [partyA, partyB] = politics.oppositionParties;
-          const [shareA, shareB] = oppositionSplit(politics.opposition);
-          return (
-            <div style={{ marginTop: 8 }}>
-              <div className="row"><span>{partyA}</span><b>{shareA}</b></div>
-              <div className="row"><span>{partyB}</span><b>{shareB}</b></div>
-            </div>
-          );
-        })()}
+        <div style={{ marginTop: 10 }}>
+          {oppositionParties.map((party, i) => {
+            const bancas = i === 0 ? seats.partyA : seats.partyB;
+            const stance = partyStance(party.ideology);
+            const humorTone = party.mood >= 60 ? 'good' : party.mood <= 35 ? 'bad' : 'warn';
+            return (
+              <div key={party.name} className="card" style={{ marginTop: i === 0 ? 0 : 8, padding: 8 }}>
+                <div className="row">
+                  <span><b>{party.name}</b> <span className="muted">&middot; {IDEOLOGY_LABEL[party.ideology]}</span></span>
+                  {party.inCoalition
+                    ? <b className="good">en tu coalicion</b>
+                    : <b>{bancas} bancas</b>}
+                </div>
+                <div className="row" style={{ marginTop: 2 }}>
+                  <span>Humor</span>
+                  <b className={humorTone}>{Math.round(party.mood)}</b>
+                </div>
+                <p className="muted" style={{ fontSize: 11, marginTop: 4, lineHeight: 1.4 }}>{stance.blurb}</p>
+              </div>
+            );
+          })}
+        </div>
 
-        <p className="muted" style={{ fontSize: 11.5, marginTop: 6 }}>
+        <p className="muted" style={{ fontSize: 11.5, marginTop: 8 }}>
           Cada decision te cuesta <b className={costFactor > 1 ? 'bad' : 'good'}>{costFactor}x</b> capital politico.
           {politics.opposition > 60 && ' Con esta oposicion, gobernar se vuelve caro: convoca al dialogo o mejora el humor social.'}
-          {' '}A 3 meses de la eleccion podes ofrecerle una coalicion a alguno de los dos, y a 1 mes elegis tu discurso de cierre.
+          {' '}Podes ofrecerle un pacto parlamentario a cualquiera de los dos desde 🎯 Decisiones &middot;
+          Comunicacion, en cualquier momento del mandato (no solo en campaña): sus bancas pasan a
+          sumar a tu mayoria, al precio que pida segun su humor. A 1 mes de la eleccion elegis
+          ademas tu discurso de cierre.
         </p>
       </Collapsible>
 

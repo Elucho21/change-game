@@ -6,6 +6,50 @@ Bitácora corta y en orden inverso: lo último arriba. Es lo que tenés que sabe
 
 ---
 
+## motor/partidos-opositores · 24/08/2026 · Los dos partidos opositores dejan de ser dos strings
+
+El jugador reporto que "los partidos minoritarios no aparecen ni tienen impacto". Ademas de los 3
+lideres (ver entrada de mas abajo, mismo dia), los dos partidos opositores mayores eran hasta v1.3
+literalmente dos nombres sorteados de un pool de diez, con una unica ventana de negociacion en toda
+la partida (el evento `oferta_coalicion`, a 3 meses de la eleccion, una vez por mandato).
+
+### Contrato nuevo (lib/politics.ts)
+
+```ts
+normalizeOppositionParties(raw, partyName)  // acepta la forma vieja (2 strings) y la nueva
+parliament(p, moral, coalitionSeats)        // reparto DERIVADO de los 100 escanos del Congreso
+partyCostFactor(p, category)                // 0.8x-1.3x segun ideologia + humor de cada partido
+tickOppositionParties(parties, input)       // humor mensual: converge segun lo que hizo el gobierno
+coalitionPrice(party, seats)                // precio variable del pacto, no fijo
+```
+
+`Politics.oppositionParties` ahora es `OppositionParty { name, ideology, mood, inCoalition }`.
+Retrocompatible: `normalizeOppositionParties` acepta las dos formas, asi que los saves viejos
+(2 strings) siguen cargando.
+
+### Que hay
+
+- **Ideologia real** (liberal / conservador / socialdemocrata / nacionalista / progresista), cada
+  una con 2 categorias que acompana y 2 que bloquea (`PARTY_STANCE`).
+- **Humor propio** (0-100) que se mueve todos los meses segun las categorias de decision que
+  ejecutaste, la corrupcion a la vista y la felicidad general.
+- **Parlamento derivado**: `parliament()` reparte los 100 escanos entre oficialismo+coalicion,
+  los dos partidos opositores y los 3 minoritarios (via `minorityVoteShare`, lib/moral.ts). No se
+  guarda: se recalcula siempre de sus tres fuentes, para que nunca se desincronice.
+- **Pacto parlamentario en cualquier momento** (`pacto_parlamentario_a/b`, lib/decisions.ts,
+  categoria comunicacion): dos decisiones nuevas, no un evento de ventana fija. Sus `cost.capital`
+  del catalogo son simbolicos; `decisionCost` (lib/store.ts) detecta `PACT_DECISION_INDEX` y usa
+  `coalitionPrice` en su lugar. Un partido sentado aporta sus bancas a la mayoria de verdad
+  (`parliamentCostFactor`, `comisionIntegrityEffective`).
+
+### Que te habilita
+
+Contenido que lea `EventContext.politics.parties` (ideologia, humor, `inCoalition`, escanos de
+cada partido) para condicionar decisiones y eventos por el tablero parlamentario real, no solo por
+el numero agregado de `opposition`.
+
+---
+
 ## motor/enrique-cadencia · 24/08/2026 · Enrique deja de ser un peaje mensual
 
 El jugador reporto "son muchas ofertas de corrupcion y siempre las mismas". Era un bug de cadencia,

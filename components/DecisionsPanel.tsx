@@ -3,6 +3,11 @@
 import { useMemo, useState } from 'react';
 import { CATEGORIES, DECISIONS } from '@/lib/decisions';
 import { decisionEligible, decisionWhenEligible } from '@/lib/diplomacy';
+import { coalitionSeats, coalitionPartners as coalitionPartnersOf } from '@/lib/cabinet';
+import {
+  monthsToElection as monthsToElectionOf, needsSuccessor, normalizeOppositionParties, parliament, poll
+} from '@/lib/politics';
+import { systemOf } from '@/lib/electoral';
 import { buildCtx, previewDelta } from '@/lib/engine';
 import { previewMoralDelta } from '@/lib/moral';
 import { previewGroupDelta } from '@/lib/popularGroups';
@@ -20,7 +25,7 @@ export default function DecisionsPanel() {
 
   const {
     capital, capitalDiplomatico, selected, playerCode, countries, orders, turn, usedOnce,
-    world, blocs, relations, moral, groups
+    world, blocs, relations, moral, groups, politics, cabinet
   } = useGame();
   const plan = useGame((s) => s.planDecision);
   const preview = useGame((s) => s.previewDecision);
@@ -38,10 +43,44 @@ export default function DecisionsPanel() {
   // contexto para las decisiones contextuales (dec.when, Change World Game v1.2):
   // se arma directo del estado vivo, sin pasar por SimState/eventExtraOf — el
   // filtro de decisiones es UI de display, no parte del contrato preview-vs-real
-  const decisionCtx = useMemo(
-    () => ({ ...buildCtx(countries[playerCode], world, turn, blocs, relations, { moral }), groups, capitalDiplomatico }),
-    [countries, playerCode, world, turn, blocs, relations, moral, groups, capitalDiplomatico]
-  );
+  const decisionCtx = useMemo(() => {
+    // el pacto parlamentario (lib/decisions.ts) necesita ver el estado real de
+    // los dos partidos opositores para decidir si se le puede ofrecer un lugar.
+    // Mismo shape que arma eventExtraOf (lib/simulation.ts) para el sorteo real,
+    // asi el filtro del catalogo no le miente al jugador sobre lo que esta
+    // habilitado.
+    const player = countries[playerCode];
+    const seats = parliament(politics, moral, coalitionSeats(cabinet));
+    const parties = normalizeOppositionParties(politics.oppositionParties, politics.partyName)
+      .map((party, i) => ({
+        name: party.name, ideology: party.ideology, mood: party.mood,
+        inCoalition: party.inCoalition, seats: i === 0 ? seats.partyA : seats.partyB
+      }));
+    const sys = systemOf(playerCode);
+    const sinceStart = turn - politics.termStart;
+    return {
+      ...buildCtx(player, world, turn, blocs, relations, {
+        moral,
+        politics: {
+          opposition: politics.opposition,
+          monthsToElection: monthsToElectionOf(politics, turn),
+          monthsToMidterm: sys.midtermMonths ? Math.max(0, sys.midtermMonths - sinceStart) : null,
+          poll: poll(player, politics, capital),
+          consecutiveTerms: politics.consecutiveTerms,
+          lastTerm: needsSuccessor(politics),
+          honeymoon: (politics.honeymoonUntil ?? 0) >= turn,
+          capital,
+          seats: politics.seats,
+          coalition: Object.values(cabinet).length > 0 && !!coalitionPartnersOf(cabinet).length,
+          parties
+        }
+      }),
+      groups, capitalDiplomatico
+    };
+  }, [
+    countries, playerCode, world, turn, blocs, relations, moral, groups, capitalDiplomatico,
+    politics, cabinet, capital
+  ]);
 
   // las "once" ya usadas y las que no cumplen su `when` desaparecen del
   // catalogo; la contraria de un par toggle (requires) recien aparece cuando
