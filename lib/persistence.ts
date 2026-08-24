@@ -7,6 +7,7 @@ import type { PlannedOrder } from './orders';
 import type { Cabinet } from './cabinet';
 import type { PensionState } from './pension';
 import type { EmploymentState } from './employment';
+import type { Milestone } from './milestones';
 
 /**
  * Guardado de partida en localStorage.
@@ -83,6 +84,8 @@ export interface PersistedState {
   moral?: MoralState;
   /** onboarding/carta de Enrique esperando resolucion. Opcional: los saves anteriores no lo traen. */
   pendingEnrique?: PendingEnrique;
+  /** hitos institucionales para el recap de fin de partida (lib/milestones.ts). Opcional: saves anteriores no lo traen. */
+  milestones?: Milestone[];
   gameOver: { title: string; body: string } | null;
 }
 

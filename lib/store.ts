@@ -46,6 +46,7 @@ import { applyPensionReform, defaultPension, pensionFromCountry, pensionReformCo
 import { defaultEmployment, employmentFromCountry, type EmploymentState } from './employment';
 import { applyMoralEffects, comisionIntegrityEffective, defaultMoral, tickMoral } from './moral';
 import { ENRIQUE_ONBOARDING_TURN, enriqueEvents } from './events/enrique';
+import { buildMilestones, type Milestone } from './milestones';
 import type {
   ActiveEvent, Bloc, ChokepointCrisis, Country, Decision, Delta, FeedItem, GameEvent,
   GlobalState, Layers, MapMode, MoralState, PendingEnrique, Projection
@@ -144,6 +145,8 @@ interface GameStore {
   employment: EmploymentState;
   /** sistema moral: corrupcion, justicia, lideres minoritarios (Change World Game v1.1) */
   moral: MoralState;
+  /** hitos institucionales de toda la partida, para el recap de fin de partida (lib/milestones.ts, lib/recap.ts) */
+  milestones: Milestone[];
   /** onboarding de Enrique (mes 4) o su carta actual, esperando al jugador en pantalla completa */
   pendingEnrique: PendingEnrique;
   /** resuelve la carta o el paso de onboarding de Enrique actual (aplica YA, no espera a endTurn) */
@@ -247,6 +250,7 @@ const initial = () => ({
   pension: defaultPension(),
   employment: defaultEmployment(),
   moral: defaultMoral(),
+  milestones: [] as Milestone[],
   pendingEnrique: null as PendingEnrique,
   election: null as ElectionResult | null,
   succession: [] as Candidate[],
@@ -289,6 +293,7 @@ function snapshot(st: GameStore): PersistedState {
     employment: st.employment,
     moral: st.moral,
     pendingEnrique: st.pendingEnrique,
+    milestones: st.milestones,
     gameOver: st.gameOver
   };
 }
@@ -926,6 +931,7 @@ export const useGame = create<GameStore>((set, get) => {
       employment: st.employment ?? employmentFromCountry(st.playerCode),
       moral: st.moral ?? defaultMoral(),
       pendingEnrique: st.pendingEnrique ?? null,
+      milestones: st.milestones ?? [],
       gameOver: st.gameOver
     });
     return true;
@@ -1477,6 +1483,25 @@ export const useGame = create<GameStore>((set, get) => {
     if (moralTick.happinessDelta) applyDelta(player, { happiness: moralTick.happinessDelta }, world);
     const moral = moralTick.state;
 
+    // hitos institucionales del turno (mayoria, coalicion, corrupcion,
+    // investigacion, presion minoritaria, FMI, calle): se recalculan al final
+    // de cada rama de endTurn con la `politics` que quede firme en esa rama
+    // (ver lib/milestones.ts). `extra` suma los hitos puntuales (elecciones,
+    // medio termino, fin de partida) que cada rama arma por su cuenta.
+    const turnMilestones = (politicsAfter: Politics, extra: Milestone[] = []): Milestone[] => [
+      ...buildMilestones({
+        turn, date: dateLabel(world),
+        cabinetBefore: st.cabinet, cabinetAfter: run.cabinet,
+        politicsBefore: st.politics, politicsAfter,
+        moralBefore: st.moral, moralAfter: moral,
+        imfStageBefore: st.imf.stage, imfStageAfter: imf.stage, imfLabel: imfLabel(imf.stage),
+        streetWeightBefore: st.street.streetWeight, streetWeightAfter: street.streetWeight
+      }),
+      ...extra
+    ];
+    const finMilestone = (title: string, body: string): Milestone =>
+      ({ turn, date: dateLabel(world), kind: 'fin_de_partida', emoji: '🏁', title, body, tone: 'malo' });
+
     let pendingEnrique: PendingEnrique = st.pendingEnrique;
     if (!pendingEnrique) {
       if (turn === ENRIQUE_ONBOARDING_TURN && !moral.onboarded) {
@@ -1547,8 +1572,18 @@ export const useGame = create<GameStore>((set, get) => {
       });
     }
 
+    const coalitionJoinMilestone: Milestone[] = coalitionOrder?.choiceId === 'partyA' || coalitionOrder?.choiceId === 'partyB'
+      ? [{
+          turn, date: dateLabel(world), kind: 'coalicion_sumada', emoji: '🤝',
+          title: feed[feed.length - 1]?.title ?? 'Un partido opositor se suma a tu coalicion',
+          body: feed[feed.length - 1]?.body ?? '', tone: 'bueno'
+        }]
+      : [];
+
     let election: ElectionResult | null = null;
     let succession: Candidate[] = [];
+    /** hitos puntuales de este turno: coalicion sumada, y (si hay) eleccion/medio-termino decisivo */
+    let electionMilestones: Milestone[] = coalitionJoinMilestone;
 
     // 9. se termino el mandato, hay ballotage pendiente, o medio termino
     if (politics.pendingBallotage) {
@@ -1560,6 +1595,10 @@ export const useGame = create<GameStore>((set, get) => {
       if (after.politics) politics = after.politics;
       if (after.capital !== undefined) capital = after.capital;
       if (after.feed) feed.push(...after.feed.slice(0, 2).reverse());
+      electionMilestones = [...electionMilestones, {
+        turn, date: dateLabel(world), kind: result.won ? 'eleccion_ganada' : 'eleccion_perdida', emoji: '🗳️',
+        title: result.headline, body: result.detail, tone: result.won ? 'bueno' : 'malo'
+      }];
       if (after.gameOver) {
         feed.push({
           turn, date: dateLabel(world), kind: 'sistema', emoji: '🏁',
@@ -1567,11 +1606,17 @@ export const useGame = create<GameStore>((set, get) => {
         });
         set({
           turn, world, countries, relations, blocs, disruptions, active, capital,
-          politics, election, succession: [],
+          politics, election, succession: [], sanctions: run.sanctions, orders: [],
+          cooldowns: run.cooldowns, usedOnce: run.usedOnce, cabinet: run.cabinet,
+          imf, street, pension, employment, moral, pendingEnrique,
           reactions, lastActions: [],
           pending: [...pending],
           recentEventIds: [...rolled.map((e) => e.id), ...st.recentEventIds].slice(0, 8),
-          feed: [...feed.reverse(), ...st.feed].slice(0, 200),
+          feed: [...planFeed, ...feed.reverse(), ...st.feed].slice(0, 200),
+          milestones: [
+            ...st.milestones,
+            ...turnMilestones(politics, [...electionMilestones, finMilestone(after.gameOver.title, after.gameOver.body)])
+          ],
           gameOver: after.gameOver
         });
         persist();
@@ -1596,6 +1641,14 @@ export const useGame = create<GameStore>((set, get) => {
         if (after.politics) politics = after.politics;
         if (after.capital !== undefined) capital = after.capital;
         if (after.feed) feed.push(...after.feed.slice(0, 2).reverse());
+        const decisiveKind: Milestone['kind'] = result.won ? 'eleccion_ganada' : 'eleccion_perdida';
+        const decisiveTone: Milestone['tone'] = result.won ? 'bueno' : 'malo';
+        electionMilestones = [...electionMilestones, {
+          turn, date: dateLabel(world),
+          kind: result.ballotage ? 'ballotage' : decisiveKind, emoji: '🗳️',
+          title: result.headline, body: result.detail,
+          tone: result.ballotage ? 'neutral' : decisiveTone
+        }];
         if (after.gameOver) {
           feed.push({
             turn, date: dateLabel(world), kind: 'sistema', emoji: '🏁',
@@ -1612,6 +1665,10 @@ export const useGame = create<GameStore>((set, get) => {
             pending: [...pending],
             recentEventIds: [...rolled.map((e) => e.id), ...st.recentEventIds].slice(0, 8),
             feed: [...planFeed, ...feed.reverse(), ...st.feed].slice(0, 200),
+            milestones: [
+              ...st.milestones,
+              ...turnMilestones(politics, [...electionMilestones, finMilestone(after.gameOver.title, after.gameOver.body)])
+            ],
             gameOver: after.gameOver
           });
           persist();
@@ -1627,6 +1684,10 @@ export const useGame = create<GameStore>((set, get) => {
       if (after.politics) politics = after.politics;
       if (after.capital !== undefined) capital = after.capital;
       if (after.feed?.[0]) feed.push(after.feed[0]);
+      electionMilestones = [...electionMilestones, {
+        turn, date: dateLabel(world), kind: result.won ? 'medio_termino_ganado' : 'medio_termino_perdido', emoji: '🗳️',
+        title: result.headline, body: result.detail, tone: result.won ? 'bueno' : 'malo'
+      }];
     }
     // interes: el capital politico que se sostiene de un mes a otro rinde.
     // Por cada 10 que quede sin gastar al cierre del turno, se suma 1 mas:
@@ -1697,7 +1758,11 @@ export const useGame = create<GameStore>((set, get) => {
           oil: world.oil_price,
           fx: p2.fx ?? FX_START
         }
-      ].slice(-60),
+      ],
+      milestones: [
+        ...st.milestones,
+        ...turnMilestones(politics, gameOver ? [...electionMilestones, finMilestone(gameOver.title, gameOver.body)] : electionMilestones)
+      ],
       gameOver
     });
     persist();

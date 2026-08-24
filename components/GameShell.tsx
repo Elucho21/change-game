@@ -19,6 +19,7 @@ import TurnPlan from './TurnPlan';
 import Feed from './Feed';
 import GrokBridge from './GrokBridge';
 import Onboarding from './Onboarding';
+import EndGameScreen from './EndGameScreen';
 
 type Tab = 'pais' | 'gobierno' | 'gabinete' | 'decisiones' | 'bloques' | 'eventos' | 'previsional' | 'justicia';
 
@@ -40,8 +41,6 @@ export default function GameShell() {
   const [grok, setGrok] = useState(false);
   const [turnFx, setTurnFx] = useState(false);
   const [fxLabel, setFxLabel] = useState('');
-  const gameOver = useGame((s) => s.gameOver);
-  const newGame = useGame((s) => s.newGame);
   const turn = useGame((s) => s.turn);
   const world = useGame((s) => s.world);
   const pendingCount = useGame((s) => s.pending.length);
@@ -128,15 +127,7 @@ export default function GameShell() {
 
       <EnriqueModal />
 
-      {gameOver && (
-        <div className="overlay">
-          <div className="modal" style={{ maxWidth: 460, textAlign: 'center' }}>
-            <h2>🏁 {gameOver.title}</h2>
-            <p>{gameOver.body}</p>
-            <button className="btn-primary" onClick={newGame}>Empezar de nuevo</button>
-          </div>
-        </div>
-      )}
+      <EndGameScreen />
     </div>
   );
 }

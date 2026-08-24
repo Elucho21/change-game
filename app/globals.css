@@ -631,3 +631,34 @@ button.link.bad { color: var(--bad); text-decoration: none; font-size: 13px; }
   .event-card-modal .event-card-options { flex-direction: row; flex-wrap: wrap; }
   .event-card-modal .event-card-option { flex: 1 1 220px; }
 }
+
+/* ---------- fin de partida: balance de gestion, logros, hitos ---------- */
+.end-game-modal { max-width: 760px; text-align: left; }
+.end-game-modal h2 { text-align: center; }
+.end-game-modal > p { text-align: center; }
+
+.recap-table { display: flex; flex-direction: column; font-size: 12px; }
+.recap-row {
+  display: grid; grid-template-columns: 1.3fr 0.8fr 1fr 1fr 0.8fr;
+  gap: 6px; align-items: center; padding: 6px 4px; border-bottom: 1px solid var(--line);
+}
+.recap-row:last-child { border-bottom: none; }
+.recap-head { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .4px; }
+.recap-row span { font-variant-numeric: tabular-nums; }
+.recap-row small { display: block; color: var(--muted); font-size: 9.5px; font-weight: 400; }
+
+.achv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
+.achv-card { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 0; }
+.achv-emoji { font-size: 24px; line-height: 1.1; flex-shrink: 0; }
+.achv-card h4 { margin: 0 0 3px; font-size: 13px; }
+
+.recap-timeline {
+  max-height: 260px; overflow-y: auto; border: 1px solid var(--line); border-radius: var(--radius);
+}
+.recap-timeline .feed-item:last-child { border-bottom: none; }
+.recap-timeline .feed-item.tone-good h5 { color: var(--good); }
+.recap-timeline .feed-item.tone-bad h5 { color: var(--bad); }
+
+@media (max-width: 640px) {
+  .recap-row { grid-template-columns: 1.1fr 0.7fr 0.9fr 0.9fr 0.7fr; font-size: 11px; }
+}

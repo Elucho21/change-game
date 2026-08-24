@@ -840,6 +840,22 @@ export const MONTHS = [
 
 export const dateLabel = (w: GlobalState) => `${MONTHS[w.month - 1]} ${w.year}`;
 
+/**
+ * Fecha legible de un turno cualquiera de la partida, reconstruida a partir
+ * del turno y la fecha ACTUALES (`world` avanza un mes exacto por turno via
+ * `advanceMonth`, siempre). Evita tener que guardar una fecha en cada punto
+ * de `history` (lib/store.ts HistoryPoint): con el turno alcanza, y esto
+ * tambien reconstruye la fecha de saves viejos sin romper nada.
+ */
+export function dateLabelForTurn(w: GlobalState, currentTurn: number, targetTurn: number): string {
+  const diff = currentTurn - targetTurn;
+  let m = w.month - diff;
+  let y = w.year;
+  while (m <= 0) { m += 12; y -= 1; }
+  while (m > 12) { m -= 12; y += 1; }
+  return `${MONTHS[m - 1]} ${y}`;
+}
+
 export function advanceMonth(w: GlobalState) {
   w.month += 1;
   if (w.month > 12) {
