@@ -5,6 +5,7 @@ import { dateLabel, useGame } from '@/lib/store';
 import { exportSave } from '@/lib/persistence';
 import type { HistoryPoint } from '@/lib/store';
 import { monthsToElection } from '@/lib/politics';
+import type { ActiveEvent } from '@/lib/types';
 
 type MetricKey = keyof Omit<HistoryPoint, 'turn'>;
 
@@ -75,6 +76,51 @@ function Sparkline({ points, metric }: { points: HistoryPoint[]; metric: MetricK
         min {Math.round(min * 100) / 100} · max {Math.round(max * 100) / 100}
       </div>
     </>
+  );
+}
+
+function ActiveEvents({ active }: { active: ActiveEvent[] }) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClickOutside = (ev: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(ev.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, [open]);
+
+  if (active.length === 0) return null;
+
+  return (
+    <div style={{ position: 'relative' }} ref={wrapRef}>
+      <button
+        type="button"
+        className="pill warn"
+        onClick={() => setOpen((o) => !o)}
+        title="Ver eventos en curso"
+      >
+        🔥 {active.length} {active.length === 1 ? 'evento activo' : 'eventos activos'}{open ? ' ▲' : ' ▾'}
+      </button>
+      {open && (
+        <div className="stat-pop" style={{ width: 280, right: 0, left: 'auto' }}>
+          <div className="stat-pop-title">Eventos en curso</div>
+          {active.map((a) => (
+            <div className="row" key={a.key} style={{ alignItems: 'flex-start', gap: 8 }}>
+              <span style={{ fontSize: 12.5 }}>{a.event.emoji} {a.event.title}</span>
+              <b className="warn" style={{ whiteSpace: 'nowrap', fontSize: 11 }}>{a.turnsLeft}m</b>
+            </div>
+          ))}
+          <p className="muted" style={{ fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>
+            {active.length === 1
+              ? active[0].event.description
+              : 'Detalle completo en Gobierno → Situacion.'}
+          </p>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -205,15 +251,7 @@ export default function TopBar({ onGrok, turnFx = false }: { onGrok: () => void;
           insight={statInsight('opposition', insightCtx)} />
       </div>
 
-      {active.length > 0 && (
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          {active.map((a) => (
-            <span className="pill warn" key={a.key} title={a.event.description}>
-              {a.event.emoji} {a.event.title} · {a.turnsLeft}m
-            </span>
-          ))}
-        </div>
-      )}
+      <ActiveEvents active={active} />
 
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <button onClick={onGrok} title="Genera el prompt del turno para pegar en Grok">🤖 Grok</button>
