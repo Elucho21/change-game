@@ -13,7 +13,8 @@ import {
 } from './engine';
 import type { Reaction } from './engine';
 import { CHOKEPOINTS, CHOKEPOINT_OWNER, chokepointClosureRisk } from './routes';
-import { tradeBaseline } from './trade';
+import { tradeBaseline, topPartnerOf, totalTrade } from './trade';
+import { buildLocalChronicle } from './chronicle';
 import { cloneSim, deterministicTick, eventExtraOf, projectDecision, type SimState } from './simulation';
 import {
   campaignEvents, defaultPolitics, DIFFICULTY_PRESETS, driftOpposition, hasMajority, isElectionDue, isMidtermDue,
@@ -1714,6 +1715,44 @@ export const useGame = create<GameStore>((set, get) => {
     capital = clamp(capital + mediaCapitalEffect(groups.alta), 0, 100);
 
     const p2 = countries[st.playerCode];
+
+    // 7b. cronica de fin de turno: informe corto de que paso, en vez de solo
+    // deltas. Las "reaccion" del feed mezclan movidas de otras potencias
+    // (aiCountryDecisions) con reacciones del mundo a tus propias acciones
+    // (aiReactions, mas abajo en el turno) y los "evento" mezclan eventos
+    // reales con penalidades por eventos ignorados: simplificacion v1
+    // aceptada, ver docs/CRONICA_FIN_DE_TURNO.md.
+    {
+      const tradeCtx = { countries, relations, blocs, sanctions: run.sanctions, playerCode: st.playerCode, disruptions, turn };
+      const baseTrade = st.tradeBase[st.playerCode];
+      const nowTrade = totalTrade(st.playerCode, tradeCtx);
+      const tradeChangeVsStart = baseTrade ? ((nowTrade - baseTrade) / baseTrade) * 100 : 0;
+      const topPartnerCode = topPartnerOf(st.playerCode, tradeCtx);
+      const chronicle = buildLocalChronicle({
+        turn,
+        dateLabel: dateLabel(world),
+        tradeChangeVsStart,
+        topPartner: topPartnerCode ? (countries[topPartnerCode]?.name ?? null) : null,
+        stability: p2.population.stability,
+        happiness: p2.population.happiness,
+        unemployment: p2.economy.unemployment,
+        inflation: p2.economy.inflation,
+        oilPrice: world.oil_price,
+        oilShock: tick.oilShockApplied,
+        globalTension: world.global_tension,
+        aiMoves: feed.filter((f) => f.kind === 'reaccion').map((f) => ({ title: f.title, body: f.body })),
+        worldEventTitles: feed.filter((f) => f.kind === 'evento').map((f) => f.title)
+      });
+      const tone = tick.oilShockApplied > 0 || p2.population.stability < 40
+        ? 'malo'
+        : tradeChangeVsStart >= 5
+          ? 'bueno'
+          : 'neutral';
+      feed.push({
+        turn, date: dateLabel(world), kind: 'sistema', emoji: '🗞️',
+        title: chronicle.headline, body: chronicle.lines.join('\n'), tone
+      });
+    }
 
     // 8. la oposicion se mueve todos los meses; la encuesta queda registrada.
     //    Parte de run.politics (no st.politics): ahi ya esta el lever directo

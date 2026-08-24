@@ -6,6 +6,36 @@ Bitácora corta y en orden inverso: lo último arriba. Es lo que tenés que sabe
 
 ---
 
+## motor/chronicle · 24/08/2026 · Cronica de fin de turno (v1 local)
+
+Primera pieza concreta del roadmap de identidad de `docs/IDENTIDAD_JUEGO_DEMOCRACY_PR_PAX.md`
+(prioridad #4). Al cerrar cada turno, `endTurn()` ahora empuja un `FeedItem` extra:
+`kind: 'sistema'`, `emoji: '🗞️'`, resumen corto (4-6 lineas) de comercio, petroleo/rutas,
+movidas de otras potencias, eventos mundiales y estabilidad/desempleo interno.
+
+### Contrato nuevo
+
+`lib/chronicle.ts`: `buildLocalChronicle(input: ChronicleInput): TurnChronicle`, funcion pura,
+sin estado ni IO. No hay `kind` nuevo en `FeedItem` ni campo nuevo persistido: viaja adentro
+del `feed` de siempre.
+
+### Que NO hace (v1)
+
+- No compara comercio contra el arranque del mandato, sino contra `st.tradeBase` (arranque de
+  partida) — no hay snapshot por mandato todavia.
+- No menciona cohesion de bloques ni moral/minoritarios — necesitarian un snapshot pre-tick
+  que no esta barato en el punto de enganche (`lib/simulation.ts`/`updateCohesion` tendria
+  que exponerlo).
+- Es local, no llama a Grok. El puente manual (`GrokBridge.tsx` / `applyGrokJson`) sigue
+  aparte y sigue generando su propio feed item `'Cronica del turno (Grok)'`; no se tocaron
+  ni se fusionaron.
+
+Si en algun momento se quiere la version enriquecida por Grok (paso 4 del doc de la cronica),
+el contrato de `TurnChronicle` ya tiene el campo `source` listo para sumar `'grok'` sin romper
+lo que lee `source: 'local'`.
+
+---
+
 ## motor/fx-imf · 22/08/2026 · FMI + tipo de cambio en el tick
 
 El índice de tipo de cambio y el arco FMI ya no son módulos sueltos: corren en `deterministicTick()`.
