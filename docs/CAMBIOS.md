@@ -6,6 +6,21 @@ Bitácora corta y en orden inverso: lo último arriba. Es lo que tenés que sabe
 
 ---
 
+## fix/build-data · 24/08/2026 · CI (y `npm run data`) rotos desde el 13e0e89
+
+`scripts/build-data.mjs` tenia una `}` faltante (el objeto de un pais dentro del `for`
+nunca cerraba) desde el commit "Motor de popularidad por sector". Era un `SyntaxError`
+real: rompia tanto `npm run data` como el paso de lint de CI, en todos los PR y en `main`
+mismo, desde ese commit. Arreglado con una sola llave — no toco `engine/countries_mvp.json`
+ni el JSON generado, nadie lo modifico en el medio asi que no hay drift.
+
+Es tecnicamente zona Grok (Datos), pero es una llave faltante sin decision de contenido
+de por medio y estaba bloqueando el CI de todo el repo, asi que lo arregle sin esperar.
+Si preferis que este tipo de arreglo puramente sintactico pase siempre por vos, avisame
+y lo dejo en `docs/PEDIDOS_A_GROK.md` la proxima vez en vez de tocarlo.
+
+---
+
 ## motor/chronicle · 24/08/2026 · Cronica de fin de turno (v1 local)
 
 Primera pieza concreta del roadmap de identidad de `docs/IDENTIDAD_JUEGO_DEMOCRACY_PR_PAX.md`
