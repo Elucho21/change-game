@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { useGame } from '../lib/store';
 import { ENRIQUE_ONBOARDING_TURN } from '../lib/events/enrique';
+import { eligibleEvents } from '../lib/engine';
+import { NATIONAL_EVENTS } from '../lib/events/national';
+import { MINORITY_LEADER_EVENTS } from '../lib/events/minority_leaders';
+
+// en la app real, lib/boot_content.ts (importado una vez desde app/page.tsx)
+// mete MINORITY_LEADER_EVENTS adentro de NATIONAL_EVENTS antes de que se
+// juegue nada. Los tests no pasan por app/page.tsx, asi que hay que
+// garantizar el mismo mutation-push aca, mismo patron que tests/content-v10.test.ts
+if (!NATIONAL_EVENTS.some((e) => e.id === MINORITY_LEADER_EVENTS[0].id)) {
+  NATIONAL_EVENTS.push(...MINORITY_LEADER_EVENTS);
+}
 
 /**
  * Sistema Moral (Change World Game v1.1): el onboarding de Enrique tiene
@@ -67,5 +78,42 @@ describe('sistema moral a traves de la store real', () => {
     }
     expect(useGame.getState().pendingEnrique).toBeNull();
     expect(useGame.getState().moral).not.toEqual(before);
+  });
+
+  /**
+   * Bug reportado por el jugador via Grok (docs/LIDERES_MINORITARIOS_DIAGNOSTICO.md,
+   * 24/08): mes 60, 14% de desempleo, cero cartas de Gustavo/Amalia/Jhon en
+   * toda la partida. Causa real: `eventExtraOf` en `endTurn` (lib/store.ts)
+   * nunca recibia `moral` (ni `simOf` para el preview) — todo `when` gateado
+   * en `c.moral?.algo` quedaba `undefined?.algo` = false para siempre, sin
+   * importar el estado real del pais. Fix: un solo `moral: st.moral` de mas
+   * en esos dos lugares.
+   */
+  it('moral llega al sorteo real de eventos: los lideres minoritarios dejan de ser inalcanzables', () => {
+    useGame.getState().newGame();
+    useGame.getState().start('Argentina', 'normal');
+    for (let i = 1; i < ENRIQUE_ONBOARDING_TURN; i++) useGame.getState().endTurn();
+    useGame.getState().resolveEnrique();
+    useGame.getState().resolveEnrique();
+    expect(useGame.getState().moral.onboarded).toBe(true);
+
+    useGame.setState((st) => ({
+      countries: {
+        ...st.countries,
+        Argentina: { ...st.countries.Argentina, economy: { ...st.countries.Argentina.economy, unemployment: 14 } }
+      }
+    }));
+
+    const st = useGame.getState();
+    const base = { turn: st.turn, playerCode: st.playerCode, countries: st.countries, relations: st.relations, blocs: st.blocs, world: st.world };
+
+    // con el fix: moral llega al contexto, Gustavo Comun es elegible (14% > su umbral de 12%)
+    const conMoral = eligibleEvents({ ...base, eventExtra: { moral: st.moral } });
+    expect(conMoral.some((e) => e.characterId === 'gustavo_comun')).toBe(true);
+
+    // reproduce el bug (moral ausente del contexto, como pasaba antes del fix):
+    // ningun evento de lideres minoritarios es elegible, pase lo que pase en la partida
+    const sinMoral = eligibleEvents(base);
+    expect(sinMoral.some((e) => e.characterId === 'gustavo_comun')).toBe(false);
   });
 });

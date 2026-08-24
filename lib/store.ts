@@ -842,7 +842,10 @@ export const useGame = create<GameStore>((set, get) => {
     street: st.street,
     pension: st.pension,
     employment: st.employment,
-    centralBank: st.centralBank
+    centralBank: st.centralBank,
+    // sin esto, el preview de "eventos que se habilitan/desactivan" nunca ve
+    // los eventos gateados en moral (mismo bug que en eventExtraOf de endTurn)
+    moral: st.moral
   });
 
   return {
@@ -1465,8 +1468,13 @@ export const useGame = create<GameStore>((set, get) => {
     // 5. eventos del turno
     const player = countries[st.playerCode];
     // el contexto politico es el que el jugador tenia al empezar el turno:
-    // la oposicion de este mes todavia no se recalculo (paso 8)
-    const eventExtra = eventExtraOf({ ...tick.state, politics: st.politics });
+    // la oposicion de este mes todavia no se recalculo (paso 8). Mismo motivo
+    // para moral: el sistema moral de ESTE turno recien se tickea en el paso
+    // 5.5, despues de sortear eventos — sin este override, `tick.state.moral`
+    // queda undefined (deterministicTick no lo toca) y CUALQUIER evento
+    // gateado en moral (los 3 lideres minoritarios, entre otros) queda
+    // permanentemente inelegible sin importar el estado real del pais.
+    const eventExtra = eventExtraOf({ ...tick.state, politics: st.politics, moral: st.moral });
     const rolled: GameEvent[] = [
       ...rollEvents(player, world, turn, blocs, relations, st.recentEventIds, eventExtra),
       ...crisisEvents(player),
