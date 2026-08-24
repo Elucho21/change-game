@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { CATEGORIES, DECISIONS } from '@/lib/decisions';
 import { decisionEligible } from '@/lib/diplomacy';
 import { previewDelta } from '@/lib/engine';
+import { previewMoralDelta } from '@/lib/moral';
 import { useGame } from '@/lib/store';
 import DecisionPreview from './DecisionPreview';
 
@@ -16,12 +17,19 @@ export default function DecisionsPanel() {
   const [cat, setCat] = useState<(typeof CATEGORIES)[number]['id']>('economia');
   const [open, setOpen] = useState<string | null>(null);
 
-  const { capital, selected, playerCode, countries, orders, turn, usedOnce } = useGame();
+  const { capital, capitalDiplomatico, selected, playerCode, countries, orders, turn, usedOnce } = useGame();
   const plan = useGame((s) => s.planDecision);
   const preview = useGame((s) => s.previewDecision);
-  const available = useGame((s) => s.availableCapital)();
+  const availablePolitico = useGame((s) => s.availableCapital)();
+  const availableDiplomatico = useGame((s) => s.availableCapitalDiplomatico)();
   const quote = useGame((s) => s.quoteDecision);
   const target = selected && selected !== playerCode ? selected : undefined;
+
+  // diplomacia gasta de otro pool: la pestana define contra que capital se mide
+  const poolIsDiplomatico = cat === 'diplomacia';
+  const available = poolIsDiplomatico ? availableDiplomatico : availablePolitico;
+  const capitalTotal = poolIsDiplomatico ? capitalDiplomatico : capital;
+  const poolLabel = poolIsDiplomatico ? 'Capital diplomatico' : 'Capital politico';
 
   // las "once" ya usadas desaparecen del catalogo; la contraria de un par
   // toggle (requires) recien aparece cuando la original ya se tomo
@@ -38,9 +46,9 @@ export default function DecisionsPanel() {
     <div>
       <div className="section" style={{ position: 'sticky', top: 0, zIndex: 4 }}>
         <h3>
-          Capital politico: {available} libre
-          {available !== Math.round(capital) && (
-            <span className="muted"> (de {Math.round(capital)}, el resto ya esta en el plan)</span>
+          {poolLabel}: {available} libre
+          {available !== Math.round(capitalTotal) && (
+            <span className="muted"> (de {Math.round(capitalTotal)}, el resto ya esta en el plan)</span>
           )}
         </h3>
         <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
@@ -81,7 +89,7 @@ export default function DecisionsPanel() {
                 title={
                   enfriando ? `Ya la usaste: disponible en ${q?.cooldown} ${q?.cooldown === 1 ? 'mes' : 'meses'}`
                     : needsTarget ? 'Elegi un pais en el globo primero'
-                      : afford ? '' : 'Capital politico insuficiente'
+                      : afford ? '' : `${poolLabel} insuficiente`
                 }
               >
                 <strong>
@@ -103,6 +111,11 @@ export default function DecisionsPanel() {
                 )}
                 <span className="preview">
                   {previewDelta(d.effects).map((p) => (
+                    <em key={p.key} className={p.tone === 'bueno' ? 'good' : 'bad'}>
+                      {p.label} {p.value > 0 ? '+' : ''}{p.value}
+                    </em>
+                  ))}
+                  {d.moralEffects && previewMoralDelta(d.moralEffects).map((p) => (
                     <em key={p.key} className={p.tone === 'bueno' ? 'good' : 'bad'}>
                       {p.label} {p.value > 0 ? '+' : ''}{p.value}
                     </em>

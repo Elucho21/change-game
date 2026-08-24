@@ -24,6 +24,8 @@ export interface DecisionOrder {
   capitalCost: number;
   label: string;
   emoji: string;
+  /** que pool paga esto: las decisiones de categoria diplomacia usan capital diplomatico */
+  pool: 'politico' | 'diplomatico';
 }
 
 export interface TaxOrder {
@@ -43,6 +45,8 @@ export interface BlocOrder {
   capitalCost: number;
   label: string;
   emoji: string;
+  /** los bloques siempre pagan del pool diplomatico */
+  pool: 'diplomatico';
 }
 
 export interface EventOrder {
@@ -112,9 +116,16 @@ export function goldFiscalDelta(action: 'comprar' | 'vender', tonnes: number): n
   return Math.round(tonnes * perTonne * 100) / 100;
 }
 
-/** Capital politico comprometido por el plan. */
-export const committedCapital = (orders: PlannedOrder[]) =>
-  orders.reduce((sum, o) => sum + o.capitalCost, 0);
+/**
+ * Capital comprometido por el plan, en el pool indicado (politico por
+ * default). Las ordenes de decision y de bloque llevan su propio `pool`;
+ * todo el resto (impuestos, oro, eventos, gabinete) es siempre politico.
+ */
+export const committedCapital = (orders: PlannedOrder[], pool: 'politico' | 'diplomatico' = 'politico') =>
+  orders.reduce((sum, o) => {
+    const orderPool = o.kind === 'decision' || o.kind === 'bloc' ? o.pool : 'politico';
+    return orderPool === pool ? sum + o.capitalCost : sum;
+  }, 0);
 
 /**
  * Agrega una orden de impuestos consolidando con la que ya exista para esa
@@ -191,7 +202,8 @@ export function addDecisionOrder(
       target,
       capitalCost,
       label: targetName ? `${dec.label} - ${targetName}` : dec.label,
-      emoji: dec.emoji
+      emoji: dec.emoji,
+      pool: dec.category === 'diplomacia' ? 'diplomatico' : 'politico'
     }
   ];
 }
@@ -213,7 +225,8 @@ export function addBlocOrder(
       blocId: bloc.id,
       capitalCost,
       label,
-      emoji: action === 'join' ? '🤝' : action === 'leave' ? '🚪' : '🏛️'
+      emoji: action === 'join' ? '🤝' : action === 'leave' ? '🚪' : '🏛️',
+      pool: 'diplomatico'
     }
   ];
 }

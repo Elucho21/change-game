@@ -117,6 +117,16 @@ export const CAPITAL_ON_WIN = 60;
 export const CAPITAL_ON_MIDTERM_WIN = 25;
 export const CAPITAL_PASSIVE_BASE = 8;
 
+/**
+ * Capital diplomatico: recurso separado del capital politico (docs/PEDIDOS_A_OPUS.md,
+ * pedido del jugador de "definir mejor el capital diplomatico"). Solo lo gastan/ganan
+ * las decisiones categoria `diplomacia` y los movimientos de bloques (lib/store.ts).
+ * Arranca mas escaso que el politico a proposito: la diplomacia tiene que sentirse
+ * limitada, no un segundo bolsillo gratis.
+ */
+export const CAPITAL_DIPLOMATICO_START = 25;
+export const DIPLOMATIC_CAPITAL_PASSIVE_BASE = 3;
+
 export const grantHoneymoon = (turn: number) => turn + HONEYMOON_MONTHS;
 
 /** Convierte voto popular en electores (538, mayoria 270). Exagera el winner-take-all. */

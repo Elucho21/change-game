@@ -121,6 +121,7 @@ function simFor(playerCode: string): SimState {
     blocs,
     world: JSON.parse(JSON.stringify(RAW.global)) as GlobalState,
     capital: 60,
+    capitalDiplomatico: 25,
     sanctions: [],
     disruptions: {},
     tradeBase: {},

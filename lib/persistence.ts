@@ -27,6 +27,8 @@ export interface PersistedState {
   playerCode: string;
   turn: number;
   capital: number;
+  /** capital diplomatico, pool separado del politico. Opcional: saves anteriores no lo traen. */
+  capitalDiplomatico?: number;
   world: GlobalState;
   countries: Record<string, Country>;
   relations: Record<string, number>;
@@ -43,7 +45,7 @@ export interface PersistedState {
     // agregados despues: los saves viejos no los traen
     unemployment?: number; fiscal?: number; debt?: number;
     capital?: number; opposition?: number; tension?: number; oil?: number;
-    fx?: number;
+    fx?: number; capitalDiplomatico?: number;
   }[];
   selected: string | null;
   mapMode: MapMode;

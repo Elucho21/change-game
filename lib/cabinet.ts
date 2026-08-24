@@ -1,4 +1,4 @@
-import type { Decision, Delta, GameEvent } from './types';
+import type { Decision, Delta, GameEvent, MoralEffects } from './types';
 import { EXTRA_MINISTERS } from './ministers_extra';
 import { factionOfMinister, type Faction } from './factions';
 
@@ -46,7 +46,13 @@ export interface Minister {
   investmentMod?: number;
   /** suma a streetWeight cada mes: cuanto alimenta o calma la presion sindical/callejera */
   unionPower?: number;
-  /** % extra de capital politico en decisiones de categoria diplomacia (0.1 = +10%) */
+  /**
+   * % extra de generacion pasiva de capital diplomatico (0.1 = +10%). Solo
+   * afecta la regen del pool diplomatico (lib/simulation.ts::diplomaticCapitalRegen):
+   * ya no abarata ni infla el rendimiento de las decisiones de categoria
+   * diplomacia (eso lo cubre el `discount` generico, como cualquier otra
+   * categoria).
+   */
   diplomaticCapitalBonus?: number;
   /**
    * 0-1: cuanto atenua el dano de subir aportes previsionales sobre el
@@ -54,6 +60,8 @@ export interface Minister {
    * los perfiles de Economia con capacidad tecnica/fiscalizadora real.
    */
   laborMitigation?: number;
+  /** efecto pasivo sobre el sistema moral (lib/moral.ts): corrupcion, investigacion, etc. */
+  moralEffects?: MoralEffects;
 }
 
 export const SEATS: { id: CabinetSeat; label: string; hint: string }[] = [
@@ -134,6 +142,17 @@ export const MINISTERS: Minister[] = [
     title: 'La mano dura',
     description: 'Orden ante todo. Sube la sensacion de seguridad y tensa con los movimientos sociales.',
     passive: { stability: 0.6, happiness: -0.25 },
+    discount: { category: 'interior', factor: 0.9 }
+  },
+  {
+    id: 'int_fiscalizadora',
+    name: 'N. Quiroga',
+    seat: 'interior',
+    party: 'oficialismo',
+    title: 'La fiscalizadora',
+    description: 'Viene de un organismo de control. Le importa mas la auditoria que la caja politica: incomoda a la propia tropa.',
+    passive: { happiness: -0.15 },
+    moralEffects: { corruption: -0.15 },
     discount: { category: 'interior', factor: 0.9 }
   },
 
@@ -259,6 +278,19 @@ export const cabinetDiplomaticBonus = (cabinet: Cabinet) =>
 /** Cuanto atenua el gabinete el dano de subir aportes sobre empleo/salarios (lib/employment.ts). */
 export const cabinetLaborMitigation = (cabinet: Cabinet) =>
   Math.min(1, Math.round(seatedMinisters(cabinet).reduce((s, m) => s + (m.laborMitigation ?? 0), 0) * 100) / 100);
+
+/** Suma de los efectos pasivos del gabinete sobre el sistema moral (lib/moral.ts). */
+export function cabinetMoralEffects(cabinet: Cabinet): MoralEffects {
+  const out: MoralEffects = {};
+  for (const m of seatedMinisters(cabinet)) {
+    if (!m.moralEffects) continue;
+    for (const [k, v] of Object.entries(m.moralEffects) as [keyof MoralEffects, number | undefined][]) {
+      if (v === undefined) continue;
+      out[k] = Math.round(((out[k] ?? 0) + v) * 100) / 100;
+    }
+  }
+  return out;
+}
 
 /** Drift de relacion pasivo del gabinete, sumado por target (por si dos ministros pegan al mismo). */
 export function cabinetRelationDrift(cabinet: Cabinet): { target: string; amount: number }[] {

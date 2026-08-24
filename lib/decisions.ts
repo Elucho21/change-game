@@ -127,6 +127,68 @@ export const DECISIONS: Decision[] = [
     effects: { stability: 4, happiness: 3, fiscal_balance: -0.5 }
   },
 
+  // ---------------- ANTICORRUPCION (siempre disponibles, sin esperar a Enrique) ----------------
+  {
+    id: 'ley_transparencia',
+    category: 'interior',
+    label: 'Ley de transparencia y acceso a la informacion',
+    emoji: '🔍',
+    detail: 'Obliga a publicar contratos publicos y declaraciones juradas. Corta el margen para arreglos bajo la mesa.',
+    cost: { capital: 9 },
+    effects: { stability: 1 },
+    moralEffects: { corruption: -5, investigacion: 3 }
+  },
+  {
+    id: 'organismo_control_gasto',
+    category: 'interior',
+    label: 'Crear organismo de control del gasto publico',
+    emoji: '🕵️',
+    detail: 'Auditorias independientes de compras y obra publica. A la casta le molesta; el votante lo aplaude despacio.',
+    cost: { capital: 11, fiscal: 0.3 },
+    effects: { happiness: 1 },
+    moralEffects: { corruption: -7, favoresActivos: -4 }
+  },
+  {
+    id: 'independencia_judicial',
+    category: 'interior',
+    label: 'Fortalecer la independencia judicial',
+    emoji: '⚖️',
+    detail: 'Concursos publicos para jueces, menos discrecionalidad del Ejecutivo. Un activo a largo plazo, un dolor de cabeza hoy.',
+    cost: { capital: 13 },
+    effects: { stability: 1 },
+    moralEffects: { corteIntegrity: 8, corteLealtad: -6 }
+  },
+  {
+    id: 'proteccion_denunciantes',
+    category: 'interior',
+    label: 'Ley de proteccion a denunciantes',
+    emoji: '📢',
+    detail: 'Blindaje legal y anonimato para quien denuncia corrupcion desde adentro del propio gobierno.',
+    cost: { capital: 8 },
+    effects: {},
+    moralEffects: { corruption: -4, investigacion: 5 }
+  },
+  {
+    id: 'auditoria_compras_publicas',
+    category: 'interior',
+    label: 'Auditoria de compras publicas',
+    emoji: '📋',
+    detail: 'Revision retroactiva de contratos y licitaciones. Incomoda a mas de uno de tu propio espacio.',
+    cost: { capital: 10 },
+    effects: { happiness: 1, stability: -1 },
+    moralEffects: { corruption: -6, favoresActivos: -3, investigacion: 4 }
+  },
+  {
+    id: 'declaraciones_juradas',
+    category: 'interior',
+    label: 'Declaraciones juradas obligatorias para funcionarios',
+    emoji: '🖋️',
+    detail: 'Patrimonio de funcionarios publico y auditable. Barato en plata, caro en enemigos internos.',
+    cost: { capital: 8 },
+    effects: {},
+    moralEffects: { corruption: -4 }
+  },
+
   // ---------------- COMERCIO ----------------
   {
     id: 'subir_aranceles',

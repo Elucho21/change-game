@@ -504,7 +504,7 @@ export interface ChokepointCrisis {
 
 export type ProjectionKey =
   | 'happiness' | 'stability' | 'gdp_growth' | 'inflation' | 'unemployment'
-  | 'fiscal_balance' | 'debt_to_gdp' | 'capital' | 'trade';
+  | 'fiscal_balance' | 'debt_to_gdp' | 'capital' | 'capitalDiplomatico' | 'trade';
 
 export interface ProjectionMetric {
   key: ProjectionKey;

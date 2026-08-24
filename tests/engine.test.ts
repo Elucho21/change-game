@@ -16,7 +16,7 @@ import {
 } from '../lib/orders';
 import { cooldownLeft, cooldownOf, scaleDecision } from '../lib/diplomacy';
 import {
-  cabinetCostFactor, cabinetDiplomaticBonus, cabinetInvestmentMod, cabinetPassive,
+  cabinetCostFactor, cabinetDiplomaticBonus, cabinetInvestmentMod, cabinetMoralEffects, cabinetPassive,
   cabinetRelationDrift, cabinetUnionPower, cabinetVoteBonus, coalitionDemand, coalitionSeats,
   factionsOf, hasCoalition, ministerById
 } from '../lib/cabinet';
@@ -50,6 +50,7 @@ function simFor(playerCode: string): SimState {
     blocs,
     world: fresh(RAW.global),
     capital: 60,
+    capitalDiplomatico: 25,
     sanctions: [],
     disruptions: {},
     tradeBase: {},
@@ -508,6 +509,14 @@ describe('impacto ideologico de ministros (docs/PEDIDOS_A_OPUS.md)', () => {
   it('diplomaticCapitalBonus solo lo aporta el canciller correspondiente', () => {
     expect(cabinetDiplomaticBonus({ exterior: 'ext_atlantista' })).toBeCloseTo(0.2);
     expect(cabinetDiplomaticBonus({ economia: 'eco_promercado' })).toBe(0);
+  });
+
+  it('cabinetMoralEffects suma los efectos pasivos de los ministros sentados', () => {
+    expect(cabinetMoralEffects({ interior: 'int_fiscalizadora' }).corruption).toBeCloseTo(-0.15);
+    expect(cabinetMoralEffects({}).corruption).toBeUndefined();
+    // dos fiscalizadoras no existen, pero dos sillas con moralEffects deberian sumar
+    const combinado = cabinetMoralEffects({ interior: 'int_fiscalizadora', economia: 'eco_ortodoxa' });
+    expect(combinado.corruption).toBeCloseTo(-0.15);
   });
 
   it('cabinetRelationDrift junta el drift de todos los ministros por target', () => {

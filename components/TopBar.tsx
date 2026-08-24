@@ -183,7 +183,7 @@ function Stat({
 
 export default function TopBar({ onGrok, turnFx = false }: { onGrok: () => void; turnFx?: boolean }) {
   const {
-    countries, playerCode, turn, capital, world, pending, politics, active, orders, history, moral
+    countries, playerCode, turn, capital, capitalDiplomatico, world, pending, politics, active, orders, history, moral
   } = useGame();
   const endTurn = useGame((s) => s.endTurn);
   const newGame = useGame((s) => s.newGame);
@@ -214,6 +214,8 @@ export default function TopBar({ onGrok, turnFx = false }: { onGrok: () => void;
       <div className="topbar-stats">
         <Stat label="Capital politico" value={`${Math.round(capital)}`} metric="capital" history={history}
           tone={capital < 20 ? 'bad' : capital > 60 ? 'good' : 'warn'} />
+        <Stat label="Capital diplomatico" value={`${Math.round(capitalDiplomatico)}`} metric="capitalDiplomatico" history={history}
+          tone={capitalDiplomatico < 15 ? 'bad' : capitalDiplomatico > 40 ? 'good' : 'warn'} />
         <Stat label="Felicidad" value={`${p.population.happiness}`} metric="happiness" history={history}
           tone={p.population.happiness < 40 ? 'bad' : p.population.happiness > 65 ? 'good' : ''}
           insight={statInsight('happiness', insightCtx)} />

@@ -22,7 +22,7 @@ import {
   type Candidate, type Difficulty, type ElectionResult, type Politics
 } from './politics';
 import {
-  CAPITAL_ON_MIDTERM_WIN, CAPITAL_ON_WIN, grantHoneymoon, systemOf
+  CAPITAL_DIPLOMATICO_START, CAPITAL_ON_MIDTERM_WIN, CAPITAL_ON_WIN, grantHoneymoon, systemOf
 } from './electoral';
 import {
   addBlocOrder, addCabinetOrder, addDecisionOrder, addEventOrder, addGoldOrder, addTaxOrder, committedCapital,
@@ -31,7 +31,7 @@ import {
 } from './orders';
 import { cooldownKey, cooldownLeft, cooldownUntil, decisionEligible, scaleDecision } from './diplomacy';
 import {
-  cabinetCostFactor, cabinetDiplomaticBonus, cabinetVoteBonus, coalitionDemand, coalitionPartners,
+  cabinetCostFactor, cabinetMoralEffects, cabinetVoteBonus, coalitionDemand, coalitionPartners,
   coalitionSeats, DEMAND_EVERY, factionsOf, ministerById, SEAT_LABEL, type Cabinet, type CabinetSeat
 } from './cabinet';
 import { factionCostFactor, policyKindOf } from './factions';
@@ -88,6 +88,8 @@ export interface HistoryPoint {
   oil: number;
   /** indice de tipo de cambio. 100 = arranque. Saves viejos no lo traen. */
   fx?: number;
+  /** capital diplomatico. Saves viejos no lo traen. */
+  capitalDiplomatico?: number;
 }
 
 interface GameStore {
@@ -95,6 +97,8 @@ interface GameStore {
   playerCode: string;
   turn: number;
   capital: number;
+  /** capital diplomatico: pool separado, solo lo mueven decisiones de categoria diplomacia y bloques */
+  capitalDiplomatico: number;
   world: GlobalState;
   countries: Record<string, Country>;
   relations: Record<string, number>;
@@ -193,6 +197,8 @@ interface GameStore {
   clearOrders: () => void;
   /** capital politico que queda libre despues de comprometer el plan */
   availableCapital: () => number;
+  /** capital diplomatico que queda libre despues de comprometer el plan */
+  availableCapitalDiplomatico: () => number;
   /** nombra o saca a un ministro (queda en el plan del turno) */
   planCabinet: (seat: CabinetSeat, ministerId: string | null) => void;
   /** costo y efectos reales de una decision contra un pais concreto */
@@ -212,6 +218,7 @@ const initial = () => ({
   playerCode: '',
   turn: 1,
   capital: 60,
+  capitalDiplomatico: CAPITAL_DIPLOMATICO_START,
   world: fresh(RAW.global),
   countries: fresh(RAW.countries),
   relations: fresh(RAW.relations),
@@ -263,6 +270,7 @@ function snapshot(st: GameStore): PersistedState {
     playerCode: st.playerCode,
     turn: st.turn,
     capital: st.capital,
+    capitalDiplomatico: st.capitalDiplomatico,
     world: st.world,
     countries: st.countries,
     relations: st.relations,
@@ -313,8 +321,6 @@ function decisionCost(st: GameStore, dec: Decision, baseCost: number): number {
     * parliamentCostFactor(st.politics, baseCost, seats)
     * cabinetCostFactor(st.cabinet, dec.category)
     * factionCostFactor(factionsOf(st.cabinet), policyKindOf(dec.id));
-  // el canciller abarata la diplomacia segun su alineamiento (docs/PEDIDOS_A_OPUS.md)
-  if (dec.category === 'diplomacia') factor *= 1 - cabinetDiplomaticBonus(st.cabinet);
   // reformas previsionales: crisis fiscal visible, superavit+inflacion baja
   // o capital politico alto abaratan la reforma (lib/pension.ts, paquete v1.0)
   if (dec.category === 'previsional') {
@@ -335,6 +341,8 @@ interface PlanRun {
   blocs: Bloc[];
   sanctions: string[];
   capital: number;
+  /** capital diplomatico despues del plan: solo lo tocan decisiones diplomacia y bloques */
+  capitalDiplomatico: number;
   feed: FeedItem[];
   pending: ActiveEvent[];
   lastActions: string[];
@@ -370,6 +378,7 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
     blocs: fresh(st.blocs),
     sanctions: [...st.sanctions],
     capital: st.capital,
+    capitalDiplomatico: st.capitalDiplomatico,
     feed: [],
     pending: [...st.pending],
     lastActions: [],
@@ -388,7 +397,12 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
   };
 
   for (const order of orders) {
-    run.capital = clamp(run.capital - order.capitalCost, 0, 100);
+    // decisiones de categoria diplomacia y movimientos de bloque pagan del
+    // pool de capital diplomatico; todo el resto (impuestos, oro, eventos,
+    // gabinete, y las demas decisiones) del capital politico
+    const paysDiplomatico = order.kind === 'bloc' || (order.kind === 'decision' && order.pool === 'diplomatico');
+    if (paysDiplomatico) run.capitalDiplomatico = clamp(run.capitalDiplomatico - order.capitalCost, 0, 100);
+    else run.capital = clamp(run.capital - order.capitalCost, 0, 100);
 
     // ---------------------------------------------------------- decisiones
     if (order.kind === 'decision') {
@@ -431,11 +445,12 @@ function runPlan(st: GameStore, orders: PlannedOrder[]): PlanRun {
       if (dec.moralEffects) {
         run.moral = applyMoralEffects(run.moral, dec.moralEffects);
       }
-      // el canciller tambien mejora el capital que rinden las jugadas diplomaticas
-      const capitalGain = dec.category === 'diplomacia' && dec.effects.capital
-        ? Math.round(dec.effects.capital * (1 + cabinetDiplomaticBonus(run.cabinet)) * 100) / 100
-        : (dec.effects.capital ?? 0);
-      run.capital = clamp(run.capital + capitalGain, 0, 100);
+      // las decisiones de diplomacia rinden en capital diplomatico, no politico
+      if (dec.category === 'diplomacia') {
+        run.capitalDiplomatico = clamp(run.capitalDiplomatico + (dec.effects.capital ?? 0), 0, 100);
+      } else if (dec.effects.capital) {
+        run.capital = clamp(run.capital + dec.effects.capital, 0, 100);
+      }
       log(dec.emoji, order.label, dec.detail);
       continue;
     }
@@ -770,6 +785,7 @@ export const useGame = create<GameStore>((set, get) => {
     blocs: st.blocs,
     world: st.world,
     capital: st.capital,
+    capitalDiplomatico: st.capitalDiplomatico,
     sanctions: st.sanctions,
     disruptions: st.disruptions,
     tradeBase: st.tradeBase,
@@ -844,7 +860,8 @@ export const useGame = create<GameStore>((set, get) => {
           opposition: politics.opposition,
           tension: s.world.global_tension,
           oil: s.world.oil_price,
-          fx: FX_START
+          fx: FX_START,
+          capitalDiplomatico: CAPITAL_DIPLOMATICO_START
         }
       ]
     });
@@ -876,6 +893,8 @@ export const useGame = create<GameStore>((set, get) => {
       playerCode: st.playerCode,
       turn: st.turn,
       capital: st.capital,
+      // saves viejos no traen capital diplomatico: arranca con la semilla de siempre
+      capitalDiplomatico: st.capitalDiplomatico ?? CAPITAL_DIPLOMATICO_START,
       world: st.world,
       countries: (() => {
         const c = st.countries;
@@ -895,6 +914,7 @@ export const useGame = create<GameStore>((set, get) => {
       // se completan con cero para que el grafico no rompa
       history: st.history.map((h) => ({
         unemployment: 0, fiscal: 0, debt: 0, capital: 0, opposition: 0, tension: 0, oil: 0, fx: FX_START,
+        capitalDiplomatico: CAPITAL_DIPLOMATICO_START,
         ...h
       })),
       selected: st.selected ?? st.playerCode,
@@ -1070,7 +1090,9 @@ export const useGame = create<GameStore>((set, get) => {
     const scaled = scaleDecision(dec, st.countries[st.playerCode], target ? st.countries[target] : undefined, st.relations);
     const cost = decisionCost(st, dec, scaled.cost);
     const orders = addDecisionOrder(st.orders, id, cost, target, target ? st.countries[target]?.name : undefined);
-    if (committedCapital(orders) > st.capital) return;
+    const pool = dec.category === 'diplomacia' ? 'diplomatico' : 'politico';
+    const budget = pool === 'diplomatico' ? st.capitalDiplomatico : st.capital;
+    if (committedCapital(orders, pool) > budget) return;
 
     set({ orders });
     persist();
@@ -1119,6 +1141,11 @@ export const useGame = create<GameStore>((set, get) => {
   availableCapital: () => {
     const st = get();
     return Math.round((st.capital - committedCapital(st.orders)) * 10) / 10;
+  },
+
+  availableCapitalDiplomatico: () => {
+    const st = get();
+    return Math.round((st.capitalDiplomatico - committedCapital(st.orders, 'diplomatico')) * 10) / 10;
   },
 
   // ---------------------------------------------------------- politica
@@ -1293,6 +1320,7 @@ export const useGame = create<GameStore>((set, get) => {
       blocs,
       world,
       capital: run.capital,
+      capitalDiplomatico: run.capitalDiplomatico,
       sanctions: run.sanctions,
       disruptions,
       tradeBase: st.tradeBase,
@@ -1473,7 +1501,11 @@ export const useGame = create<GameStore>((set, get) => {
     // lideres minoritarios, y Enrique Grook (onboarding obligatorio mes 4 o
     // una de sus cartas normales, en pantalla completa - no pasa por `pending`)
     const coalitionSeatsCount = coalitionSeats(run.cabinet);
-    const moralTick = tickMoral(run.moral, {
+    // el gabinete tambien pesa pasivo sobre el sistema moral (ej. "La fiscalizadora"
+    // baja corrupcion de a poco) antes de que corra el drift del mes
+    const cabinetMoral = cabinetMoralEffects(run.cabinet);
+    const moralBeforeTick = Object.keys(cabinetMoral).length ? applyMoralEffects(run.moral, cabinetMoral) : run.moral;
+    const moralTick = tickMoral(moralBeforeTick, {
       happiness: player.population.happiness,
       unemployment: player.economy.unemployment,
       hasMajority: hasMajority(run.politics, coalitionSeatsCount),
@@ -1532,8 +1564,13 @@ export const useGame = create<GameStore>((set, get) => {
       }
     }
 
-    // 7. el capital politico ya lo recupero el tick determinista
+    // 7. el capital politico y el diplomatico ya los recupero el tick determinista
     let capital = tick.state.capital;
+    const capitalDiplomatico = tick.state.capitalDiplomatico;
+    // corrupcion alta drena capital politico todos los meses (docs/PEDIDOS_A_OPUS.md,
+    // rebalance de la generacion pasiva): el gancho que le da payoff concreto
+    // a pelear la corrupcion, no solo un numero que sube.
+    capital = clamp(capital - Math.max(0, moral.corruption - 60) * 0.03, 0, 100);
 
     const p2 = countries[st.playerCode];
 
@@ -1605,7 +1642,7 @@ export const useGame = create<GameStore>((set, get) => {
           title: after.gameOver.title, body: after.gameOver.body, tone: 'malo'
         });
         set({
-          turn, world, countries, relations, blocs, disruptions, active, capital,
+          turn, world, countries, relations, blocs, disruptions, active, capital, capitalDiplomatico,
           politics, election, succession: [], sanctions: run.sanctions, orders: [],
           cooldowns: run.cooldowns, usedOnce: run.usedOnce, cabinet: run.cabinet,
           imf, street, pension, employment, moral, pendingEnrique,
@@ -1657,7 +1694,7 @@ export const useGame = create<GameStore>((set, get) => {
         }
         if (after.gameOver) {
           set({
-            turn, world, countries, relations, blocs, disruptions, active, capital,
+            turn, world, countries, relations, blocs, disruptions, active, capital, capitalDiplomatico,
             politics, election, succession: [], sanctions: run.sanctions, orders: [],
             cooldowns: run.cooldowns, usedOnce: run.usedOnce, cabinet: run.cabinet,
             moral, pendingEnrique,
@@ -1690,9 +1727,12 @@ export const useGame = create<GameStore>((set, get) => {
       }];
     }
     // interes: el capital politico que se sostiene de un mes a otro rinde.
-    // Por cada 10 que quede sin gastar al cierre del turno, se suma 1 mas:
-    // ahorrar para algo grande deja de ser tiempo muerto.
-    const capitalInterest = Math.floor(capital / 10);
+    // Por cada 10 que quede sin gastar al cierre del turno, se suma 1 mas,
+    // con techo (docs/PEDIDOS_A_OPUS.md, rebalance de la generacion pasiva):
+    // sin el techo escalaba sin limite con capital alto, una bola de nieve
+    // que hacia irrelevante gastarlo. Ahorrar para algo grande sigue rindiendo,
+    // pero no reemplaza jugar el turno.
+    const capitalInterest = Math.min(4, Math.floor(capital / 12));
     if (capitalInterest > 0) {
       feed.push({
         turn, date: dateLabel(world), kind: 'sistema', emoji: '💹',
@@ -1720,6 +1760,7 @@ export const useGame = create<GameStore>((set, get) => {
       disruptions,
       active,
       capital,
+      capitalDiplomatico,
       politics,
       election,
       succession,
@@ -1756,7 +1797,8 @@ export const useGame = create<GameStore>((set, get) => {
           opposition: politics.opposition,
           tension: world.global_tension,
           oil: world.oil_price,
-          fx: p2.fx ?? FX_START
+          fx: p2.fx ?? FX_START,
+          capitalDiplomatico
         }
       ],
       milestones: [
@@ -1773,11 +1815,11 @@ export const useGame = create<GameStore>((set, get) => {
     const st = get();
     const bloc = st.blocs.find((b) => b.id === id);
     if (!bloc) return;
-    const check = canJoin(bloc, st.playerCode, st.relations, st.capital);
+    const check = canJoin(bloc, st.playerCode, st.relations, st.capitalDiplomatico);
     if (!check.ok) return;
 
     const orders = addBlocOrder(st.orders, 'join', bloc, check.cost ?? 20);
-    if (committedCapital(orders) > st.capital) return;
+    if (committedCapital(orders, 'diplomatico') > st.capitalDiplomatico) return;
     set({ orders });
     persist();
   },
@@ -1788,7 +1830,7 @@ export const useGame = create<GameStore>((set, get) => {
     if (!bloc || !bloc.members.includes(st.playerCode)) return;
 
     const orders = addBlocOrder(st.orders, 'leave', bloc, 15);
-    if (committedCapital(orders) > st.capital) return;
+    if (committedCapital(orders, 'diplomatico') > st.capitalDiplomatico) return;
     set({ orders });
     persist();
   },
@@ -1799,7 +1841,7 @@ export const useGame = create<GameStore>((set, get) => {
     if (!bloc || !bloc.members.includes(st.playerCode)) return;
 
     const orders = addBlocOrder(st.orders, 'summit', bloc, 10);
-    if (committedCapital(orders) > st.capital) return;
+    if (committedCapital(orders, 'diplomatico') > st.capitalDiplomatico) return;
     set({ orders });
     persist();
   },

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { capitalRegen } from '../lib/simulation';
+import { capitalComboBonus, capitalRegen, diplomaticCapitalRegen } from '../lib/simulation';
 import { defaultPolitics } from '../lib/politics';
 import {
-  CAPITAL_ON_MIDTERM_WIN, CAPITAL_ON_WIN, CAPITAL_PASSIVE_BASE,
+  CAPITAL_DIPLOMATICO_START, CAPITAL_ON_MIDTERM_WIN, CAPITAL_ON_WIN, CAPITAL_PASSIVE_BASE,
   decideRound, popularToElectors, systemOf
 } from '../lib/electoral';
 import type { Country } from '../lib/types';
@@ -58,6 +58,54 @@ describe('capital pasivo y luna de miel', () => {
   it('ganar da 60 y el medio termino 25', () => {
     expect(CAPITAL_ON_WIN).toBe(60);
     expect(CAPITAL_ON_MIDTERM_WIN).toBe(25);
+  });
+});
+
+describe('capital diplomatico (pool separado del politico)', () => {
+  it('arranca en 25, mas escaso que el politico', () => {
+    expect(CAPITAL_DIPLOMATICO_START).toBe(25);
+    expect(CAPITAL_DIPLOMATICO_START).toBeLessThan(60);
+  });
+
+  it('sube con la cantidad de bloques, acotado a un tope', () => {
+    const sinBloques = diplomaticCapitalRegen(25, 0);
+    const conBloques = diplomaticCapitalRegen(25, 3);
+    const conMuchosBloques = diplomaticCapitalRegen(25, 10);
+    expect(conBloques).toBeGreaterThan(sinBloques);
+    expect(conMuchosBloques).toBeLessThanOrEqual(diplomaticCapitalRegen(25, 5) + 0.01);
+  });
+
+  it('el bonus del canciller y la luna de miel lo potencian', () => {
+    const base = diplomaticCapitalRegen(25, 1, 0, false);
+    const conCanciller = diplomaticCapitalRegen(25, 1, 0.2, false);
+    const conLuna = diplomaticCapitalRegen(25, 1, 0, true);
+    expect(conCanciller).toBeGreaterThan(base);
+    expect(conLuna).toBeGreaterThan(base);
+  });
+
+  it('se mueve independiente del capital politico (0-100 propio)', () => {
+    expect(diplomaticCapitalRegen(0, 0)).toBeGreaterThanOrEqual(0);
+    expect(diplomaticCapitalRegen(100, 5)).toBeLessThanOrEqual(100);
+  });
+});
+
+describe('combo capital politico: superavit + inflacion baja + empleo mejorando', () => {
+  it('da un bonus solo si se cumplen las tres condiciones', () => {
+    expect(capitalComboBonus(1, -1, true)).toBeGreaterThan(0);
+    expect(capitalComboBonus(-1, -1, true)).toBe(0); // sin superavit
+    expect(capitalComboBonus(1, 2, true)).toBe(0); // inflacion no esta en la banda baja
+    expect(capitalComboBonus(1, -1, false)).toBe(0); // desempleo no esta bajando
+  });
+
+  it('se apaga en deflacion profunda, para no premiar la trampa', () => {
+    expect(capitalComboBonus(1, -3, true)).toBe(0);
+  });
+
+  it('el bonus queda entre 0.3 y 0.8, menos que ganar una eleccion', () => {
+    const bonus = capitalComboBonus(2, -1.5, true);
+    expect(bonus).toBeGreaterThanOrEqual(0.3);
+    expect(bonus).toBeLessThanOrEqual(0.8);
+    expect(bonus).toBeLessThan(CAPITAL_ON_WIN);
   });
 });
 

@@ -12,10 +12,10 @@ import { systemOf } from './electoral';
 import { topPartnerOf, totalTrade, tradeMatrix, type TradeContext } from './trade';
 import type { Politics } from './politics';
 import {
-  cabinetInvestmentMod, cabinetLaborMitigation, cabinetPassive, cabinetRelationDrift, cabinetUnionPower,
-  coalitionPartners as coalitionPartnersOf, type Cabinet
+  cabinetDiplomaticBonus, cabinetInvestmentMod, cabinetLaborMitigation, cabinetPassive, cabinetRelationDrift,
+  cabinetUnionPower, coalitionPartners as coalitionPartnersOf, type Cabinet
 } from './cabinet';
-import { CAPITAL_PASSIVE_BASE } from './electoral';
+import { CAPITAL_PASSIVE_BASE, DIPLOMATIC_CAPITAL_PASSIVE_BASE } from './electoral';
 import { defaultImf, tickImf, type ImfState } from './imf';
 import { applyFx, FX_START, fxInflationPassthrough, fxPressure, DEVALUE_JUMP } from './fx';
 import { defaultStreet, streetDrip, tickStreetPressure, type StreetState } from './streetPressure';
@@ -45,6 +45,8 @@ export interface SimState {
   blocs: Bloc[];
   world: GlobalState;
   capital: number;
+  /** capital diplomatico: pool separado, solo lo mueven decisiones de categoria diplomacia y bloques */
+  capitalDiplomatico: number;
   sanctions: string[];
   disruptions: Record<string, number>;
   tradeBase: Record<string, number>;
@@ -180,6 +182,37 @@ export const capitalRegen = (capital: number, happiness: number, honeymoon = fal
   return clamp(capital + passive * (honeymoon ? 2 : 1), 0, 100);
 };
 
+/**
+ * Capital diplomatico que se recupera al cerrar el mes. Pool separado del
+ * politico (docs/PEDIDOS_A_OPUS.md, ver electoral.ts). Sube con la cantidad
+ * de bloques a los que perteneces (tener presencia internacional rinde solo)
+ * y con el bonus pasivo del Canciller (`diplomaticCapitalBonus`, lib/cabinet.ts) —
+ * ya no abarata ni infla el rendimiento de las decisiones de diplomacia, ver
+ * lib/store.ts.
+ */
+export const diplomaticCapitalRegen = (
+  capitalD: number, blocMemberships: number, cancillerBonus = 0, honeymoon = false
+) => {
+  const passive = DIPLOMATIC_CAPITAL_PASSIVE_BASE + Math.min(3, blocMemberships * 0.6);
+  return clamp(capitalD + passive * (1 + cancillerBonus) * (honeymoon ? 1.5 : 1), 0, 100);
+};
+
+/**
+ * Bonus de capital politico por el combo superavit + inflacion baja + empleo
+ * mejorando (docs/PEDIDOS_A_OPUS.md, pedido de Grok, antes sin cablear).
+ * Deliberadamente estrecho para que no sea un "win button": exige superavit
+ * fiscal real, inflacion en una banda baja (deflacion profunda la apaga, para
+ * no premiar la trampa de la recesion) y desempleo bajando este mismo turno.
+ */
+export function capitalComboBonus(
+  fiscalBalance: number, inflation: number, unemploymentFalling: boolean
+): number {
+  if (fiscalBalance <= 0) return 0;
+  if (inflation > 0 || inflation <= -2) return 0;
+  if (!unemploymentFalling) return 0;
+  return Math.round(clamp(0.3 + Math.min(0.5, Math.abs(inflation) * 0.3), 0.3, 0.8) * 100) / 100;
+}
+
 export interface TickResult {
   state: SimState;
   /** cuanto subio el barril por rutas cerradas (0 si no hay bloqueos) */
@@ -232,6 +265,7 @@ export function deterministicTick(s: SimState): TickResult {
   const playerBefore = s.countries[s.playerCode];
   const prevDebt = playerBefore.economy.debt_to_gdp;
   const prevGold = playerBefore.economy.gold_reserves_tonnes;
+  const prevUnemployment = playerBefore.economy.unemployment;
 
   naturalDrift(s.countries, s.blocs, s.world, tradeEffects(s), s.taxBase);
 
@@ -308,10 +342,18 @@ export function deterministicTick(s: SimState): TickResult {
 
   updateCohesion(s.blocs, s.relations);
 
-  s.capital = capitalRegen(
-    s.capital,
-    s.countries[s.playerCode].population.happiness,
-    (s.honeymoonUntil ?? 0) >= s.turn
+  const honeymoon = (s.honeymoonUntil ?? 0) >= s.turn;
+  s.capital = capitalRegen(s.capital, s.countries[s.playerCode].population.happiness, honeymoon);
+  s.capital = clamp(
+    s.capital + capitalComboBonus(
+      player.economy.fiscal_balance, player.economy.inflation, player.economy.unemployment < prevUnemployment
+    ),
+    0, 100
+  );
+
+  const blocMemberships = s.blocs.filter((b) => b.members.includes(s.playerCode)).length;
+  s.capitalDiplomatico = diplomaticCapitalRegen(
+    s.capitalDiplomatico, blocMemberships, s.cabinet ? cabinetDiplomaticBonus(s.cabinet) : 0, honeymoon
   );
 
   return { state: s, oilShockApplied: shock };
@@ -338,7 +380,12 @@ export function applyDecisionTo(s: SimState, dec: Decision, target?: string): Si
     s.pension = applyPensionReform(s.pension ?? defaultPension(), dec.id);
   }
 
-  s.capital = clamp(s.capital - dec.cost.capital + (dec.effects.capital ?? 0), 0, 100);
+  // diplomacia gasta y rinde en el pool de capital diplomatico, no en el politico
+  if (dec.category === 'diplomacia') {
+    s.capitalDiplomatico = clamp(s.capitalDiplomatico - dec.cost.capital + (dec.effects.capital ?? 0), 0, 100);
+  } else {
+    s.capital = clamp(s.capital - dec.cost.capital + (dec.effects.capital ?? 0), 0, 100);
+  }
   return s;
 }
 
@@ -355,6 +402,7 @@ const METRIC_LABELS: Record<ProjectionKey, string> = {
   fiscal_balance: 'Balance fiscal',
   debt_to_gdp: 'Deuda / PBI',
   capital: 'Capital politico',
+  capitalDiplomatico: 'Capital diplomatico',
   trade: 'Comercio total'
 };
 
@@ -365,6 +413,7 @@ function readMetric(s: SimState, key: ProjectionKey): number {
   const p = s.countries[s.playerCode];
   switch (key) {
     case 'capital': return s.capital;
+    case 'capitalDiplomatico': return s.capitalDiplomatico;
     case 'trade': return totalTrade(s.playerCode, tradeContextOf(s));
     case 'happiness': return p.population.happiness;
     case 'stability': return p.population.stability;
@@ -464,7 +513,7 @@ export function projectDecision(
 ): Projection {
   const keys: ProjectionKey[] = [
     'happiness', 'stability', 'gdp_growth', 'inflation', 'unemployment',
-    'fiscal_balance', 'debt_to_gdp', 'capital', 'trade'
+    'fiscal_balance', 'debt_to_gdp', 'capital', 'capitalDiplomatico', 'trade'
   ];
 
   const now: Record<ProjectionKey, number> = {} as Record<ProjectionKey, number>;

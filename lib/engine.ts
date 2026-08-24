@@ -83,8 +83,8 @@ export function canJoin(bloc: Bloc, code: string, rel: Record<string, number>, c
     return { ok: false, reason: `Necesitas relacion >= ${minRel} con: ${blockers.join(', ')}` };
   }
   const cost = bloc.type === 'militar' ? 25 : 18;
-  if (capital < cost) return { ok: false, reason: `Necesitas ${cost} de capital politico` };
-  return { ok: true, reason: `Ingreso posible (cuesta ${cost} de capital politico)`, cost };
+  if (capital < cost) return { ok: false, reason: `Necesitas ${cost} de capital diplomatico` };
+  return { ok: true, reason: `Ingreso posible (cuesta ${cost} de capital diplomatico)`, cost };
 }
 
 // ============================================================

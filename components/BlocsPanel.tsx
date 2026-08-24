@@ -11,11 +11,12 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 export default function BlocsPanel() {
-  const { blocs, playerCode, countries, relations, capital } = useGame();
+  const { blocs, playerCode, countries, relations, capitalDiplomatico } = useGame();
   const join = useGame((s) => s.planJoinBloc);
   const leave = useGame((s) => s.planLeaveBloc);
   const summit = useGame((s) => s.planSummit);
   const orders = useGame((s) => s.orders);
+  const available = useGame((s) => s.availableCapitalDiplomatico)();
 
   const fx = blocEffects(blocs, playerCode);
 
@@ -31,7 +32,7 @@ export default function BlocsPanel() {
 
       {blocs.map((b) => {
         const isMember = b.members.includes(playerCode);
-        const check = canJoin(b, playerCode, relations, capital);
+        const check = canJoin(b, playerCode, relations, capitalDiplomatico);
         return (
           <div className="section" key={b.id}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
@@ -57,8 +58,8 @@ export default function BlocsPanel() {
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {isMember ? (
                 <>
-                  <button onClick={() => summit(b.id)} disabled={capital < 10}>🏛️ Cumbre al plan (10 cap.)</button>
-                  <button onClick={() => leave(b.id)} disabled={capital < 15}>🚪 Salir, al plan (15 cap.)</button>
+                  <button onClick={() => summit(b.id)} disabled={available < 10}>🏛️ Cumbre al plan (10 cap. diplomatico)</button>
+                  <button onClick={() => leave(b.id)} disabled={available < 15}>🚪 Salir, al plan (15 cap. diplomatico)</button>
                 </>
               ) : (
                 <button onClick={() => join(b.id)} disabled={!check.ok} title={check.reason}>
