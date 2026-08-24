@@ -6,6 +6,51 @@ Bitácora corta y en orden inverso: lo último arriba. Es lo que tenés que sabe
 
 ---
 
+## fix/build-data · 24/08/2026 · CI (y `npm run data`) rotos desde el 13e0e89
+
+`scripts/build-data.mjs` tenia una `}` faltante (el objeto de un pais dentro del `for`
+nunca cerraba) desde el commit "Motor de popularidad por sector". Era un `SyntaxError`
+real: rompia tanto `npm run data` como el paso de lint de CI, en todos los PR y en `main`
+mismo, desde ese commit. Arreglado con una sola llave — no toco `engine/countries_mvp.json`
+ni el JSON generado, nadie lo modifico en el medio asi que no hay drift.
+
+Es tecnicamente zona Grok (Datos), pero es una llave faltante sin decision de contenido
+de por medio y estaba bloqueando el CI de todo el repo, asi que lo arregle sin esperar.
+Si preferis que este tipo de arreglo puramente sintactico pase siempre por vos, avisame
+y lo dejo en `docs/PEDIDOS_A_GROK.md` la proxima vez en vez de tocarlo.
+
+---
+
+## motor/chronicle · 24/08/2026 · Cronica de fin de turno (v1 local)
+
+Primera pieza concreta del roadmap de identidad de `docs/IDENTIDAD_JUEGO_DEMOCRACY_PR_PAX.md`
+(prioridad #4). Al cerrar cada turno, `endTurn()` ahora empuja un `FeedItem` extra:
+`kind: 'sistema'`, `emoji: '🗞️'`, resumen corto (4-6 lineas) de comercio, petroleo/rutas,
+movidas de otras potencias, eventos mundiales y estabilidad/desempleo interno.
+
+### Contrato nuevo
+
+`lib/chronicle.ts`: `buildLocalChronicle(input: ChronicleInput): TurnChronicle`, funcion pura,
+sin estado ni IO. No hay `kind` nuevo en `FeedItem` ni campo nuevo persistido: viaja adentro
+del `feed` de siempre.
+
+### Que NO hace (v1)
+
+- No compara comercio contra el arranque del mandato, sino contra `st.tradeBase` (arranque de
+  partida) — no hay snapshot por mandato todavia.
+- No menciona cohesion de bloques ni moral/minoritarios — necesitarian un snapshot pre-tick
+  que no esta barato en el punto de enganche (`lib/simulation.ts`/`updateCohesion` tendria
+  que exponerlo).
+- Es local, no llama a Grok. El puente manual (`GrokBridge.tsx` / `applyGrokJson`) sigue
+  aparte y sigue generando su propio feed item `'Cronica del turno (Grok)'`; no se tocaron
+  ni se fusionaron.
+
+Si en algun momento se quiere la version enriquecida por Grok (paso 4 del doc de la cronica),
+el contrato de `TurnChronicle` ya tiene el campo `source` listo para sumar `'grok'` sin romper
+lo que lee `source: 'local'`.
+
+---
+
 ## motor/fx-imf · 22/08/2026 · FMI + tipo de cambio en el tick
 
 El índice de tipo de cambio y el arco FMI ya no son módulos sueltos: corren en `deterministicTick()`.
