@@ -4,6 +4,7 @@ import {
   tickMoral, CORRUPTION_LEVELS, type MoralTickInput
 } from '../lib/moral';
 import { defaultPolitics } from '../lib/politics';
+import { defaultPopularGroups, GROUP_KEYS } from '../lib/popularGroups';
 import data from '../lib/data/countries.gen.json';
 import type { Country } from '../lib/types';
 
@@ -14,7 +15,8 @@ const baseInput: MoralTickInput = {
   unemployment: 7,
   hasMajority: false,
   strongMajority: false,
-  comisionIntegrity: 50
+  comisionIntegrity: 50,
+  groups: defaultPopularGroups()
 };
 
 describe('sistema moral (corrupcion, investigacion, lideres minoritarios)', () => {
@@ -90,6 +92,37 @@ describe('sistema moral (corrupcion, investigacion, lideres minoritarios)', () =
         s = tickMoral(s, { ...baseInput, unemployment: 4, happiness: 80 }).state;
       }
       expect(s.gustavoApoyo).toBeLessThan(2);
+    });
+
+    it('Gustavo responde al humor del grupo obrero, independiente del desempleo (v1.2)', () => {
+      const obreraContenta = tickMoral(defaultMoral(), {
+        ...baseInput, groups: { ...defaultPopularGroups(), obrera: 80 }
+      });
+      const obreraEnojada = tickMoral(defaultMoral(), {
+        ...baseInput, groups: { ...defaultPopularGroups(), obrera: 15 }
+      });
+      expect(obreraEnojada.state.gustavoApoyo).toBeGreaterThan(obreraContenta.state.gustavoApoyo);
+    });
+
+    it('Jhon responde a la clase media descontenta, ademas de seguridad/corrupcion (v1.2)', () => {
+      const base = { ...defaultMoral(), securityIndex: 50, corruption: 40 };
+      const claseMediaContenta = tickMoral(base, {
+        ...baseInput, groups: { ...defaultPopularGroups(), claseMedia: 80 }
+      });
+      const claseMediaEnojada = tickMoral(base, {
+        ...baseInput, groups: { ...defaultPopularGroups(), claseMedia: 15 }
+      });
+      expect(claseMediaEnojada.state.jhonApoyo).toBeGreaterThan(claseMediaContenta.state.jhonApoyo);
+    });
+
+    it('Amalia no se mueve por ningun grupo de popularidad por sector (decision explicita de diseno)', () => {
+      const base = { ...defaultMoral(), environmentIndex: 40, corruption: 40 };
+      const conGruposNeutros = tickMoral(base, { ...baseInput, groups: defaultPopularGroups() }).state.amaliaApoyo;
+      for (const key of GROUP_KEYS) {
+        const grupos = { ...defaultPopularGroups(), [key]: 5 };
+        const r = tickMoral(base, { ...baseInput, groups: grupos });
+        expect(r.state.amaliaApoyo).toBeCloseTo(conGruposNeutros);
+      }
     });
   });
 

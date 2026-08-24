@@ -19,7 +19,7 @@
  */
 
 import { totalSeats, type Politics } from './politics';
-import type { MoralEffects, MoralState } from './types';
+import type { MoralEffects, MoralState, PopularGroupsState } from './types';
 
 export type { MoralState };
 
@@ -59,6 +59,13 @@ export interface MoralTickInput {
   /** mayoria solida (> 65 escanos totales): bonus extra al freno de investigaciones */
   strongMajority: boolean;
   comisionIntegrity: number;
+  /**
+   * Popularidad por sector de este mismo turno (lib/popularGroups.ts,
+   * Change World Game v1.2). Alimenta targetGustavo/targetJhon donde la
+   * señal calza (obrero -> Gustavo, clase media -> Jhon); targetAmalia
+   * queda sin cambios, ver comentario ahi.
+   */
+  groups: PopularGroupsState;
 }
 
 export interface MoralTickResult {
@@ -93,10 +100,30 @@ export function tickMoral(prev: MoralState, input: MoralTickInput): MoralTickRes
   const securityIndex = clamp(round(prev.securityIndex + (50 - prev.securityIndex) * 0.03), 0, 100);
 
   // los 3 lideres minoritarios convergen hacia un target segun sus propios
-  // drivers, mismo patron que driftOpposition (lib/politics.ts)
-  const targetGustavo = clamp((input.unemployment - 5) * 0.6 + (60 - input.happiness) * 0.05, 0, MINORITY_CAPS.gustavo);
+  // drivers, mismo patron que driftOpposition (lib/politics.ts). Desde
+  // v1.2, dos de los tres tambien leen la popularidad por sector de este
+  // turno (lib/popularGroups.ts) donde la señal calza de verdad: la mitad
+  // del peso de desempleo de Gustavo pasa a leer directo el humor de la
+  // clase obrera (el comunista es el partido obrero, no falta forzarlo);
+  // Jhon suma un termino chico de clase media descontenta (harta de la
+  // corrupcion, deriva a la derecha dura) sin sacarle peso a lo que ya tenia.
+  const targetGustavo = clamp(
+    (input.unemployment - 5) * 0.3
+    + (60 - input.happiness) * 0.05
+    + Math.max(0, 50 - input.groups.obrera) * 0.09,
+    0, MINORITY_CAPS.gustavo
+  );
+  // targetAmalia SIN CAMBIOS: ninguno de los 5 grupos (empresarios, clase
+  // media, obrera, alta, fieles) es una lectura razonable de "ambientalismo".
+  // Forzar una conexion aca seria arbitrario — sigue leyendo solo
+  // environmentIndex/corruption, igual que siempre.
   const targetAmalia = clamp((60 - prev.environmentIndex) * 0.08 + Math.max(0, corruption - 20) * 0.02, 0, MINORITY_CAPS.amalia);
-  const targetJhon = clamp((prev.securityIndex - 30) * 0.15 + Math.max(0, corruption - 30) * 0.03, 0, MINORITY_CAPS.jhon);
+  const targetJhon = clamp(
+    (prev.securityIndex - 30) * 0.15
+    + Math.max(0, corruption - 30) * 0.03
+    + Math.max(0, 50 - input.groups.claseMedia) * 0.04,
+    0, MINORITY_CAPS.jhon
+  );
 
   const converge = (current: number, target: number, cap: number) =>
     clamp(round(current + (target - current) * 0.1), 0, cap);

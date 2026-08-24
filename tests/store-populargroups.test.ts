@@ -49,4 +49,34 @@ describe('popularidad por sector a traves de la store real', () => {
     // aislando el efecto de medios del resto de la regen pasiva
     expect(despuesFeliz - antesFeliz).toBeGreaterThan(despuesEnojada - antesEnojada);
   });
+
+  it('el sistema moral de este turno ya lee los grupos de este mismo turno (orden en endTurn)', () => {
+    useGame.getState().newGame();
+    useGame.getState().start('Argentina', 'normal');
+    // fuerza obrera muy enojada justo antes de un endTurn: si moral leyera
+    // los grupos DEL TURNO ANTERIOR (bug de orden), gustavoApoyo no
+    // reaccionaria todavia a este cambio
+    useGame.setState((st) => ({ groups: { ...st.groups, obrera: 5 } }));
+    const antes = useGame.getState().moral.gustavoApoyo;
+    useGame.getState().endTurn();
+    expect(useGame.getState().moral.gustavoApoyo).toBeGreaterThan(antes);
+  });
+
+  it('un salto de empresarios entre dos ticks dispara el mensaje de feed correspondiente', () => {
+    useGame.getState().newGame();
+    useGame.getState().start('Argentina', 'normal');
+    // fuerza el escenario en el propio estado de grupos (mas confiable que
+    // esperar a que la macro real cruce el umbral en un turno): empresarios
+    // muy bajo el turno anterior implicito, alta inflacion cayendo este turno
+    useGame.setState((st) => ({
+      groups: { ...st.groups, empresarios: 20 },
+      countries: {
+        ...st.countries,
+        Argentina: { ...st.countries.Argentina, economy: { ...st.countries.Argentina.economy, inflation: 4 } }
+      }
+    }));
+    useGame.getState().endTurn();
+    const feedTitles = useGame.getState().feed.map((f) => f.title);
+    expect(feedTitles.some((t) => t.includes('empresarios'))).toBe(true);
+  });
 });

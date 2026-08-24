@@ -1170,7 +1170,7 @@ export const useGame = create<GameStore>((set, get) => {
   currentPoll: () => {
     const st = get();
     if (!st.started) return 0;
-    return poll(st.countries[st.playerCode], st.politics, st.capital, cabinetVoteBonus(st.cabinet));
+    return poll(st.countries[st.playerCode], st.politics, st.capital, cabinetVoteBonus(st.cabinet), st.groups);
   },
 
   /**
@@ -1194,7 +1194,7 @@ export const useGame = create<GameStore>((set, get) => {
       consecutiveTerms: 0   // arranca de cero: la eleccion de abajo lo pone en 1
     };
 
-    const result = runElection(countries[st.playerCode], politics, capital, candidate);
+    const result = runElection(countries[st.playerCode], politics, capital, candidate, 0, st.groups);
     const after = applyElection(
       { ...st, countries, world, capital, politics } as GameStore, result, candidate
     );
@@ -1559,7 +1559,8 @@ export const useGame = create<GameStore>((set, get) => {
       unemployment: player.economy.unemployment,
       hasMajority: hasMajority(run.politics, coalitionSeatsCount),
       strongMajority: totalSeats(run.politics, coalitionSeatsCount) > 65,
-      comisionIntegrity: comisionIntegrityEffective(run.politics, coalitionSeatsCount)
+      comisionIntegrity: comisionIntegrityEffective(run.politics, coalitionSeatsCount),
+      groups
     });
     if (moralTick.happinessDelta) applyDelta(player, { happiness: moralTick.happinessDelta }, world);
     const moral = moralTick.state;
@@ -1629,7 +1630,7 @@ export const useGame = create<GameStore>((set, get) => {
     // 8. la oposicion se mueve todos los meses; la encuesta queda registrada.
     //    Parte de run.politics (no st.politics): ahi ya esta el lever directo
     //    de las decisiones de este turno (Delta.opposition, ver runPlan).
-    const encuesta = poll(p2, run.politics, capital, cabinetVoteBonus(run.cabinet));
+    const encuesta = poll(p2, run.politics, capital, cabinetVoteBonus(run.cabinet), groups);
     let politics: Politics = {
       ...run.politics,
       opposition: driftOpposition(run.politics, p2),
@@ -1676,7 +1677,7 @@ export const useGame = create<GameStore>((set, get) => {
 
     // 9. se termino el mandato, hay ballotage pendiente, o medio termino
     if (politics.pendingBallotage) {
-      const result = runElection(p2, politics, capital);
+      const result = runElection(p2, politics, capital, undefined, 0, groups);
       const after = applyElection(
         { ...st, turn, world, countries, capital, politics } as GameStore, result
       );
@@ -1722,7 +1723,7 @@ export const useGame = create<GameStore>((set, get) => {
           tone: 'neutral'
         });
       } else {
-        const result = runElection(p2, politics, capital, undefined, cabinetVoteBonus(run.cabinet));
+        const result = runElection(p2, politics, capital, undefined, cabinetVoteBonus(run.cabinet), groups);
         const after = applyElection(
           { ...st, turn, world, countries, capital, politics } as GameStore, result
         );
@@ -1765,7 +1766,7 @@ export const useGame = create<GameStore>((set, get) => {
         }
       }
     } else if (isMidtermDue(politics, turn, st.playerCode)) {
-      const result = runMidterm(p2, politics, capital);
+      const result = runMidterm(p2, politics, capital, groups);
       const after = applyMidterm(
         { ...st, turn, world, countries, capital, politics } as GameStore, result
       );

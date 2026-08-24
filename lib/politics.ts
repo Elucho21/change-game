@@ -1,8 +1,9 @@
-import type { Country, Delta, GameEvent } from './types';
+import type { Country, Delta, GameEvent, GroupKey, PopularGroupsState } from './types';
 import { clamp } from './engine';
 import {
   CAPITAL_ON_WIN, decideBallotage, decideRound, grantHoneymoon, systemOf
 } from './electoral';
+import { classCompositionFromCountry, GROUP_KEYS } from './popularGroups';
 
 /**
  * Ciclo electoral, oposicion y continuidad del partido.
@@ -257,18 +258,56 @@ export const monthsToElection = (p: Politics, turn: number) => Math.max(0, p.ter
 export const isElectionDue = (p: Politics, turn: number) => termsElapsed(p, turn) >= p.termLength;
 export const needsSuccessor = (p: Politics) => p.consecutiveTerms >= p.maxConsecutive;
 
+// Peso de la felicidad general vs. de los 5 grupos en el termino "social" de
+// poll() cuando hay `groups` (Change World Game v1.2). Suman parecido al 0.55
+// original a proposito: no es reemplazar felicidad, es repartir el mismo peso
+// entre "como esta el pais en general" y "como esta cada sector en particular".
+// Numeros mas sensibles a como se siente jugar: tunear aca, no reescribir la formula.
+export const HAPPINESS_POLL_WEIGHT = 0.28;
+export const GROUPS_POLL_WEIGHT = 0.30;
+
+/**
+ * Cuanto pesa cada grupo en la boleta, mas alla de cuanta gente representa.
+ * La clase media es la bisagra electoral tipica: pesa mas que su tamaño
+ * poblacional. La clase alta pesa poco en votos (es chica), su influencia
+ * real es via medios -> capital politico (lib/popularGroups.ts::mediaCapitalEffect),
+ * no aca.
+ */
+const GROUP_ELECTORAL_WEIGHT: Record<GroupKey, number> = {
+  empresarios: 0.9, claseMedia: 1.3, obrera: 1.0, alta: 0.5, fieles: 0.6
+};
+
+function groupsPollTerm(groups: PopularGroupsState, country: Country): number {
+  const comp = classCompositionFromCountry(country);
+  let weightedSum = 0;
+  let weightTotal = 0;
+  for (const g of GROUP_KEYS) {
+    const w = (comp[g] / 100) * GROUP_ELECTORAL_WEIGHT[g];
+    weightedSum += (groups[g] - 55) * w;
+    weightTotal += w;
+  }
+  return weightTotal ? weightedSum / weightTotal : 0;
+}
+
 /**
  * Intencion de voto proyectada, 0-100.
  * Es la misma cuenta que decide la eleccion, asi que la encuesta que ve el
  * jugador durante el mandato no le miente: si llega al final con 46, pierde.
+ *
+ * `groups` es opcional (Change World Game v1.2): si se pasa, el termino de
+ * felicidad se reparte entre felicidad general y la popularidad ponderada de
+ * los 5 grupos; si no se pasa, la formula queda identica a como era antes.
  */
-export function poll(country: Country, p: Politics, capital: number, bonus = 0): number {
+export function poll(country: Country, p: Politics, capital: number, bonus = 0, groups?: PopularGroupsState): number {
   // `bonus` junta lo del candidato y lo que aporta el gabinete
   const e = country.economy;
   const pop = country.population;
+  const socialTerm = groups
+    ? (pop.happiness - 55) * HAPPINESS_POLL_WEIGHT + groupsPollTerm(groups, country) * GROUPS_POLL_WEIGHT
+    : (pop.happiness - 55) * 0.55;
   const vote =
     46 +
-    (pop.happiness - 55) * 0.55 +
+    socialTerm +
     e.gdp_growth * 2.2 -
     Math.min(e.inflation, 100) * 0.06 -
     (e.unemployment - 8) * 0.7 +
@@ -285,11 +324,12 @@ export const isMidtermDue = (p: Politics, turn: number, code: string) => {
 
 /** Resuelve la eleccion. El ruido evita que el resultado sea cantado. */
 export function runElection(
-  country: Country, p: Politics, capital: number, candidate?: Candidate, cabinetBonus = 0
+  country: Country, p: Politics, capital: number, candidate?: Candidate, cabinetBonus = 0,
+  groups?: PopularGroupsState
 ): ElectionResult {
   const sys = systemOf(country.code);
   // el gabinete tambien pesa en la boleta: un ministro de la oposicion suma
-  const base = poll(country, p, capital, (candidate?.voteBonus ?? 0) + cabinetBonus);
+  const base = poll(country, p, capital, (candidate?.voteBonus ?? 0) + cabinetBonus, groups);
   const noise = (Math.random() - 0.5) * 6;
   const vote = clamp(Math.round((base + noise) * 10) / 10, 1, 99);
   const quien = candidate ? candidate.name : p.leaderName;
@@ -337,8 +377,8 @@ export function runElection(
   };
 }
 
-export function runMidterm(country: Country, p: Politics, capital: number): ElectionResult {
-  const vote = poll(country, p, capital);
+export function runMidterm(country: Country, p: Politics, capital: number, groups?: PopularGroupsState): ElectionResult {
+  const vote = poll(country, p, capital, 0, groups);
   const won = vote >= 48;
   return {
     vote, won, margin: Math.round((vote - 50) * 10) / 10,
