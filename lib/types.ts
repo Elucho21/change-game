@@ -407,6 +407,20 @@ export interface EventContext {
    *   when: (c) => (c.moral?.environmentIndex ?? 100) < 40
    */
   moral?: MoralState;
+  /**
+   * Popularidad por sector (lib/popularGroups.ts), Change World Game v1.2.
+   * Solo se completa para el gating de decisiones en components/DecisionsPanel.tsx
+   * (no pasa por SimState/eventExtraOf: el filtro de decisiones es UI de
+   * display, no parte del contrato preview-vs-real que SimState protege).
+   *   when: (c) => (c.groups?.obrera ?? 50) < 30
+   */
+  groups?: PopularGroupsState;
+  /**
+   * Capital diplomatico disponible (pool separado del politico, lib/electoral.ts).
+   * Mismo motivo que `groups`: solo para gating de decisiones en el panel.
+   *   when: (c) => (c.capitalDiplomatico ?? 0) >= 20
+   */
+  capitalDiplomatico?: number;
 }
 
 /**

@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import { CATEGORIES, DECISIONS } from '@/lib/decisions';
-import { decisionEligible } from '@/lib/diplomacy';
-import { previewDelta } from '@/lib/engine';
+import { decisionEligible, decisionWhenEligible } from '@/lib/diplomacy';
+import { buildCtx, previewDelta } from '@/lib/engine';
 import { previewMoralDelta } from '@/lib/moral';
 import { previewGroupDelta } from '@/lib/popularGroups';
 import { useGame } from '@/lib/store';
@@ -18,7 +18,10 @@ export default function DecisionsPanel() {
   const [cat, setCat] = useState<(typeof CATEGORIES)[number]['id']>('economia');
   const [open, setOpen] = useState<string | null>(null);
 
-  const { capital, capitalDiplomatico, selected, playerCode, countries, orders, turn, usedOnce } = useGame();
+  const {
+    capital, capitalDiplomatico, selected, playerCode, countries, orders, turn, usedOnce,
+    world, blocs, relations, moral, groups
+  } = useGame();
   const plan = useGame((s) => s.planDecision);
   const preview = useGame((s) => s.previewDecision);
   const availablePolitico = useGame((s) => s.availableCapital)();
@@ -32,9 +35,20 @@ export default function DecisionsPanel() {
   const capitalTotal = poolIsDiplomatico ? capitalDiplomatico : capital;
   const poolLabel = poolIsDiplomatico ? 'Capital diplomatico' : 'Capital politico';
 
-  // las "once" ya usadas desaparecen del catalogo; la contraria de un par
-  // toggle (requires) recien aparece cuando la original ya se tomo
-  const list = DECISIONS.filter((d) => d.category === cat && decisionEligible(d, usedOnce, target));
+  // contexto para las decisiones contextuales (dec.when, Change World Game v1.2):
+  // se arma directo del estado vivo, sin pasar por SimState/eventExtraOf — el
+  // filtro de decisiones es UI de display, no parte del contrato preview-vs-real
+  const decisionCtx = useMemo(
+    () => ({ ...buildCtx(countries[playerCode], world, turn, blocs, relations, { moral }), groups, capitalDiplomatico }),
+    [countries, playerCode, world, turn, blocs, relations, moral, groups, capitalDiplomatico]
+  );
+
+  // las "once" ya usadas y las que no cumplen su `when` desaparecen del
+  // catalogo; la contraria de un par toggle (requires) recien aparece cuando
+  // la original ya se tomo
+  const list = DECISIONS.filter((d) =>
+    d.category === cat && decisionEligible(d, usedOnce, target) && decisionWhenEligible(d, decisionCtx)
+  );
 
   // la proyeccion simula 3 turnos por duplicado: se calcula solo para la
   // decision abierta y se recalcula unicamente si cambia el turno o el objetivo

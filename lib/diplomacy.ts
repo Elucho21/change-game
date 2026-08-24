@@ -1,4 +1,4 @@
-import type { Country, Decision, Delta } from './types';
+import type { Country, Decision, Delta, EventContext } from './types';
 import { clamp, getRelation } from './engine';
 
 /**
@@ -144,4 +144,15 @@ export function decisionEligible(dec: Decision, usedOnce: string[], target?: str
   if (dec.once && isUsedOnce(usedOnce, dec.id, target)) return false;
   if (dec.requires && !isUsedOnce(usedOnce, dec.requires, target)) return false;
   return true;
+}
+
+/**
+ * Decisiones contextuales (Change World Game v1.2, pedido de Grok en
+ * docs/INFRAESTRUCTURA_Y_DECISIONES_CONTEXTUALES.md): una decision con
+ * `when` que da falso no aparece en el catalogo, mismo criterio que
+ * `decisionEligible` de arriba (desaparece, no se muestra deshabilitada).
+ * Mismo one-liner que `eligibleEvents` (lib/engine.ts) para eventos.
+ */
+export function decisionWhenEligible(dec: Decision, ctx: EventContext): boolean {
+  return !dec.when || dec.when(ctx);
 }
