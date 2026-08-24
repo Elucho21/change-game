@@ -216,6 +216,58 @@ export function notableGroupSwing(
   return best;
 }
 
+/**
+ * Titular para el feed cuando un grupo se mueve fuerte.
+ *
+ * Antes el store solo narraba UN caso (empresarios subiendo) y el resto de los
+ * swings pasaba invisible: el jugador veia la barra cambiada en la pestaña sin
+ * saber cuando ni por que. Un grupo que se mueve tiene que decirlo el mes que
+ * se mueve, o no existe.
+ */
+const GROUP_SWING_COPY: Record<GroupKey, { up: string; down: string }> = {
+  empresarios: {
+    up: 'Los empresarios recuperan confianza',
+    down: 'Los empresarios desconfian del rumbo'
+  },
+  claseMedia: {
+    up: 'La clase media respira',
+    down: 'La clase media se siente exprimida'
+  },
+  obrera: {
+    up: 'La clase obrera acompana al gobierno',
+    down: 'La clase obrera le suelta la mano al gobierno'
+  },
+  alta: {
+    up: 'Los grandes grupos economicos aflojan la presion',
+    down: 'Los grandes grupos economicos se dan vuelta'
+  },
+  fieles: {
+    up: 'La base propia se entusiasma',
+    down: 'Hasta la base propia empieza a dudar'
+  }
+};
+
+const GROUP_SWING_WHY: Record<GroupKey, string> = {
+  empresarios: 'Miran inflacion y presion impositiva antes que cualquier otra cosa.',
+  claseMedia: 'Pesa la mezcla de corrupcion, inflacion y desempleo.',
+  obrera: 'Lo que mueve la aguja es el empleo y el peso de los sindicatos.',
+  alta: 'Leen desregulacion, impuesto corporativo y crecimiento. Y manejan los medios.',
+  fieles: 'Se mueven poco y tarde: si estos se mueven, algo grande paso.'
+};
+
+export function groupSwingFeed(group: GroupKey, delta: number): {
+  emoji: string; title: string; body: string; tone: 'bueno' | 'malo';
+} {
+  const up = delta > 0;
+  const signo = up ? '+' : '';
+  return {
+    emoji: up ? '📈' : '📉',
+    title: GROUP_SWING_COPY[group][up ? 'up' : 'down'],
+    body: `${GROUP_LABEL[group]}: ${signo}${delta} este mes. ${GROUP_SWING_WHY[group]}`,
+    tone: up ? 'bueno' : 'malo'
+  };
+}
+
 // ============================================================
 // PREVIEW (mismo patron que previewMoralDelta, lib/moral.ts)
 // ============================================================

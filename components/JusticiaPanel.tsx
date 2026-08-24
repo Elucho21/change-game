@@ -1,11 +1,10 @@
 'use client';
 
 import { useGame } from '@/lib/store';
-import { CORRUPTION_LEVELS, INVESTIGACION_LEVELS, levelOf, MINORITY_CAPS, comisionIntegrityEffective } from '@/lib/moral';
+import { CORRUPTION_LEVELS, INVESTIGACION_LEVELS, levelOf, comisionIntegrityEffective, minorityVoteShare } from '@/lib/moral';
 import { coalitionSeats } from '@/lib/cabinet';
 import Collapsible from './Collapsible';
 
-const pct = (v: number) => `${Math.round(v * 10) / 10}%`;
 const toneFor = (v: number) => (v > 65 ? 'bad' : v > 35 ? 'warn' : 'good');
 
 /**
@@ -22,6 +21,7 @@ export default function JusticiaPanel() {
   const corrLevel = levelOf(moral.corruption, CORRUPTION_LEVELS);
   const invLevel = levelOf(moral.investigacion, INVESTIGACION_LEVELS);
   const comision = comisionIntegrityEffective(politics, coalitionSeats(cabinet));
+  const fuga = minorityVoteShare(moral);
 
   return (
     <div>
@@ -66,19 +66,21 @@ export default function JusticiaPanel() {
         </p>
       </Collapsible>
 
-      <Collapsible title="Lideres minoritarios">
-        <div className="row"><span>🚩 Gustavo Comun</span><b>{pct(moral.gustavoApoyo)} / {MINORITY_CAPS.gustavo}%</b></div>
-        <div className="bar"><div style={{ width: `${(moral.gustavoApoyo / MINORITY_CAPS.gustavo) * 100}%`, background: '#e5484d' }} /></div>
-
-        <div className="row" style={{ marginTop: 8 }}><span>🌿 Amalia Verde</span><b>{pct(moral.amaliaApoyo)} / {MINORITY_CAPS.amalia}%</b></div>
-        <div className="bar"><div style={{ width: `${(moral.amaliaApoyo / MINORITY_CAPS.amalia) * 100}%`, background: '#37c98a' }} /></div>
-
-        <div className="row" style={{ marginTop: 8 }}><span>🎖️ Jhon el Duro</span><b>{pct(moral.jhonApoyo)} / {MINORITY_CAPS.jhon}%</b></div>
-        <div className="bar"><div style={{ width: `${(moral.jhonApoyo / MINORITY_CAPS.jhon) * 100}%`, background: '#4f7cff' }} /></div>
-
-        <p className="muted" style={{ fontSize: 11, marginTop: 8, lineHeight: 1.4 }}>
-          Nunca superan su techo. Gustavo crece con desempleo y descontento; Amalia con el indice ambiental
-          hundido; Jhon con la inseguridad en alza. Sus cartas aparecen como eventos nacionales normales.
+      {/*
+        El detalle de los 3 lideres se mudo a components/GovernmentPanel.tsx en
+        v1.4 (esta pestaña no existe hasta el mes 4 y el jugador no los veia).
+        Aca queda solo el gancho con lo que SI es de esta pestaña: la corrupcion
+        que alimenta a dos de los tres.
+      */}
+      <Collapsible title="Lideres minoritarios" defaultOpen={false}>
+        <div className="row">
+          <span>Voto fugado a minoritarios</span>
+          <b className={fuga > 12 ? 'bad' : fuga > 6 ? 'warn' : 'good'}>-{fuga.toFixed(1)} pts</b>
+        </div>
+        <p className="muted" style={{ fontSize: 11, marginTop: 6, lineHeight: 1.4 }}>
+          El detalle de los tres esta en 🏛️ Gobierno. Desde aca los alimentas sin querer: la
+          corrupcion a la vista empuja a Amalia y a Jhon, y el indice de inseguridad es el
+          combustible de Jhon.
         </p>
       </Collapsible>
 

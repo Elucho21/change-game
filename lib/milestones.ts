@@ -143,7 +143,9 @@ export function buildMilestones(ctx: MilestoneCtx): Milestone[] {
   }
 
   // ---------------------------------------------------------- presion de partidos minoritarios
-  if (ctx.moralAfter.onboarded) {
+  // sin gatear por `onboarded` desde v1.4: los minoritarios pesan en la
+  // eleccion desde el turno 1 y se ven en Gobierno, no en Justicia
+  {
     const checks: [keyof typeof LEADER_NAME, number, number, number][] = [
       ['gustavo', ctx.moralBefore.gustavoApoyo, ctx.moralAfter.gustavoApoyo, MINORITY_CAPS.gustavo],
       ['amalia', ctx.moralBefore.amaliaApoyo, ctx.moralAfter.amaliaApoyo, MINORITY_CAPS.amalia],

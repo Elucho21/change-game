@@ -27,6 +27,7 @@ import {
   defaultInfrastructure, INFRA_DECISION_TYPE, startInfrastructure, tickInfrastructure,
   type InfrastructureItem, type InfrastructureState
 } from './infrastructure';
+import { minorityStreetPush } from './moral';
 import type { MoralState } from './types';
 
 /**
@@ -117,7 +118,7 @@ export function eventExtraOf(s: SimState) {
       opposition: s.politics.opposition,
       monthsToElection: monthsToElection(s.politics, s.turn),
       monthsToMidterm: midterm,
-      poll: poll(player, s.politics, s.capital),
+      poll: poll(player, s.politics, s.capital, 0, undefined, s.moral),
       consecutiveTerms: s.politics.consecutiveTerms,
       lastTerm: needsSuccessor(s.politics),
       honeymoon: (s.honeymoonUntil ?? 0) >= s.turn,
@@ -289,8 +290,11 @@ export function deterministicTick(s: SimState): TickResult {
   );
   // un ministro sindical alimenta la mecha; uno pro-mercado la enfria
   const unionPower = s.cabinet ? cabinetUnionPower(s.cabinet) : 0;
-  if (unionPower) {
-    s.street = { ...s.street, streetWeight: clamp(s.street.streetWeight + unionPower, 0, 12) };
+  // ...y Gustavo Comun tambien: es el unico de los tres minoritarios con
+  // estructura sindical para poner gente en la calle (lib/moral.ts)
+  const streetPush = unionPower + minorityStreetPush(s.moral);
+  if (streetPush) {
+    s.street = { ...s.street, streetWeight: clamp(s.street.streetWeight + streetPush, 0, 12) };
   }
   if (s.street.streetWeight >= 4) {
     applyDelta(streetPlayer, streetDrip(s.street.streetWeight), s.world);

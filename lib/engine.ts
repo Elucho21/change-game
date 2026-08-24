@@ -4,6 +4,7 @@ import type {
 } from './types';
 import { NATIONAL_EVENTS } from './events/national';
 import { WORLD_EVENTS } from './events/world';
+import { MINORITY_CAPS, MINORITY_LEADERS, minorityApoyo } from './moral';
 
 // ============================================================
 // RELACIONES
@@ -500,6 +501,28 @@ function pick<T>(items: { item: T; weight: number }[]): T | null {
 }
 
 /**
+ * Multiplicador dinamico del peso de un evento en el sorteo, 1 = sin cambio.
+ *
+ * `GameEvent.weight` es un numero fijo escrito a mano en el contenido, asi que
+ * sin esto un lider minoritario con 14 puntos de apoyo sortea exactamente igual
+ * que uno con 0: sus cartas aparecen a la misma frecuencia pase lo que pase.
+ * Aca el apoyo se convierte en presencia — un lider que crece se hace oir mas
+ * seguido — sin bajar ningun umbral de `when` (anti-patron #5 del doc de
+ * identidad: arreglar el pipeline, no forzar el contenido).
+ */
+export function eventWeightBoost(e: GameEvent, ctx: EventContext): number {
+  const moral = ctx.moral;
+  if (!moral) return 1;
+  for (const l of MINORITY_LEADERS) {
+    if (!e.tags?.includes(l.id)) continue;
+    // 0 apoyo = x1, techo del lider = x2.5
+    const share = minorityApoyo(moral, l.id) / MINORITY_CAPS[l.id];
+    return 1 + Math.max(0, Math.min(1, share)) * 1.5;
+  }
+  return 1;
+}
+
+/**
  * Sortea los eventos del turno. El motor Python usa 25% mundial / 35%
  * nacional / 15% personal; aca el mundial se subio a 40% a proposito: el
  * resto del mundo tiene que sentirse presente, no como ruido de fondo que
@@ -516,7 +539,7 @@ export function rollEvents(
   const eligible = (list: GameEvent[], scope?: GameEvent['scope']) =>
     list
       .filter((e) => (!scope || e.scope === scope) && (!e.when || e.when(ctx)) && !recentIds.includes(e.id))
-      .map((e) => ({ item: e, weight: e.weight }));
+      .map((e) => ({ item: e, weight: e.weight * eventWeightBoost(e, ctx) }));
 
   if (Math.random() < 0.4) {
     const e = pick(eligible(WORLD_EVENTS));

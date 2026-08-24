@@ -6,6 +6,7 @@ import { systemOf } from '@/lib/electoral';
 import { damagedSectors, taxEffects } from '@/lib/engine';
 import { goldCapitalCost, goldFiscalDelta, plannedTaxRate, rateCost, type GoldOrder, type RateOrder } from '@/lib/orders';
 import { oppositionSplit } from '@/lib/politics';
+import { MINORITY_CAPS, MINORITY_LEADERS, minorityApoyo, minorityVoteShare } from '@/lib/moral';
 import { confidenceLabel, RATE_MAX, RATE_MIN, RATE_STEP } from '@/lib/centralBank';
 import { INFRA_CONFIG } from '@/lib/infrastructure';
 import Collapsible from './Collapsible';
@@ -23,6 +24,7 @@ export default function GovernmentPanel() {
   const planRateChange = useGame((s) => s.planRateChange);
   const orders = useGame((s) => s.orders);
   const currentPoll = useGame((s) => s.currentPoll);
+  const moral = useGame((s) => s.moral);
 
   const country = countries[playerCode];
   const votes = currentPoll();
@@ -32,6 +34,7 @@ export default function GovernmentPanel() {
   const fx = taxEffects(country, taxBase[playerCode]);
   const costFactor = oppositionCostFactor(politics.opposition);
   const danados = damagedSectors(country);
+  const fuga = minorityVoteShare(moral);
 
   const TAXES: { kind: 'iva' | 'corporate' | 'income'; label: string; value: number; hint: string }[] = [
     { kind: 'iva', label: 'IVA', value: country.economy.tax_iva, hint: 'Recauda facil, empuja precios y castiga a los que menos tienen.' },
@@ -121,6 +124,39 @@ export default function GovernmentPanel() {
           {politics.opposition > 60 && ' Con esta oposicion, gobernar se vuelve caro: convoca al dialogo o mejora el humor social.'}
           {' '}A 3 meses de la eleccion podes ofrecerle una coalicion a alguno de los dos, y a 1 mes elegis tu discurso de cierre.
         </p>
+      </Collapsible>
+
+      {/*
+        Los tres partidos minoritarios viven aca desde v1.4, no en Justicia: esa
+        pestaña no existe hasta el onboarding de Enrique (mes 4), y con eso el
+        jugador se pasaba un tercio del mandato sin enterarse de que existian.
+        La corrupcion y la Corte SI siguen ocultas hasta el mes 4: lo que se
+        adelanta es el tablero politico, no el sistema moral.
+      */}
+      <Collapsible title="Partidos minoritarios">
+        <div className="row">
+          <span>Voto que se te fuga</span>
+          <b className={fuga > 12 ? 'bad' : fuga > 6 ? 'warn' : 'good'}>-{fuga.toFixed(1)} pts</b>
+        </div>
+        <p className="muted" style={{ fontSize: 11.5, margin: '4px 0 10px', lineHeight: 1.45 }}>
+          Se descuenta punto por punto de tu intencion de voto, empuja la fuerza de la oposicion y
+          hace que las cartas de cada lider aparezcan mas seguido.
+        </p>
+
+        {MINORITY_LEADERS.map((l) => {
+          const apoyo = minorityApoyo(moral, l.id);
+          const cap = MINORITY_CAPS[l.id];
+          return (
+            <div key={l.id} style={{ marginBottom: 10 }}>
+              <div className="row">
+                <span>{l.emoji} {l.name} <span className="muted">· {l.party}</span></span>
+                <b>{(Math.round(apoyo * 10) / 10).toFixed(1)}% / {cap}%</b>
+              </div>
+              <div className="bar"><div style={{ width: `${(apoyo / cap) * 100}%`, background: l.color }} /></div>
+              <p className="muted" style={{ fontSize: 11, marginTop: 4, lineHeight: 1.4 }}>{l.blurb}</p>
+            </div>
+          );
+        })}
       </Collapsible>
 
       <Collapsible title="Politica impositiva">

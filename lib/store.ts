@@ -46,9 +46,13 @@ import { defaultStreet, type StreetState } from './streetPressure';
 import { applyFx, DEVALUE_JUMP, FX_START } from './fx';
 import { applyPensionReform, defaultPension, pensionFromCountry, pensionReformCostMultiplier, type PensionState } from './pension';
 import { defaultEmployment, employmentFromCountry, type EmploymentState } from './employment';
-import { applyMoralEffects, comisionIntegrityEffective, defaultMoral, tickMoral } from './moral';
 import {
-  applyGroupEffects, defaultPopularGroups, mediaCapitalEffect, notableGroupSwing, tickPopularGroups
+  applyMoralEffects, comisionIntegrityEffective, defaultMoral, MINORITY_LEADERS,
+  minorityVoteShare, notableMinoritySwing, tickMoral
+} from './moral';
+import {
+  applyGroupEffects, defaultPopularGroups, groupSwingFeed, mediaCapitalEffect, notableGroupSwing,
+  tickPopularGroups
 } from './popularGroups';
 import { applyRateChange, defaultCentralBank, type CentralBankState } from './centralBank';
 import {
@@ -1240,7 +1244,7 @@ export const useGame = create<GameStore>((set, get) => {
   currentPoll: () => {
     const st = get();
     if (!st.started) return 0;
-    return poll(st.countries[st.playerCode], st.politics, st.capital, cabinetVoteBonus(st.cabinet), st.groups);
+    return poll(st.countries[st.playerCode], st.politics, st.capital, cabinetVoteBonus(st.cabinet), st.groups, st.moral);
   },
 
   /**
@@ -1264,7 +1268,7 @@ export const useGame = create<GameStore>((set, get) => {
       consecutiveTerms: 0   // arranca de cero: la eleccion de abajo lo pone en 1
     };
 
-    const result = runElection(countries[st.playerCode], politics, capital, candidate, 0, st.groups);
+    const result = runElection(countries[st.playerCode], politics, capital, candidate, 0, st.groups, st.moral);
     const after = applyElection(
       { ...st, countries, world, capital, politics } as GameStore, result, candidate
     );
@@ -1630,14 +1634,13 @@ export const useGame = create<GameStore>((set, get) => {
       happiness: player.population.happiness
     });
     const groups = groupsTick;
+    // el grupo que mas se movio se narra SIEMPRE, suba o baje y sea cual sea
+    // (antes solo salia el caso "empresarios contentos" y el resto de los
+    // movimientos quedaba invisible fuera de la pestaña de Grupos)
     const groupSwing = notableGroupSwing(run.groups, groups);
-    if (groupSwing && groupSwing.group === 'empresarios' && groupSwing.delta > 0) {
-      feed.push({
-        turn, date: dateLabel(world), kind: 'sistema', emoji: '📉',
-        title: 'Los empresarios festejan la baja de inflacion',
-        body: `Confianza empresarial +${groupSwing.delta} este mes. Menos incertidumbre de precios, mas ganas de invertir.`,
-        tone: 'bueno'
-      });
+    if (groupSwing) {
+      const copy = groupSwingFeed(groupSwing.group, groupSwing.delta);
+      feed.push({ turn, date: dateLabel(world), kind: 'sistema', ...copy });
     }
 
     // 5.5 sistema moral (Change World Game v1.1): corrupcion, investigacion,
@@ -1660,6 +1663,22 @@ export const useGame = create<GameStore>((set, get) => {
     // `let` porque el selector de Enrique, mas abajo, le deja registrada la
     // carta que salio este turno (cooldown + espaciado, lib/events/enrique.ts)
     let moral = moralTick.state;
+
+    // un lider minoritario que crece le saca voto al oficialismo (poll) y
+    // empuja la oposicion: tiene que verse el mes que pasa, no al cerrar la
+    // partida en los hitos
+    const minoritySwing = notableMinoritySwing(st.moral, moral);
+    if (minoritySwing) {
+      const leader = MINORITY_LEADERS.find((l) => l.id === minoritySwing.id)!;
+      const sube = minoritySwing.delta > 0;
+      feed.push({
+        turn, date: dateLabel(world), kind: 'sistema', emoji: leader.emoji,
+        title: sube ? `${leader.name} crece` : `${leader.name} se desinfla`,
+        body: `${leader.party}: ${sube ? '+' : ''}${minoritySwing.delta} pts de intencion de voto `
+          + `(${minorityVoteShare(moral).toFixed(1)}% fugado en total entre los tres).`,
+        tone: sube ? 'malo' : 'bueno'
+      });
+    }
 
     // hitos institucionales del turno (mayoria, coalicion, corrupcion,
     // investigacion, presion minoritaria, FMI, calle): se recalculan al final
@@ -1767,10 +1786,10 @@ export const useGame = create<GameStore>((set, get) => {
     // 8. la oposicion se mueve todos los meses; la encuesta queda registrada.
     //    Parte de run.politics (no st.politics): ahi ya esta el lever directo
     //    de las decisiones de este turno (Delta.opposition, ver runPlan).
-    const encuesta = poll(p2, run.politics, capital, cabinetVoteBonus(run.cabinet), groups);
+    const encuesta = poll(p2, run.politics, capital, cabinetVoteBonus(run.cabinet), groups, moral);
     let politics: Politics = {
       ...run.politics,
-      opposition: driftOpposition(run.politics, p2),
+      opposition: driftOpposition(run.politics, p2, moral),
       pollHistory: [...(st.politics.pollHistory ?? []), { turn, value: encuesta }].slice(-60),
       // la agenda electoral (campaignEvents) oferto coalicion este turno: no
       // se vuelve a ofertar en el mismo mandato, elija lo que elija el jugador
@@ -1814,7 +1833,7 @@ export const useGame = create<GameStore>((set, get) => {
 
     // 9. se termino el mandato, hay ballotage pendiente, o medio termino
     if (politics.pendingBallotage) {
-      const result = runElection(p2, politics, capital, undefined, 0, groups);
+      const result = runElection(p2, politics, capital, undefined, 0, groups, moral);
       const after = applyElection(
         { ...st, turn, world, countries, capital, politics } as GameStore, result
       );
@@ -1860,7 +1879,7 @@ export const useGame = create<GameStore>((set, get) => {
           tone: 'neutral'
         });
       } else {
-        const result = runElection(p2, politics, capital, undefined, cabinetVoteBonus(run.cabinet), groups);
+        const result = runElection(p2, politics, capital, undefined, cabinetVoteBonus(run.cabinet), groups, moral);
         const after = applyElection(
           { ...st, turn, world, countries, capital, politics } as GameStore, result
         );
@@ -1903,7 +1922,7 @@ export const useGame = create<GameStore>((set, get) => {
         }
       }
     } else if (isMidtermDue(politics, turn, st.playerCode)) {
-      const result = runMidterm(p2, politics, capital, groups);
+      const result = runMidterm(p2, politics, capital, groups, moral);
       const after = applyMidterm(
         { ...st, turn, world, countries, capital, politics } as GameStore, result
       );

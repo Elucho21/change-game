@@ -1,9 +1,10 @@
-import type { Country, Delta, GameEvent, GroupKey, PopularGroupsState } from './types';
+import type { Country, Delta, GameEvent, GroupKey, MoralState, PopularGroupsState } from './types';
 import { clamp } from './engine';
 import {
   CAPITAL_ON_WIN, decideBallotage, decideRound, grantHoneymoon, systemOf
 } from './electoral';
 import { classCompositionFromCountry, GROUP_KEYS } from './popularGroups';
+import { minorityOppositionPush, minorityVoteShare } from './moral';
 
 /**
  * Ciclo electoral, oposicion y continuidad del partido.
@@ -180,7 +181,7 @@ export function oppositionSplit(opposition: number): [number, number] {
  * habia hecho crecer. Asi, una mala racha la infla pero una buena la desinfla,
  * y siempre hay camino de vuelta.
  */
-export function driftOpposition(p: Politics, country: Country): number {
+export function driftOpposition(p: Politics, country: Country, moral?: MoralState): number {
   const e = country.economy;
   const pop = country.population;
 
@@ -198,6 +199,9 @@ export function driftOpposition(p: Politics, country: Country): number {
   if (e.gdp_growth > 3) target -= 6;
   if (pop.stability > 65) target -= 5;
   target -= clamp(trend * 3, -8, 8);
+  // los lideres minoritarios que estan creciendo tambien tensan el tablero:
+  // no son la oposicion principal, pero le suben el piso (lib/moral.ts)
+  target += minorityOppositionPush(moral);
   target = clamp(target, 10, 90);
 
   // guardado para la proxima vez que se llame esta funcion (proximo turno):
@@ -297,8 +301,13 @@ function groupsPollTerm(groups: PopularGroupsState, country: Country): number {
  * `groups` es opcional (Change World Game v1.2): si se pasa, el termino de
  * felicidad se reparte entre felicidad general y la popularidad ponderada de
  * los 5 grupos; si no se pasa, la formula queda identica a como era antes.
+ * `moral` es opcional (v1.4): el apoyo a los tres lideres minoritarios se
+ * descuenta punto por punto de la intencion de voto del oficialismo.
  */
-export function poll(country: Country, p: Politics, capital: number, bonus = 0, groups?: PopularGroupsState): number {
+export function poll(
+  country: Country, p: Politics, capital: number, bonus = 0,
+  groups?: PopularGroupsState, moral?: MoralState
+): number {
   // `bonus` junta lo del candidato y lo que aporta el gabinete
   const e = country.economy;
   const pop = country.population;
@@ -312,7 +321,9 @@ export function poll(country: Country, p: Politics, capital: number, bonus = 0, 
     Math.min(e.inflation, 100) * 0.06 -
     (e.unemployment - 8) * 0.7 +
     (capital - 50) * 0.04 -
-    (p.opposition - 40) * 0.18 +
+    (p.opposition - 40) * 0.18 -
+    // voto que se fuga a los minoritarios: sale del oficialismo, punto por punto
+    minorityVoteShare(moral) +
     bonus;
   return clamp(Math.round(vote * 10) / 10, 1, 99);
 }
@@ -325,11 +336,11 @@ export const isMidtermDue = (p: Politics, turn: number, code: string) => {
 /** Resuelve la eleccion. El ruido evita que el resultado sea cantado. */
 export function runElection(
   country: Country, p: Politics, capital: number, candidate?: Candidate, cabinetBonus = 0,
-  groups?: PopularGroupsState
+  groups?: PopularGroupsState, moral?: MoralState
 ): ElectionResult {
   const sys = systemOf(country.code);
   // el gabinete tambien pesa en la boleta: un ministro de la oposicion suma
-  const base = poll(country, p, capital, (candidate?.voteBonus ?? 0) + cabinetBonus, groups);
+  const base = poll(country, p, capital, (candidate?.voteBonus ?? 0) + cabinetBonus, groups, moral);
   const noise = (Math.random() - 0.5) * 6;
   const vote = clamp(Math.round((base + noise) * 10) / 10, 1, 99);
   const quien = candidate ? candidate.name : p.leaderName;
@@ -377,8 +388,10 @@ export function runElection(
   };
 }
 
-export function runMidterm(country: Country, p: Politics, capital: number, groups?: PopularGroupsState): ElectionResult {
-  const vote = poll(country, p, capital, 0, groups);
+export function runMidterm(
+  country: Country, p: Politics, capital: number, groups?: PopularGroupsState, moral?: MoralState
+): ElectionResult {
+  const vote = poll(country, p, capital, 0, groups, moral);
   const won = vote >= 48;
   return {
     vote, won, margin: Math.round((vote - 50) * 10) / 10,

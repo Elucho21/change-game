@@ -23,7 +23,40 @@ import type { MoralEffects, MoralState, PopularGroupsState } from './types';
 
 export type { MoralState };
 
-export const MINORITY_CAPS = { gustavo: 8, amalia: 5, jhon: 9 } as const;
+/**
+ * Techo de cada lider minoritario, en puntos de intencion de voto.
+ *
+ * Subidos en v1.4 (eran 8/5/9). Con el techo viejo los tres juntos no llegaban
+ * al 22% ni en el peor escenario y, sobre todo, NADIE leia el numero: el apoyo
+ * se escribia desde 12 eventos, se dibujaba en un panel y no entraba en ninguna
+ * formula. Ahora `minorityVoteShare` y sus dos hermanas de abajo lo meten en
+ * la eleccion, en la oposicion y en la calle, asi que el techo tiene que ser
+ * un numero que se sienta cuando se toca.
+ */
+export const MINORITY_CAPS = { gustavo: 15, amalia: 12, jhon: 15 } as const;
+
+export type MinorityLeaderId = 'gustavo' | 'amalia' | 'jhon';
+
+export const MINORITY_LEADERS: {
+  id: MinorityLeaderId; name: string; party: string; emoji: string; color: string; blurb: string;
+}[] = [
+  {
+    id: 'gustavo', name: 'Gustavo Comun', party: 'Partido Comunista', emoji: '🚩', color: '#e5484d',
+    blurb: 'Crece con el desempleo y con la clase obrera enojada. Su fuerte es la calle: cuanto mas apoyo tiene, mas caro sale gobernar con paros.'
+  },
+  {
+    id: 'amalia', name: 'Amalia Verde', party: 'Partido Verde', emoji: '🌿', color: '#37c98a',
+    blurb: 'Crece con el indice ambiental hundido y con la corrupcion a la vista. Le saca voto joven al oficialismo.'
+  },
+  {
+    id: 'jhon', name: 'Jhon el Duro', party: 'Ultra-Derecha', emoji: '🎖️', color: '#4f7cff',
+    blurb: 'Crece con la inseguridad en alza y con la clase media harta. Le saca voto de derecha al oficialismo.'
+  }
+];
+
+/** Apoyo actual de un lider, sin tener que recordar el sufijo del campo. */
+export const minorityApoyo = (m: MoralState, id: MinorityLeaderId): number =>
+  id === 'gustavo' ? m.gustavoApoyo : id === 'amalia' ? m.amaliaApoyo : m.jhonApoyo;
 
 export const defaultMoral = (): MoralState => ({
   corruption: 21,
@@ -185,6 +218,55 @@ export function levelOf(value: number, table: MoralLevel[]): MoralLevel {
     if (value >= l.min) current = l;
   }
   return current;
+}
+
+// ============================================================
+// IMPACTO DE LOS LIDERES MINORITARIOS
+// ============================================================
+
+/**
+ * Hasta v1.3 el apoyo de Gustavo/Amalia/Jhon era decoracion: se escribia desde
+ * los 12 eventos de `lib/events/minority_leaders.ts`, se dibujaba en un panel y
+ * ninguna formula lo leia. Estas tres funciones son el cableado que le da
+ * consecuencia, cada una en el sistema donde el lider de verdad pesa.
+ */
+
+/** Voto que se le fuga al oficialismo hacia los minoritarios, en puntos de encuesta. */
+export const minorityVoteShare = (m?: MoralState): number =>
+  m ? round(m.gustavoApoyo + m.amaliaApoyo + m.jhonApoyo, 1) : 0;
+
+/**
+ * Cuanto empuja hacia arriba el objetivo de la oposicion. Un tercio de la fuga
+ * de votos: el minoritario le saca voto al gobierno, pero no todo ese voto se
+ * suma al bloque opositor principal (por eso no es 1:1).
+ */
+export const minorityOppositionPush = (m?: MoralState): number =>
+  m ? round(minorityVoteShare(m) * 0.33, 1) : 0;
+
+/**
+ * Cuanto suma Gustavo al `streetWeight` (lib/streetPressure.ts). Solo el: es el
+ * unico de los tres con estructura sindical para poner gente en la calle.
+ * Arranca recien pasados los 4 puntos de apoyo, para que un comunista testimonial
+ * no mueva la aguja.
+ */
+export const minorityStreetPush = (m?: MoralState): number =>
+  m ? round(Math.max(0, m.gustavoApoyo - 4) * 0.35, 1) : 0;
+
+/**
+ * El lider que mas se movio este turno, si supera el umbral (si no, null).
+ * Mismo shape y criterio que `notableGroupSwing` (lib/popularGroups.ts): existe
+ * para que el feed pueda narrar el movimiento, no solo el panel mostrarlo.
+ */
+export function notableMinoritySwing(
+  prev: MoralState, next: MoralState, threshold = 0.8
+): { id: MinorityLeaderId; delta: number } | null {
+  let best: { id: MinorityLeaderId; delta: number } | null = null;
+  for (const l of MINORITY_LEADERS) {
+    const delta = round(minorityApoyo(next, l.id) - minorityApoyo(prev, l.id), 1);
+    if (Math.abs(delta) < threshold) continue;
+    if (!best || Math.abs(delta) > Math.abs(best.delta)) best = { id: l.id, delta };
+  }
+  return best;
 }
 
 // ============================================================
