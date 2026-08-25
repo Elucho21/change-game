@@ -62,7 +62,10 @@ const STEPS: { emoji: string; title: string; body: React.ReactNode }[] = [
     body: (
       <ul>
         <li><b>Pais</b>: tus indicadores (economia, poblacion, sectores) y acciones bilaterales con otros paises.</li>
-        <li><b>Gobierno</b>: tu mandato, intencion de voto, oposicion, politica impositiva y Banco Central.</li>
+        <li>
+          <b>Gobierno</b>: tu mandato, intencion de voto, los dos partidos opositores (ideologia, humor y
+          pacto), los tres lideres minoritarios, politica impositiva y Banco Central.
+        </li>
         <li><b>Grupos</b>: la popularidad por sector — 5 grupos con intereses propios.</li>
         <li><b>Gabinete</b>: tus cinco ministros — cada uno suma un pasivo mensual y abarata una categoria.</li>
         <li><b>Decisiones</b>: el catalogo completo de acciones que podes tomar, por categoria.</li>
@@ -96,7 +99,9 @@ const STEPS: { emoji: string; title: string; body: React.ReactNode }[] = [
         oligarcas</b> (quieren favores y desregulacion hasta que les toca el bolsillo propio — y controlan los
         medios: contentos suman Capital Politico, en contra te lo restan) y <b>Los Fieles</b> (tu base, se mueve
         poco y es la ultima en irse). Cada grupo pesa distinto en tu intencion de voto: una misma decision puede
-        subirte con unos y bajarte con otros a la vez.
+        subirte con unos y bajarte con otros a la vez. Si dejas que alguno caiga por debajo de 30 de humor, deja
+        de ser paciente y actua por su cuenta cada mes hasta que se recupere: la obrera arma huelga general, la
+        alta saca sus dolares del pais, los empresarios frenan la inversion, y la clase media sale con las ollas.
       </p>
     )
   },
@@ -165,15 +170,17 @@ const STEPS: { emoji: string; title: string; body: React.ReactNode }[] = [
   },
   {
     emoji: '🕴️',
-    title: 'Justicia: corrupcion, Enrique Grook y los lideres minoritarios',
+    title: 'Justicia: corrupcion y Enrique Grook',
     body: (
       <p>
         En el mes 4 de cada partida se presenta <b>Enrique Grook</b>, el Subsecretario de la Subsecretaria
         de Presidencia — un onboarding obligatorio que explica el sistema y desbloquea la pestana
-        <b> Justicia</b> (no existe antes de ese momento). Ahi ves tu nivel de corrupcion, el Progreso de
-        Investigaciones de la Suprema Corte y la Comision Anticorrupcion, y el apoyo de los tres lideres
-        minoritarios (Gustavo Comun, Amalia Verde, Jhon el Duro). Enrique vuelve despues con cartas propias
-        en pantalla completa, ofreciendo siempre el camino facil — con consecuencias reales.
+        <b> Justicia</b> (no existe antes de ese momento). Ahi ves tu nivel de corrupcion y el Progreso de
+        Investigaciones de la Suprema Corte y la Comision Anticorrupcion. Enrique vuelve despues con cartas
+        propias en pantalla completa, ofreciendo siempre el camino facil — pero no todos los meses: aparece
+        mas seguido cuanto peor estas, nunca es seguro, y si le decis que no varias veces seguidas se ofende
+        y desaparece un tiempo. (Los tres lideres minoritarios se mudaron a <b>Gobierno</b>, visibles desde
+        el primer mes.)
       </p>
     )
   }

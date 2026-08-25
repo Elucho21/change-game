@@ -23,6 +23,62 @@ export default function ActualizacionesPage() {
         </p>
 
         <div className="card">
+          <h2>🏛️ v1.36 — Politica interna con dientes: Enrique, minoritarios, oposicion y grupos</h2>
+          <p className="muted" style={{ fontSize: 12, marginTop: -4 }}>
+            El tablero politico interno deja de ser decoracion. Enrique deja de insistir todos los meses, los
+            tres lideres minoritarios y los dos partidos opositores pesan de verdad, y los 5 grupos sociales
+            pueden romper cosas si los dejas caer. Ademas, la economia deja de curarse sola.
+          </p>
+
+          <h3>🕴️ Enrique ya no te ofrece lo mismo todos los meses</h3>
+          <p>
+            Antes, pasado cierto punto de la partida, Enrique aparecia a pantalla completa <b>todos los meses,
+            para siempre</b>, a veces con la misma carta repetida dos o tres veces seguidas. Ahora su aparicion
+            es una probabilidad que sube con lo mal que estas (nunca es segura), no repite la misma carta antes
+            de un buen tiempo, y tiene memoria: si le decis que no varias veces seguidas se ofende y desaparece
+            unos meses — pero si le seguis el juego, te desbloquea su oferta mas grande.
+          </p>
+
+          <h3>🚩🌿🎖️ Los lideres minoritarios ya pesan en la eleccion</h3>
+          <p>
+            Gustavo Comun, Amalia Verde y Jhon el Duro dejan de ser tres barras decorativas: el apoyo que
+            acumulan ahora se descuenta de tu intencion de voto, empuja a la oposicion, y Gustavo (el unico con
+            estructura sindical) puede sumar presion de calle real. Un lider con apoyo alto tambien hace que sus
+            propias cartas te salgan mas seguido. Los vas a encontrar ahora en <b>Gobierno</b>, visibles desde el
+            primer mes — antes vivian ocultos en Justicia hasta el mes 4.
+          </p>
+
+          <h3>🤝 La oposicion tiene nombre, ideologia y precio</h3>
+          <p>
+            Los dos partidos opositores ya no son dos nombres sueltos: cada uno tiene una ideologia (liberal,
+            conservador, socialdemocrata, nacionalista o progresista) que define que decisiones acompaña y
+            cuales bloquea, y un humor propio que sube o baja segun lo que hagas. Les podes ofrecer un{' '}
+            <b>pacto parlamentario</b> (pestana Decisiones → Comunicacion) en cualquier momento del mandato, no
+            solo en campaña: si aceptan, sus bancas pasan a contar para tu mayoria, al precio que pidan segun
+            cuanto humor tengan.
+          </p>
+
+          <h3>📣 Los 5 grupos pueden romper cosas</h3>
+          <p>
+            Muchas mas decisiones y los eventos nacionales grandes (piquetes, paro general, corrupcion, corrida
+            cambiaria, FMI, boom de commodities) ahora mueven a tus 5 grupos sociales. Y si dejas que alguno caiga
+            por debajo de 30 de humor, deja de ser paciente: la clase obrera arma huelga general, la clase alta
+            saca sus dolares del pais, los empresarios frenan la inversion, y la clase media sale con las ollas.
+            La pestana <b>Grupos</b> ahora muestra tendencia y un mini-historial de cada uno, no solo el nivel
+            de hoy.
+          </p>
+
+          <h3>💰 La economia deja de curarse sola</h3>
+          <p>
+            Correr deficit con la deuda alta ya empieza a empujar la inflacion. La deuda paga intereses de
+            verdad todos los meses — cuanto mas alta, mas cara la tasa a la que te financiás. Y un pais golpeado
+            (estabilidad hundida, deuda disparada) tarda mucho mas en volver a crecer que antes: la confianza
+            de los inversores no se recupera en seis meses, se gana de a poco. Gobernar mal ahora tiene
+            consecuencias que se sostienen en el tiempo, no se disuelven solas.
+          </p>
+        </div>
+
+        <div className="card">
           <h2>🗞️ v1.35 — Cronica de fin de turno</h2>
           <p className="muted" style={{ fontSize: 12, marginTop: -4 }}>
             Al cerrar el mes ya no solo ves numeros que subieron o bajaron: ves un informe corto de que paso.
