@@ -107,6 +107,15 @@ export interface Country {
   /** ultimo efecto fiscal por impuestos ya asentado en fiscal_balance (ver taxEffects en engine.ts) */
   taxFiscalApplied?: number;
   /**
+   * 0-100, arranca en 50 (neutral). Memoria lenta de clima de inversion:
+   * converge hacia un target que lee estabilidad y deuda, mucho mas lento
+   * que cualquier otro indicador (naturalDrift, lib/engine.ts). Existe para
+   * romper el iman de crecimiento a 2%: antes cualquier golpe se disolvia en
+   * ~6 meses porque el target de gdp_growth solo miraba el mes actual. Un
+   * pais destruido carga el estigma aca aunque el resto ya se haya calmado.
+   */
+  investmentMemory?: number;
+  /**
    * Indice de tipo de cambio. 100 = arranque de partida.
    * Sube = depreciacion; baja = apreciacion. Solo lo llena el pais del jugador.
    */

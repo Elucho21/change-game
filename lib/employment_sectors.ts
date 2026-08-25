@@ -145,3 +145,27 @@ export const GAME_SECTOR_LABOR: Record<GameSector, SectorLaborProfile> = {
 export function employmentFromSectorPush(sector: GameSector, gdpDelta: number): number {
   return gdpDelta * GAME_SECTOR_LABOR[sector].employmentIntensity;
 }
+
+/**
+ * Intensidad de empleo PONDERADA de un pais entero, segun el peso real de
+ * cada sector en su PBI (`Country.sectors`, ya existe en los 76 paises).
+ * ~1.0 = economia promedio; un pais con mucho turismo/comercio pesa mas
+ * cerca de 1.5, uno con mucha agricultura pesa mas cerca de 0.85.
+ *
+ * Change World Game v1.4, item #12 del reordenamiento de economia: hasta
+ * ahora esta tabla (`SECTOR_LABOR`) era pura documentacion — el motor nunca
+ * la leia (pedido abierto en docs/PEDIDOS_A_OPUS.md). Este es el enganche:
+ * el mismo `gdp_growth` mueve el desempleo mas en un pais turistico que en
+ * uno minero, tanto para el jugador (lib/employment.ts) como para el resto
+ * del mundo (naturalDrift, lib/engine.ts).
+ */
+export function sectoralEmploymentIntensity(sectors: Record<string, number>): number {
+  let weightedSum = 0;
+  let totalWeight = 0;
+  for (const sector of GAME_SECTORS) {
+    const weight = sectors[sector] ?? 0;
+    weightedSum += weight * GAME_SECTOR_LABOR[sector].employmentIntensity;
+    totalWeight += weight;
+  }
+  return totalWeight ? weightedSum / totalWeight : 1;
+}

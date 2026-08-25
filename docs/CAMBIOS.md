@@ -6,6 +6,67 @@ Bitácora corta y en orden inverso: lo último arriba. Es lo que tenés que sabe
 
 ---
 
+## motor/economia-con-memoria · 24/08/2026 · La economia deja de auto-curarse sola
+
+Diagnostico del plan de auditoria (D4): todo mean-revertia. La inflacion bajaba siempre
+(`inflation *= 0.98`) sin importar el deficit; la deuda subia pero nunca costaba nada (sin
+intereses, sin riesgo pais); el crecimiento convergia a 2% mirando solo el mes actual (cualquier
+desastre se disolvia en ~6 meses); y el jugador tenia DOS motores de desempleo pisandose (uno
+"mudo" en `naturalDrift`, otro real en `tickEmployment`). Las decisiones se lavaban solas.
+
+**Decision explicita de diseño (pedida por el jugador): se cambio el modelo, no se agregaron
+terminos apagados por defecto.** Una partida guardada se comporta distinto de ahora en mas.
+
+### Contrato nuevo
+
+```ts
+naturalDrift(countries, blocs, world, tradeEffect, taxBase, playerCode?)  // 6to param nuevo
+interestBurden(debtToGdp, rate, imfWeight)              // lib/centralBank.ts
+sectoralEmploymentIntensity(sectors)                     // lib/employment_sectors.ts (por fin se usa)
+Country.investmentMemory?: number                        // 0-100, nuevo campo opcional
+EmploymentTickInput.sectorIntensity?: number              // lib/employment.ts
+```
+
+### Que hay (items #7, #8, #10, #11, #12 del plan)
+
+- **#7 · Deficit -> inflacion**: con `fiscal_balance < -2` Y `debt_to_gdp > 70` a la vez (doble
+  condicion: un deficit chico o puntual no alcanza), el faltante se monetiza y empuja inflacion,
+  acotado a +0.6/mes.
+- **#8 · Intereses de deuda**: `interestBurden` cobra cada mes sobre `fiscal_balance`, proporcional
+  a la deuda y a una tasa EFECTIVA (`cb.rate` + prima de riesgo que sube con la deuda y con el
+  weight del FMI). Techo de 1 punto de PBI/mes: ni el peor escenario tumba la economia en un solo
+  mes.
+- **#10 · `investmentMemory`**: memoria lenta (converge a 6%/mes, mismo idioma que Confianza del
+  Banco Central) que lee estabilidad y deuda, y empuja el target de `gdp_growth` de forma aditiva.
+  Rompe el iman de crecimiento a 2%: un pais destruido carga el estigma mucho mas de lo que tarda
+  en calmarse la estabilidad que lo origino.
+- **#11 · Un solo motor de desempleo para el jugador**: `naturalDrift` ya no toca el desempleo del
+  pais del jugador (nuevo parametro `playerCode`) — sigue tocando el de los paises de IA, que no
+  tienen `tickEmployment` propio.
+- **#12 · Empleo por sector, por fin cableado**: `sectoralEmploymentIntensity` (peso real de
+  turismo/agro/industria/etc. del pais) multiplica tanto el Okun's-law de `naturalDrift` (paises IA)
+  como el termino de PBI de `tickEmployment` (jugador). El mismo `gdp_growth` baja mas el desempleo
+  en un pais turistico que en uno minero.
+
+### Que quedo explicitamente afuera (item #9)
+
+**Separar caja de gasto estructural de gasto one-off** (`fiscal_balance` como stock permanente vs.
+flujo) se evaluo y se dejo FUERA de esta pasada: arreglarlo de verdad implica re-tipar el efecto
+fiscal de las ~90 decisiones y ~40 eventos del catalogo (distinguir cual es un costo de una vez y
+cual es una reforma estructural), no un cambio de formula. Es un refactor de contenido, no de
+motor, y el riesgo/alcance no entraba en esta sesion. Sigue en el backlog.
+
+### Verificacion
+
+262 tests de motor pasaban antes; 317 tests pasan ahora (30 nuevos: canal deficit-inflacion,
+intereses, hysteresis de `investmentMemory`, desempleo unico, intensidad sectorial, y un guardia de
+"no rompe la economia en 60 turnos" ampliado a 5 paises con perfiles distintos, mas un pais
+castigado a proposito). Jugado en vivo: una partida totalmente pasiva (ignorando toda decision y
+evento 25 turnos) termina en golpe de Estado real por primera vez con este motor — antes se hubiera
+auto-curado. Una partida con ajuste fiscal activo estabiliza deuda e inflacion sin romperse.
+
+---
+
 ## motor/grupos-con-dientes · 24/08/2026 · Los 5 grupos sociales dejan de ser decoracion
 
 El jugador reporto que los 5 grupos "no aparecen en el juego ni en pantalla y no tienen funciones o

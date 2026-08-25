@@ -68,6 +68,15 @@ export interface EmploymentTickInput {
   inflation: number;
   /** 0-1, ministro de Economia/Trabajo (lib/cabinet.ts cabinetLaborMitigation) */
   laborMitigation?: number;
+  /**
+   * Intensidad de empleo de la estructura productiva del pais (peso real de
+   * sus sectores x cuanto empleo genera cada uno, lib/employment_sectors.ts
+   * `sectoralEmploymentIntensity`). ~1.0 = economia promedio. Change World
+   * Game v1.4, item #12: el mismo punto de PBI genera mas empleo formal en
+   * un pais turistico (1.55) que en uno minero (0.35). Opcional, default 1
+   * (comportamiento identico al de antes si no se pasa).
+   */
+  sectorIntensity?: number;
 }
 
 export interface EmploymentTickResult {
@@ -84,7 +93,7 @@ export function tickEmployment(prev: EmploymentState, input: EmploymentTickInput
   const contribHit = CONTRIB_FORMAL_IMPACT * input.contribTotalDeltaPp * (1 - mitigation * 0.5);
 
   const formalDelta =
-    EMPLOYMENT_GDP_ELASTICITY * (input.gdpGrowth / 12)
+    EMPLOYMENT_GDP_ELASTICITY * (input.gdpGrowth / 12) * (input.sectorIntensity ?? 1)
     - contribHit
     + COVERAGE_FORMAL_IMPACT * input.coverageDeltaPp
     + RETIREMENT_AGE_FORMAL_IMPACT * input.retirementAgeDeltaYears;

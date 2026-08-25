@@ -5,6 +5,7 @@ import type {
 import { NATIONAL_EVENTS } from './events/national';
 import { WORLD_EVENTS } from './events/world';
 import { MINORITY_CAPS, MINORITY_LEADERS, minorityApoyo } from './moral';
+import { sectoralEmploymentIntensity } from './employment_sectors';
 
 // ============================================================
 // RELACIONES
@@ -372,18 +373,37 @@ export function naturalDrift(
   /** efecto del comercio bilateral por pais, de lib/trade.ts (opcional) */
   tradeEffect: Record<string, number> = {},
   /** tasas impositivas con las que arranco cada pais (opcional) */
-  taxBase: Record<string, TaxRates> = {}
+  taxBase: Record<string, TaxRates> = {},
+  /**
+   * Codigo del jugador (opcional). Solo se usa para NO duplicar el motor de
+   * desempleo: el jugador tiene el suyo propio y mas rico (tickEmployment,
+   * lib/employment.ts) que corre despues en el mismo tick; el resto del
+   * mundo sigue con el Okun's-law liviano de aca abajo (Change World Game
+   * v1.4, item #11 del reordenamiento de economia).
+   */
+  playerCode?: string
 ) {
   for (const c of Object.values(countries)) {
     const e = c.economy;
     const p = c.population;
     const fx = blocEffects(blocs, c.code);
 
+    // memoria de inversion: converge LENTO (mismo idioma que Confianza del
+    // Banco Central) hacia un target que lee estabilidad y deuda. Rompe el
+    // iman de crecimiento a 2%: antes cualquier golpe se disolvia en ~6
+    // meses porque el target solo miraba el mes actual (item #10).
+    const invTarget = clamp(
+      50 + (p.stability - 50) * 0.7 - Math.max(0, e.debt_to_gdp - 80) * 0.3,
+      0, 100
+    );
+    c.investmentMemory = round(clamp((c.investmentMemory ?? 50) + (invTarget - (c.investmentMemory ?? 50)) * 0.06, 0, 100), 1);
+    const investmentDrag = round((c.investmentMemory - 50) * 0.02, 3);
+
     // el comercio intrabloque, los flujos bilaterales y la presion impositiva
     // definen hacia donde tiende el crecimiento
     const tax = taxEffects(c, taxBase[c.code]);
     const target =
-      2 + fx.tradeBonus + (tradeEffect[c.code] ?? 0) + tax.growth
+      2 + fx.tradeBonus + (tradeEffect[c.code] ?? 0) + tax.growth + investmentDrag
       - (e.inflation > 30 ? 1.5 : 0)
       - (world.global_tension > 70 ? 0.5 : 0);
     e.gdp_growth = round(e.gdp_growth * 0.85 + target * 0.15);
@@ -395,8 +415,26 @@ export function naturalDrift(
     if (e.inflation > 5) e.inflation = round(e.inflation * (0.98 - fx.inflationDrag / 20));
     else e.inflation = round(e.inflation * 0.95 + 2 * 0.05);
 
-    // desempleo sigue al ciclo
-    e.unemployment = round(clamp(e.unemployment - (e.gdp_growth - 2) * 0.05, 0.5, 60));
+    // deficit alto + deuda alta = nadie te presta, asi que el faltante se
+    // cubre emitiendo. Sin esto se podia correr -8% de deficit y desinflar
+    // igual (item #7). Acotado y con doble condicion para no castigar un
+    // deficit chico o puntual: hace falta ESTAR mal Y seguir gastando mal.
+    if (e.fiscal_balance < -2 && e.debt_to_gdp > 70) {
+      const monetization = Math.min(
+        0.6,
+        (Math.abs(e.fiscal_balance) - 2) * 0.08 * clamp((e.debt_to_gdp - 70) / 60, 0, 1)
+      );
+      e.inflation = round(Math.max(-2, e.inflation + monetization));
+    }
+
+    // desempleo sigue al ciclo, ponderado por cuanto empleo genera la
+    // estructura productiva de ESE pais (turismo >> mineria, item #12,
+    // lib/employment_sectors.ts). No para el jugador: ver comentario del
+    // parametro `playerCode` arriba.
+    if (c.code !== playerCode) {
+      const sectorIntensity = sectoralEmploymentIntensity(c.sectors);
+      e.unemployment = round(clamp(e.unemployment - (e.gdp_growth - 2) * 0.05 * sectorIntensity, 0.5, 60));
+    }
 
     // la estructura impositiva empuja la recaudacion y los precios
     if (tax.inflation) e.inflation = round(Math.max(-2, e.inflation + tax.inflation));

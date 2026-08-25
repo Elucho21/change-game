@@ -14,16 +14,6 @@ Ver `docs/REGLAS_DE_CODIGO.md` sección 7.
 
 ## Abiertos (el jugador los pidió, nadie los codeó)
 
-### Empleo × sectores — leer `lib/employment_sectors.ts`
-
-**Qué:** el empleo que genera un punto de PBI depende del sector (turismo 1.55, minería 0.35). Formalidad distinta por sector. Grok dejó la tabla; el motor no la lee.
-
-**Contrato:** `employmentFromSectorPush(sector, gdpDelta)` ya existe. Enchufarlo cuando un evento/decisión mueve un sector o cuando el tick reparte crecimiento. Elasticidad empleo-PBI 0.45–0.60. Aportes ↑ → formalidad ↓.
-
-No hay métrica de informalidad en `Delta`. Camino seguro: campo **opcional** `informality?: number` en `Economy` (0–100). Si no entra en este sprint, seguir proxyando con `unemployment` + `fiscal_balance`.
-
-**Cómo probarlo:** mismo `gdp_growth +0.4` en un país turístico vs minero → el turístico baja más el desempleo.
-
 ### Feedback de Timeline / UI para deflación, superávit y recaudación — interfaz
 
 Esto es `components/*`, zona Opus. El jugador tiene que VER por qué le subieron las reservas “sin hacer nada”. Una línea en el feed del tick alcanza: “Deflación leve: reservas +X, poder de compra +Y”.
@@ -33,6 +23,15 @@ Grok no lo codea.
 ---
 
 ## Cerrados
+
+### Empleo × sectores — hecho
+
+`sectoralEmploymentIntensity(sectors)` (`lib/employment_sectors.ts`) pondera la intensidad real
+del pais (peso de turismo/agro/industria/comercio/servicios) y multiplica tanto el Okun's-law de
+`naturalDrift` (paises IA, `lib/engine.ts`) como el termino de PBI de `tickEmployment` (jugador,
+`lib/employment.ts`, campo `sectorIntensity`). El mismo `gdp_growth` baja mas el desempleo en un
+pais turistico (1.55) que en uno minero/agricola (0.35–0.85), verificado con tests dedicados
+(`tests/economy-rebalance.test.ts`).
 
 ### Combo superávit + deflación + empleo formal → capital político — hecho
 

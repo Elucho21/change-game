@@ -78,6 +78,32 @@ export function applyRateChange(prev: CentralBankState, delta: number): CentralB
   return { ...prev, rate: round(clamp(prev.rate + delta, RATE_MIN, RATE_MAX), 1), monthsSinceRateChange: -1 };
 }
 
+/**
+ * Carga de intereses de la deuda, en puntos de PBI por mes (Change World Game
+ * v1.4, item #8 del reordenamiento de economia).
+ *
+ * Hasta v1.3 `debt_to_gdp` subia con el deficit (`naturalDrift`, lib/engine.ts)
+ * pero NUNCA volvia — no habia intereses, ni riesgo pais, ni spread. Una
+ * deuda del 180% del PBI era gratis salvo por el arco del FMI. Esto cierra
+ * el circulo: mas deuda y mas bajo el stage del FMI, mas cara la tasa
+ * EFECTIVA a la que se financia el pais (`riskPremium`), y esa tasa paga
+ * intereses reales sobre el stock de deuda todos los meses.
+ *
+ * ADITIVO sobre `fiscal_balance`, mismo patron que el resto del modulo: se
+ * resta en `deterministicTick` (lib/simulation.ts) junto al resto de los
+ * terminos fiscales, nunca reemplaza nada.
+ */
+export function interestBurden(debtToGdp: number, rate: number, imfWeight: number): number {
+  // prima de riesgo: sube con la deuda por encima de un umbral sano, y con
+  // que tan metido esta el pais en el radar del FMI (weight 0-18)
+  const riskPremium = Math.max(0, (debtToGdp - 60) * 0.02) + imfWeight * 0.15;
+  const effectiveRate = rate + riskPremium;
+  // deuda x tasa efectiva, mensualizado (divisor 1800 = 100 x 100 x 12 x 1.5
+  // de margen). Techo a proposito: ni la peor combinacion puede tumbar la
+  // economia en un solo mes (ver tests/engine.test.ts "no rompe la economia").
+  return round(clamp((debtToGdp * effectiveRate) / 1800, 0, 1), 3);
+}
+
 export function confidenceLabel(confidence: number): string {
   if (confidence >= 70) return 'Alta confianza';
   if (confidence >= 45) return 'Confianza normal';

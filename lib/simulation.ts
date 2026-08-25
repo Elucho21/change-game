@@ -22,8 +22,12 @@ import { applyFx, FX_START, fxInflationPassthrough, fxPressure, DEVALUE_JUMP } f
 import { defaultStreet, streetDrip, tickStreetPressure, type StreetState } from './streetPressure';
 import { applyPensionReform, defaultPension, tickPension, type PensionState } from './pension';
 import { defaultEmployment, tickEmployment, type EmploymentState } from './employment';
+import { sectoralEmploymentIntensity } from './employment_sectors';
 import { deflationReserveGrowth } from './deflation';
-import { applyRateChange, defaultCentralBank, rateEconomicEffect, tickCentralBank, type CentralBankState } from './centralBank';
+import {
+  applyRateChange, defaultCentralBank, interestBurden, rateEconomicEffect, tickCentralBank,
+  type CentralBankState
+} from './centralBank';
 import {
   defaultInfrastructure, INFRA_DECISION_TYPE, startInfrastructure, tickInfrastructure,
   type InfrastructureItem, type InfrastructureState
@@ -291,7 +295,7 @@ export function deterministicTick(s: SimState): TickResult {
   const prevGold = playerBefore.economy.gold_reserves_tonnes;
   const prevUnemployment = playerBefore.economy.unemployment;
 
-  naturalDrift(s.countries, s.blocs, s.world, tradeEffects(s), s.taxBase);
+  naturalDrift(s.countries, s.blocs, s.world, tradeEffects(s), s.taxBase, s.playerCode);
 
   // presion de calle: inflacion/desempleo altos sostenidos varios meses
   // suben el weight de eventos de calle y gotean humor/estabilidad. Despues
@@ -348,6 +352,14 @@ export function deterministicTick(s: SimState): TickResult {
     imfStage: s.imf.stage
   });
 
+  // intereses de la deuda (Change World Game v1.4, item #8): hasta v1.3
+  // `debt_to_gdp` subia con el deficit pero nunca volvia — deuda gratis
+  // salvo por el arco del FMI. `cb.rate` (la tasa antes de este tick, no
+  // cambia salvo por `applyRateChange`) mas una prima de riesgo que sube
+  // con la deuda y con el weight del FMI.
+  const burden = interestBurden(player.economy.debt_to_gdp, cb.rate, s.imf.weight);
+  if (burden) applyDelta(player, { fiscal_balance: -burden }, s.world);
+
   // previsional + empleo/salarios (Change World Game v1.0). Despues del FX
   // para leer inflacion/gdp_growth ya asentados del mes que se cierra.
   const prevPension = s.pension ?? defaultPension();
@@ -360,7 +372,8 @@ export function deterministicTick(s: SimState): TickResult {
     gdpGrowth: player.economy.gdp_growth,
     ...pensionTick.employmentInputs,
     inflation: player.economy.inflation,
-    laborMitigation: s.cabinet ? cabinetLaborMitigation(s.cabinet) : 0
+    laborMitigation: s.cabinet ? cabinetLaborMitigation(s.cabinet) : 0,
+    sectorIntensity: sectoralEmploymentIntensity(player.sectors)
   });
   applyDelta(
     player,
