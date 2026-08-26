@@ -11,6 +11,29 @@ type MetricKey = keyof Omit<HistoryPoint, 'turn'>;
 
 const BAD_UP: MetricKey[] = ['inflation', 'unemployment', 'debt', 'opposition', 'tension', 'oil', 'fx'];
 
+/** Texto corto y fijo de "con que se relaciona" cada KPI, para el popover.
+ * No es un desglose dinamico (eso lo tienen capital y capitalDiplomatico,
+ * via `breakdown`): es la version barata para los KPIs cuya formula esta
+ * repartida en muchas funciones de motor y no vale la pena instrumentar. */
+function statRelation(metric: MetricKey): string | null {
+  switch (metric) {
+    case 'stability':
+      return 'Se mueve con desempleo, inflacion, deuda arriba de 110% del PBI, presion de calle y corrupcion.';
+    case 'growth':
+      return 'Depende del comercio vs el arranque de partida, la tasa del Banco Central, impuestos y shocks de sector.';
+    case 'unemployment':
+      return 'Baja con crecimiento sostenido; el sector que crece importa (turismo genera mas empleo que mineria).';
+    case 'fx':
+      return 'Sube con presion cambiaria (deficit, brecha con el FMI); una devaluacion es un salto, no un drift.';
+    case 'tension':
+      return 'Sube con conflictos activos y cierres de chokepoints; empuja el precio del petroleo.';
+    case 'oil':
+      return 'Reacciona a cierres de rutas maritimas (ej. Ormuz) y a la tension global.';
+    default:
+      return null;
+  }
+}
+
 function statInsight(
   metric: MetricKey,
   ctx: { fiscal: number; debt: number; opposition: number; happiness: number }
@@ -34,7 +57,7 @@ function statInsight(
         ? 'Con oposicion alta, las decisiones grandes cuestan mas capital politico (ver Gobierno).'
         : null;
     default:
-      return null;
+      return statRelation(metric);
   }
 }
 
@@ -125,7 +148,7 @@ function ActiveEvents({ active }: { active: ActiveEvent[] }) {
 }
 
 function Stat({
-  label, value, tone, metric, history, insight
+  label, value, tone, metric, history, insight, breakdown
 }: {
   label: string;
   value: string;
@@ -133,6 +156,7 @@ function Stat({
   metric?: MetricKey;
   history?: HistoryPoint[];
   insight?: string | null;
+  breakdown?: { label: string; value: number }[];
 }) {
   const [open, setOpen] = useState(false);
   const puedeExpandir = !!metric && !!history;
@@ -174,6 +198,19 @@ function Stat({
         <div className="stat-pop">
           <div className="stat-pop-title">{label}</div>
           <Sparkline points={history} metric={metric} />
+          {breakdown && breakdown.length > 0 && (
+            <div className="stat-pop-breakdown">
+              <div className="stat-pop-title">Este turno</div>
+              {breakdown.map((b, i) => (
+                <div className="row" key={i}>
+                  <span>{b.label}</span>
+                  <b className={b.value > 0 ? 'good' : b.value < 0 ? 'bad' : ''}>
+                    {b.value > 0 ? '+' : ''}{b.value}
+                  </b>
+                </div>
+              ))}
+            </div>
+          )}
           {insight && <p className="muted stat-pop-insight">{insight}</p>}
         </div>
       )}
@@ -183,7 +220,8 @@ function Stat({
 
 export default function TopBar({ onGrok, turnFx = false }: { onGrok: () => void; turnFx?: boolean }) {
   const {
-    countries, playerCode, turn, capital, capitalDiplomatico, world, pending, politics, active, orders, history, moral
+    countries, playerCode, turn, capital, capitalDiplomatico, world, pending, politics, active, orders, history, moral,
+    capitalBreakdown, capitalDiplomaticoBreakdown
   } = useGame();
   const endTurn = useGame((s) => s.endTurn);
   const newGame = useGame((s) => s.newGame);
@@ -213,9 +251,9 @@ export default function TopBar({ onGrok, turnFx = false }: { onGrok: () => void;
 
       <div className="topbar-stats">
         <Stat label="Capital politico" value={`${Math.round(capital)}`} metric="capital" history={history}
-          tone={capital < 20 ? 'bad' : capital > 60 ? 'good' : 'warn'} />
+          tone={capital < 20 ? 'bad' : capital > 60 ? 'good' : 'warn'} breakdown={capitalBreakdown} />
         <Stat label="Capital diplomatico" value={`${Math.round(capitalDiplomatico)}`} metric="capitalDiplomatico" history={history}
-          tone={capitalDiplomatico < 15 ? 'bad' : capitalDiplomatico > 40 ? 'good' : 'warn'} />
+          tone={capitalDiplomatico < 15 ? 'bad' : capitalDiplomatico > 40 ? 'good' : 'warn'} breakdown={capitalDiplomaticoBreakdown} />
         <Stat label="Felicidad" value={`${p.population.happiness}`} metric="happiness" history={history}
           tone={p.population.happiness < 40 ? 'bad' : p.population.happiness > 65 ? 'good' : ''}
           insight={statInsight('happiness', insightCtx)} />

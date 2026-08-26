@@ -37,10 +37,23 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'justicia', label: '⚖️ Justicia' }
 ];
 
+// menu de escritorio: dos pestanas sueltas (las de uso mas frecuente) y el
+// resto agrupado en 3 submenus verticales, mas cerca de como se organiza el
+// panel interno en P&R que una tira de 9 botones iguales.
+const STANDALONE_TABS: Tab[] = ['pais', 'decisiones'];
+const MENU_GROUPS: { label: string; emoji: string; tabs: Tab[] }[] = [
+  { label: 'Gobierno', emoji: '🏛️', tabs: ['gobierno', 'gabinete', 'previsional'] },
+  { label: 'Mundo', emoji: '🌎', tabs: ['bloques', 'eventos'] },
+  { label: 'Sociedad', emoji: '👥', tabs: ['grupos', 'justicia'] }
+];
+
 const TURN_FX_MS = 1400;
+
+const groupOf = (t: Tab) => MENU_GROUPS.find((g) => g.tabs.includes(t))?.label ?? null;
 
 export default function GameShell() {
   const [tab, setTab] = useState<Tab>('pais');
+  const [openGroup, setOpenGroup] = useState<string | null>(() => groupOf('pais'));
   const [grok, setGrok] = useState(false);
   const [turnFx, setTurnFx] = useState(false);
   const [fxLabel, setFxLabel] = useState('');
@@ -76,6 +89,14 @@ export default function GameShell() {
 
   // la pestana Justicia no existe hasta el onboarding de Enrique (mes 4)
   const visibleTabs = moralOnboarded ? TABS : TABS.filter((t) => t.id !== 'justicia');
+  const visibleIds = new Set(visibleTabs.map((t) => t.id));
+  const labelOf = (id: Tab) => visibleTabs.find((t) => t.id === id)?.label ?? id;
+
+  const goTo = (id: Tab) => {
+    setTab(id);
+    const g = groupOf(id);
+    if (g) setOpenGroup(g);
+  };
 
   return (
     <div className={`app${turnFx ? ' turn-fx' : ''}`}>
@@ -83,7 +104,47 @@ export default function GameShell() {
 
       <div className="stage">
         <div className="col">
-          <div className="tabs">
+          <nav className="side-menu">
+            {STANDALONE_TABS.filter((id) => visibleIds.has(id)).map((id) => {
+              const badge = BADGES[id];
+              return (
+                <button key={id} className={tab === id ? 'on' : ''} onClick={() => goTo(id)}>
+                  {labelOf(id)}
+                  {!!badge && tab !== id && <span className="tab-badge">{badge}</span>}
+                </button>
+              );
+            })}
+            {MENU_GROUPS.map((g) => {
+              const items = g.tabs.filter((id) => visibleIds.has(id));
+              if (items.length === 0) return null;
+              const isOpen = openGroup === g.label;
+              return (
+                <div key={g.label}>
+                  <button
+                    className={`side-menu-group-header${items.includes(tab) ? ' on' : ''}`}
+                    onClick={() => setOpenGroup(isOpen ? null : g.label)}
+                  >
+                    <span>{g.emoji} {g.label}</span>
+                    <span className="side-menu-caret">{isOpen ? '▾' : '▸'}</span>
+                  </button>
+                  {isOpen && (
+                    <div className="side-menu-sub">
+                      {items.map((id) => {
+                        const badge = BADGES[id];
+                        return (
+                          <button key={id} className={tab === id ? 'on' : ''} onClick={() => goTo(id)}>
+                            {labelOf(id)}
+                            {!!badge && tab !== id && <span className="tab-badge">{badge}</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </nav>
+          <div className="tabs mobile-only">
             {visibleTabs.map((t) => {
               const badge = BADGES[t.id];
               return (

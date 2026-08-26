@@ -137,6 +137,8 @@ interface GameStore {
   active: ActiveEvent[];
   recentEventIds: string[];
   reactions: Reaction[];
+  capitalBreakdown: { label: string; value: number }[];
+  capitalDiplomaticoBreakdown: { label: string; value: number }[];
   lastActions: string[];
   history: HistoryPoint[];
   selected: string | null;
@@ -265,6 +267,8 @@ const initial = () => ({
   active: [] as ActiveEvent[],
   recentEventIds: [] as string[],
   reactions: [] as Reaction[],
+  capitalBreakdown: [] as { label: string; value: number }[],
+  capitalDiplomaticoBreakdown: [] as { label: string; value: number }[],
   lastActions: [] as string[],
   history: [] as HistoryPoint[],
   selected: null as string | null,
@@ -1770,15 +1774,35 @@ export const useGame = create<GameStore>((set, get) => {
       }
     }
 
-    // 7. el capital politico y el diplomatico ya los recupero el tick determinista
+    // 7. el capital politico y el diplomatico ya los recupero el tick determinista.
+    // Ademas de la cifra final, se arma un desglose de donde sale/se va cada
+    // pool este turno: no separa cada mecanismo del tick (regen, combo,
+    // gabinete quedan fusionados en un solo bucket, ver docs/CAMBIOS.md), pero
+    // usa numeros que ya se calculaban igual, sin instrumentar deterministicTick.
+    const capitalBreakdown: { label: string; value: number }[] = [];
+    const capitalDiplomaticoBreakdown: { label: string; value: number }[] = [];
+    const decisionesCapital = Math.round((run.capital - st.capital) * 10) / 10;
+    if (decisionesCapital !== 0) capitalBreakdown.push({ label: 'Decisiones y eventos', value: decisionesCapital });
+    const decisionesCapitalD = Math.round((run.capitalDiplomatico - st.capitalDiplomatico) * 10) / 10;
+    if (decisionesCapitalD !== 0) capitalDiplomaticoBreakdown.push({ label: 'Decisiones y bloques', value: decisionesCapitalD });
+
     let capital = tick.state.capital;
     const capitalDiplomatico = tick.state.capitalDiplomatico;
+    const pasivaCapital = Math.round((capital - run.capital) * 10) / 10;
+    if (pasivaCapital !== 0) capitalBreakdown.push({ label: 'Generacion pasiva', value: pasivaCapital });
+    const pasivaCapitalD = Math.round((capitalDiplomatico - run.capitalDiplomatico) * 10) / 10;
+    if (pasivaCapitalD !== 0) capitalDiplomaticoBreakdown.push({ label: 'Generacion pasiva', value: pasivaCapitalD });
+
     // corrupcion alta drena capital politico todos los meses (docs/PEDIDOS_A_OPUS.md,
     // rebalance de la generacion pasiva): el gancho que le da payoff concreto
     // a pelear la corrupcion, no solo un numero que sube.
+    const drainCorrupcion = -Math.round(Math.max(0, moral.corruption - 60) * 0.03 * 10) / 10;
+    if (drainCorrupcion !== 0) capitalBreakdown.push({ label: 'Corrupcion alta', value: drainCorrupcion });
     capital = clamp(capital - Math.max(0, moral.corruption - 60) * 0.03, 0, 100);
     // grupo 4 (alta/oligarcas) maneja los medios: contento suma capital
     // politico, en contra le resta al gobierno
+    const efectoMedios = Math.round(mediaCapitalEffect(groups.alta) * 10) / 10;
+    if (efectoMedios !== 0) capitalBreakdown.push({ label: 'Medios (sector alto)', value: efectoMedios });
     capital = clamp(capital + mediaCapitalEffect(groups.alta), 0, 100);
 
     const p2 = countries[st.playerCode];
@@ -1954,6 +1978,7 @@ export const useGame = create<GameStore>((set, get) => {
           cooldowns: run.cooldowns, usedOnce: run.usedOnce, cabinet: run.cabinet,
           imf, street, pension, employment, moral, groups, centralBank, infrastructure, pendingEnrique,
           reactions, lastActions: [],
+          capitalBreakdown, capitalDiplomaticoBreakdown,
           pending: [...pending],
           recentEventIds: [...rolled.map((e) => e.id), ...st.recentEventIds].slice(0, 8),
           feed: [...planFeed, ...feed.reverse(), ...st.feed].slice(0, 200),
@@ -2006,6 +2031,7 @@ export const useGame = create<GameStore>((set, get) => {
             cooldowns: run.cooldowns, usedOnce: run.usedOnce, cabinet: run.cabinet,
             moral, groups, centralBank, infrastructure, pendingEnrique,
             reactions, lastActions: [],
+            capitalBreakdown, capitalDiplomaticoBreakdown,
             pending: [...pending],
             recentEventIds: [...rolled.map((e) => e.id), ...st.recentEventIds].slice(0, 8),
             feed: [...planFeed, ...feed.reverse(), ...st.feed].slice(0, 200),
@@ -2047,6 +2073,7 @@ export const useGame = create<GameStore>((set, get) => {
         body: `Sostener ${Math.round(capital * 10) / 10} sin gastarlo suma +${capitalInterest} este mes.`,
         tone: 'bueno'
       });
+      capitalBreakdown.push({ label: 'Interes por ahorro', value: capitalInterest });
       capital += capitalInterest;
     }
 
@@ -2087,6 +2114,7 @@ export const useGame = create<GameStore>((set, get) => {
       infrastructure,
       pendingEnrique,
       reactions,
+      capitalBreakdown, capitalDiplomaticoBreakdown,
       lastActions: [],
       pending: [...pending],
       recentEventIds: [...rolled.map((e) => e.id), ...st.recentEventIds].slice(0, 8),

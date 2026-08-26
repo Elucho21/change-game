@@ -6,6 +6,51 @@ Bitácora corta y en orden inverso: lo último arriba. Es lo que tenés que sabe
 
 ---
 
+## ux/desglose-capital-y-menu · 24/08/2026 · Desglose de capital, buscador de decisiones y menu vertical
+
+Sigue el roadmap de identidad (`docs/IDENTIDAD_JUEGO_DEMOCRACY_PR_PAX.md`): mas datos visibles para
+calcular la jugada, y una interfaz que se organiza como panel de gobierno, no como 9 pestanas iguales.
+
+### Desglose de capital politico y diplomatico
+
+`endTurn` arma, ademas de la cifra final, un desglose de que sumo/resto ese turno:
+`{label: string; value: number}[]` en `st.capitalBreakdown` / `st.capitalDiplomaticoBreakdown`.
+
+**No instrumenta `deterministicTick`/`runPlan` por dentro** (regen, combo bonus y el pasivo de
+gabinete quedan fusionados en una sola linea "Generacion pasiva"): usa snapshots de `capital`/
+`capitalDiplomatico` que ya estaban en el scope de `endTurn` (`st.capital` antes del plan,
+`run.capital` despues del plan, `tick.state.capital` despues del tick), mas los ajustes que ya
+eran variables sueltas (corrupcion, medios, interes por ahorro). Simplificacion documentada, no
+un contrato nuevo para quien agregue mecanicas de capital: si sumás una fuente nueva de capital
+politico/diplomatico en un lugar distinto a estos, no aparece sola en el desglose a menos que la
+agregues ahi tambien.
+
+Es **efimero, como `reactions`**: no esta en `snapshot()`/`PersistedState`, no hace falta subir
+`SAVE_VERSION`. Se recalcula cada turno, no sobrevive a un reload.
+
+`components/TopBar.tsx`: `Stat` acepta `breakdown?` y lo pinta en el popover, debajo del
+sparkline. `statInsight` ahora tiene un fallback `statRelation` que cubre TODOS los KPIs (antes
+solo covering 4) con una linea fija de "con que se relaciona" — no es dinamico como el desglose
+de capital, es texto de referencia.
+
+### DecisionsPanel: buscador cruzado + orden
+
+Buscador que ignora la pestana de categoria y busca en las 76 decisiones por label/detail;
+selector de orden (catalogo / costo / alfabetico). Buscando, cada resultado muestra su categoria
+de origen porque puede venir de cualquiera de las 8. El pool de capital que valida cada decision
+(politico vs diplomatico) ahora se calcula por decision (`availableOf(d)`), no por pestana activa,
+porque buscando pueden aparecer decisiones de ambos pools mezcladas.
+
+### GameShell: menu vertical con submenus (solo desktop)
+
+`components/GameShell.tsx`: 2 pestanas sueltas (Pais, Decisiones) + 3 grupos plegables (Gobierno,
+Mundo, Sociedad) en un `<nav className="side-menu">` nuevo. La fila horizontal plana de siempre
+(`.tabs`) se mantiene sin tocar como fallback en mobile (`<=900px`, clase `.mobile-only`) — cero
+riesgo de repetir el bug de mobile que ya se arreglo una vez (ver commit `68ce0a6`). Verificado en
+vivo (Playwright, 1440px y 390px) antes de subir.
+
+---
+
 ## motor/economia-con-memoria · 24/08/2026 · La economia deja de auto-curarse sola
 
 Diagnostico del plan de auditoria (D4): todo mean-revertia. La inflacion bajaba siempre
