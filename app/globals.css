@@ -487,6 +487,7 @@ textarea {
 }
 .proj-series em.good { background: rgba(55, 201, 138, 0.16); border-color: rgba(55, 201, 138, 0.4); }
 .proj-series em.bad { background: rgba(229, 72, 77, 0.16); border-color: rgba(229, 72, 77, 0.4); }
+.proj-drift { font-size: 10px; margin: -2px 0 4px; }
 .proj-warnings { margin: 8px 0 0; padding-left: 4px; list-style: none; line-height: 1.5; }
 .proj-warnings li { margin-bottom: 2px; }
 .proj-events { margin: 6px 0 0; font-size: 11px; line-height: 1.4; }

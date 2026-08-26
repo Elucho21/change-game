@@ -27,22 +27,35 @@ export default function DecisionPreview({ projection }: { projection: Projection
         </p>
       )}
 
-      {metrics.map((m) => (
-        <div className="proj-row" key={m.key}>
-          <span className="proj-label">{m.label}</span>
-          <span className="proj-series">
-            {m.deltas.map((d, i) => (
-              <em
-                key={i}
-                className={Math.abs(d) < 0.05 ? 'muted' : m.tone === 'malo' ? 'bad' : 'good'}
-                title={i === 0 ? 'impacto inmediato' : `dentro de ${i} ${i === 1 ? 'mes' : 'meses'}`}
-              >
-                {fmt(d, m.key)}
-              </em>
-            ))}
-          </span>
-        </div>
-      ))}
+      {metrics.map((m) => {
+        // cuanto de esto es tendencia (iba a pasar igual) vs. lo que causa
+        // la decision: se compara al cierre del horizonte, no turno a turno,
+        // para no duplicar la fila de arriba con otra serie casi identica.
+        const drift = m.naturalDrift[m.naturalDrift.length - 1];
+        return (
+          <div key={m.key}>
+            <div className="proj-row">
+              <span className="proj-label">{m.label}</span>
+              <span className="proj-series">
+                {m.deltas.map((d, i) => (
+                  <em
+                    key={i}
+                    className={Math.abs(d) < 0.05 ? 'muted' : m.tone === 'malo' ? 'bad' : 'good'}
+                    title={i === 0 ? 'impacto inmediato' : `dentro de ${i} ${i === 1 ? 'mes' : 'meses'}`}
+                  >
+                    {fmt(d, m.key)}
+                  </em>
+                ))}
+              </span>
+            </div>
+            {Math.abs(drift) >= 0.05 && (
+              <div className="proj-drift muted" title={`Sin tomar esta decision, ${m.label.toLowerCase()} iba a moverse igual a ${horizon} meses`}>
+                tendencia sin actuar: {fmt(drift, m.key)}
+              </div>
+            )}
+          </div>
+        );
+      })}
 
       {warnings.length > 0 && (
         <ul className="proj-warnings">

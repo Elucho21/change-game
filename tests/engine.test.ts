@@ -184,6 +184,23 @@ describe('turno determinista', () => {
     expect(felicidadProyectada).toBeCloseTo(real, 1);
   });
 
+  it('projectDecision.naturalDrift es la tendencia sin la decision, no lo que causa la decision', () => {
+    const decision = DECISIONS.find((d) => d.id === 'ajuste_fiscal')!;
+    const start = simFor('Argentina');
+
+    const projection = projectDecision(fresh(start), decision, undefined, 3);
+    const driftFelicidad = projection.metrics.find((m) => m.key === 'happiness')!.naturalDrift[3];
+
+    // misma linea base que el test anterior: 3 turnos sin decidir nada
+    let base = fresh(start);
+    for (let i = 0; i < 3; i++) base = deterministicTick(base).state;
+    const driftReal =
+      base.countries[base.playerCode].population.happiness -
+      start.countries[start.playerCode].population.happiness;
+
+    expect(driftFelicidad).toBeCloseTo(driftReal, 1);
+  });
+
   it('los eventos con ongoing cobran todos los meses y se apagan solos', () => {
     const s = simFor('Argentina');
     s.active = [

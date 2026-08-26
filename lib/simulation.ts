@@ -95,6 +95,35 @@ export interface SimState {
 export const cloneSim = (s: SimState): SimState => JSON.parse(JSON.stringify(s)) as SimState;
 
 /**
+ * Los 6 KPIs con desglose por turno ademas de capital/capitalDiplomatico
+ * (docs/CAMBIOS.md). Vive aca, no en store.ts, porque tanto endTurn como
+ * projectDecision (el preview) necesitan snapshotear los mismos campos.
+ */
+export type KpiKey = 'happiness' | 'stability' | 'growth' | 'inflation' | 'fiscal' | 'debt';
+
+/** Snapshot liviano de los 6 KPIs de un pais, para diffear en distintos momentos del turno. */
+export const snapKpi = (c: Country): Record<KpiKey, number> => ({
+  happiness: c.population.happiness,
+  stability: c.population.stability,
+  growth: c.economy.gdp_growth,
+  inflation: c.economy.inflation,
+  fiscal: c.economy.fiscal_balance,
+  debt: c.economy.debt_to_gdp
+});
+
+/** Arma las lineas {label,value} de un tramo del turno, solo las no-nulas. */
+function kpiDiff(
+  label: string, before: Record<KpiKey, number>, after: Record<KpiKey, number>
+): Partial<Record<KpiKey, { label: string; value: number }>> {
+  const out: Partial<Record<KpiKey, { label: string; value: number }>> = {};
+  for (const k of Object.keys(before) as KpiKey[]) {
+    const value = Math.round((after[k] - before[k]) * 10) / 10;
+    if (value !== 0) out[k] = { label, value };
+  }
+  return out;
+}
+
+/**
  * Contexto politico y comercial que reciben los eventos en su condicion `when`.
  * Se arma aca para que sea el mismo en el sorteo real y en el preview.
  */
@@ -245,6 +274,14 @@ export interface TickResult {
   oilShockApplied: number;
   /** obras de infraestructura que pasaron a operativas este turno, para narrar en el feed */
   infrastructureCompleted: InfrastructureItem[];
+  /**
+   * desglose de los 6 KPIs (docs/CAMBIOS.md) en 3 tramos DENTRO del tick, para
+   * no dejar todo fusionado en un solo "Motor economico": Gabinete (pasivo del
+   * gabinete), Comercio/impuestos/calle (naturalDrift + presion de calle) y
+   * Banco Central/deuda/programas (FX, IMF, tasa, intereses, previsional,
+   * empleo, deflacion, infraestructura). Solo lineas con valor distinto de 0.
+   */
+  kpiBreakdown: Record<KpiKey, { label: string; value: number }[]>;
 }
 
 /**
@@ -254,6 +291,11 @@ export interface TickResult {
 export function deterministicTick(s: SimState): TickResult {
   advanceMonth(s.world);
   s.turn += 1;
+
+  // desglose de los 6 KPIs (docs/CAMBIOS.md): 3 checkpoints DENTRO del tick,
+  // sobre el mismo pais mutable, mismo principio que el desglose por turno
+  // de endTurn (lib/store.ts) pero un nivel mas adentro.
+  const kpiE0 = snapKpi(s.countries[s.playerCode]);
 
   // 1. las crisis en curso siguen pesando: una recesion de 4 meses cobra
   //    todos los meses, no solo el primero
@@ -289,6 +331,7 @@ export function deterministicTick(s: SimState): TickResult {
       targets.forEach((t) => adjustRelation(s.relations, s.playerCode, t, rd.amount));
     }
   }
+  const kpiE1 = snapKpi(s.countries[s.playerCode]);
 
   const playerBefore = s.countries[s.playerCode];
   const prevDebt = playerBefore.economy.debt_to_gdp;
@@ -315,6 +358,7 @@ export function deterministicTick(s: SimState): TickResult {
   if (s.street.streetWeight >= 4) {
     applyDelta(streetPlayer, streetDrip(s.street.streetWeight), s.world);
   }
+  const kpiE2 = snapKpi(s.countries[s.playerCode]);
 
   // FMI + tipo de cambio del jugador. Despues del drift para que vean
   // el mes economico, no el estado con el que se abrio el turno.
@@ -417,7 +461,22 @@ export function deterministicTick(s: SimState): TickResult {
     s.capitalDiplomatico, blocMemberships, s.cabinet ? cabinetDiplomaticBonus(s.cabinet) : 0, honeymoon
   );
 
-  return { state: s, oilShockApplied: shock, infrastructureCompleted: infraTick.justCompleted };
+  const kpiE3 = snapKpi(s.countries[s.playerCode]);
+  const tramosTick: [string, Record<KpiKey, number>, Record<KpiKey, number>][] = [
+    ['Crisis en curso y gabinete', kpiE0, kpiE1],
+    ['Comercio, impuestos y calle', kpiE1, kpiE2],
+    ['Banco Central, deuda y programas', kpiE2, kpiE3]
+  ];
+  const kpiBreakdown = {} as Record<KpiKey, { label: string; value: number }[]>;
+  for (const k of Object.keys(kpiE0) as KpiKey[]) kpiBreakdown[k] = [];
+  for (const [label, before, after] of tramosTick) {
+    const diff = kpiDiff(label, before, after);
+    for (const k of Object.keys(diff) as KpiKey[]) kpiBreakdown[k].push(diff[k]!);
+  }
+
+  return {
+    state: s, oilShockApplied: shock, infrastructureCompleted: infraTick.justCompleted, kpiBreakdown
+  };
 }
 
 /** Aplica una decision sobre un estado simulado (sin tocar el store). */
@@ -594,7 +653,14 @@ export function projectDecision(
 
   // paso 0: impacto inmediato, antes de que corra el mes
   const series: Record<ProjectionKey, number[]> = {} as Record<ProjectionKey, number[]>;
-  for (const k of keys) series[k] = [readMetric(withD, k) - readMetric(base, k)];
+  // tendencia natural: cuanto se mueve `base` sola (sin la decision) contra
+  // el valor de arranque. Mismo indice que `series`, para separar "esto iba
+  // a pasar igual" de "esto lo causa la decision".
+  const naturalSeries: Record<ProjectionKey, number[]> = {} as Record<ProjectionKey, number[]>;
+  for (const k of keys) {
+    series[k] = [readMetric(withD, k) - readMetric(base, k)];
+    naturalSeries[k] = [readMetric(base, k) - now[k]];
+  }
 
   const warnings: ProjectionWarning[] = relationWarnings(withD, base);
   const eventsBefore = new Set(eligibleEvents({ ...base, eventExtra: eventExtraOf(base) }).map((e) => e.id));
@@ -602,7 +668,10 @@ export function projectDecision(
   for (let t = 1; t <= horizon; t++) {
     base = deterministicTick(base).state;
     withD = deterministicTick(withD).state;
-    for (const k of keys) series[k].push(readMetric(withD, k) - readMetric(base, k));
+    for (const k of keys) {
+      series[k].push(readMetric(withD, k) - readMetric(base, k));
+      naturalSeries[k].push(readMetric(base, k) - now[k]);
+    }
     warnings.push(...collectWarnings(withD, base, t));
   }
 
@@ -633,6 +702,11 @@ export function projectDecision(
         deltas: k === 'trade'
           ? series[k].map((v) => (now[k] ? Math.round((v / now[k]) * 1000) / 10 : 0))
           : deltas,
+        // misma normalizacion especial que `deltas` para comercio (% sobre
+        // el total actual, no miles de millones)
+        naturalDrift: k === 'trade'
+          ? naturalSeries[k].map((v) => (now[k] ? Math.round((v / now[k]) * 1000) / 10 : 0))
+          : naturalSeries[k].map((v) => Math.round(v * 100) / 100),
         tone: Math.abs(rel) < 0.05 ? 'neutral' : bad ? 'malo' : 'bueno'
       } as ProjectionMetric;
     })

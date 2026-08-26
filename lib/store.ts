@@ -15,7 +15,7 @@ import type { Reaction } from './engine';
 import { CHOKEPOINTS, CHOKEPOINT_OWNER, chokepointClosureRisk } from './routes';
 import { tradeBaseline, topPartnerOf, totalTrade } from './trade';
 import { buildLocalChronicle } from './chronicle';
-import { cloneSim, deterministicTick, eventExtraOf, projectDecision, type SimState } from './simulation';
+import { cloneSim, deterministicTick, eventExtraOf, projectDecision, snapKpi, type KpiKey, type SimState } from './simulation';
 import {
   campaignEvents, defaultPolitics, DIFFICULTY_PRESETS, driftOpposition, hasMajority, isElectionDue, isMidtermDue,
   coalitionPrice, legacy, monthsToElection, needsSuccessor, normalizeOppositionParties,
@@ -72,19 +72,9 @@ import type {
 
 // MapMode y Layers viven en lib/types.ts (los comparten el store, la UI y el save)
 export type { MapMode, Layers } from './types';
-
-/** Los 6 KPIs con desglose por turno ademas de capital (ver "7c" en endTurn). */
-export type KpiKey = 'happiness' | 'stability' | 'growth' | 'inflation' | 'fiscal' | 'debt';
-
-/** Snapshot liviano de los 6 KPIs de un pais, para diffear en distintos momentos del turno. */
-const snapKpi = (c: Country): Record<KpiKey, number> => ({
-  happiness: c.population.happiness,
-  stability: c.population.stability,
-  growth: c.economy.gdp_growth,
-  inflation: c.economy.inflation,
-  fiscal: c.economy.fiscal_balance,
-  debt: c.economy.debt_to_gdp
-});
+// KpiKey/snapKpi viven en simulation.ts: los usa tanto endTurn (aca) como
+// projectDecision (preview), asi que el motor es su hogar natural.
+export type { KpiKey };
 
 
 const RAW = data as unknown as {
@@ -1869,23 +1859,23 @@ export const useGame = create<GameStore>((set, get) => {
     }
     const kpiT5 = snapKpi(p2);
 
-    // desglose final: 5 tramos del turno, uno por KPI. Igual que con capital,
-    // no separa mecanismos DENTRO de "Motor economico" (naturalDrift, taxEffects,
-    // FX, IMF, Banco Central, deflacion, intereses de deuda, investmentMemory,
-    // shocks de sector quedan todos fusionados: pasan dentro de deterministicTick).
+    // desglose final por KPI. El tramo del tick (deterministicTick) ya viene
+    // partido en 3 sub-lineas desde lib/simulation.ts (tick.kpiBreakdown);
+    // el resto son tramos simples de un solo numero.
     const kpiBreakdown: Partial<Record<KpiKey, { label: string; value: number }[]>> = {};
     const KPI_KEYS: KpiKey[] = ['happiness', 'stability', 'growth', 'inflation', 'fiscal', 'debt'];
     for (const k of KPI_KEYS) {
-      const tramos: [string, number][] = [
-        ['Decisiones y eventos sin responder', kpiT1[k] - kpiT0[k]],
-        ['Motor economico', kpiT2[k] - kpiT1[k]],
-        ['Eventos del mes', kpiT3[k] - kpiT2[k]],
-        ['Sistema moral', kpiT4[k] - kpiT3[k]],
-        ['Grupos sociales', kpiT5[k] - kpiT4[k]]
+      const simple = (label: string, raw: number) => {
+        const value = Math.round(raw * 10) / 10;
+        return value !== 0 ? [{ label, value }] : [];
+      };
+      const lines = [
+        ...simple('Decisiones y eventos sin responder', kpiT1[k] - kpiT0[k]),
+        ...tick.kpiBreakdown[k],
+        ...simple('Eventos del mes', kpiT3[k] - kpiT2[k]),
+        ...simple('Sistema moral', kpiT4[k] - kpiT3[k]),
+        ...simple('Grupos sociales', kpiT5[k] - kpiT4[k])
       ];
-      const lines = tramos
-        .map(([label, raw]) => ({ label, value: Math.round(raw * 10) / 10 }))
-        .filter((t) => t.value !== 0);
       if (lines.length) kpiBreakdown[k] = lines;
     }
 

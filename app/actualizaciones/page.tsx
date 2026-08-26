@@ -33,9 +33,18 @@ export default function ActualizacionesPage() {
             El popover de <b>Capital politico</b>, <b>Capital diplomatico</b>, <b>Felicidad</b>,{' '}
             <b>Estabilidad</b>, <b>Crecimiento</b>, <b>Inflacion</b>, <b>Fiscal</b> y <b>Deuda/PBI</b> (click en la
             barra superior) ahora muestra, ademas de la evolucion historica, un desglose de este turno: cuanto
-            vino de tus decisiones, de la economia real, de los eventos, del sistema moral y de los grupos
-            sociales. El resto de los indicadores suma una linea fija de &quot;con que se relaciona&quot; para
-            entender que mecanicas los mueven, no solo el numero.
+            vino de tus decisiones, de comercio/impuestos/calle, del Banco Central/deuda/programas, de los
+            eventos, del sistema moral y de los grupos sociales &mdash; ya no un solo numero de &quot;economia&quot;
+            fusionado, sino las piezas que realmente lo mueven. El resto de los indicadores suma una linea fija
+            de &quot;con que se relaciona&quot; para entender que mecanicas los mueven, no solo el numero.
+          </p>
+
+          <h3>🔮 Cuanto es tuyo y cuanto iba a pasar igual</h3>
+          <p>
+            En el preview de 3 meses de cualquier decision (<b>Decisiones</b>, primer click), cada indicador
+            ahora muestra tambien &quot;tendencia sin actuar&quot;: cuanto se iba a mover ese numero aunque no
+            hicieras nada. Compara las dos lineas y sabes si la decision te esta salvando de una caida que ya
+            venia, o si el numero iba a mejorar solo y estas gastando capital de mas.
           </p>
 
           <h3>🔎 Buscador de decisiones en las 8 categorias</h3>
