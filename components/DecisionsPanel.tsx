@@ -14,14 +14,19 @@ import { previewGroupDelta } from '@/lib/popularGroups';
 import { useGame } from '@/lib/store';
 import DecisionPreview from './DecisionPreview';
 
+type SortMode = 'catalogo' | 'costo' | 'alfabetico';
+
 /**
- * Decisiones por categoria. El primer click abre las consecuencias a 3 turnos;
- * el segundo confirma. Asi el jugador ve el impacto de segundo orden antes de
- * gastar capital politico, y no se ejecuta nada por un click perdido.
+ * Decisiones por categoria, con buscador cruzado y orden. El primer click
+ * abre las consecuencias a 3 turnos; el segundo confirma. Asi el jugador ve
+ * el impacto de segundo orden antes de gastar capital politico, y no se
+ * ejecuta nada por un click perdido.
  */
 export default function DecisionsPanel() {
   const [cat, setCat] = useState<(typeof CATEGORIES)[number]['id']>('economia');
   const [open, setOpen] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
+  const [sort, setSort] = useState<SortMode>('catalogo');
 
   const {
     capital, capitalDiplomatico, selected, playerCode, countries, orders, turn, usedOnce,
@@ -34,11 +39,16 @@ export default function DecisionsPanel() {
   const quote = useGame((s) => s.quoteDecision);
   const target = selected && selected !== playerCode ? selected : undefined;
 
-  // diplomacia gasta de otro pool: la pestana define contra que capital se mide
+  const buscando = query.trim().length > 0;
+
+  // diplomacia gasta de otro pool: la pestana (o la categoria propia del
+  // resultado, buscando) define contra que capital se mide
   const poolIsDiplomatico = cat === 'diplomacia';
   const available = poolIsDiplomatico ? availableDiplomatico : availablePolitico;
   const capitalTotal = poolIsDiplomatico ? capitalDiplomatico : capital;
   const poolLabel = poolIsDiplomatico ? 'Capital diplomatico' : 'Capital politico';
+  const availableOf = (d: (typeof DECISIONS)[number]) =>
+    d.category === 'diplomacia' ? availableDiplomatico : availablePolitico;
 
   // contexto para las decisiones contextuales (dec.when, Change World Game v1.2):
   // se arma directo del estado vivo, sin pasar por SimState/eventExtraOf — el
@@ -84,10 +94,17 @@ export default function DecisionsPanel() {
 
   // las "once" ya usadas y las que no cumplen su `when` desaparecen del
   // catalogo; la contraria de un par toggle (requires) recien aparece cuando
-  // la original ya se tomo
-  const list = DECISIONS.filter((d) =>
-    d.category === cat && decisionEligible(d, usedOnce, target) && decisionWhenEligible(d, decisionCtx)
-  );
+  // la original ya se tomo. Buscando, ignora la pestana y mira las 8 categorias.
+  const qLower = query.trim().toLowerCase();
+  const list = useMemo(() => {
+    const base = DECISIONS.filter((d) =>
+      (buscando ? (d.label.toLowerCase().includes(qLower) || d.detail.toLowerCase().includes(qLower)) : d.category === cat)
+      && decisionEligible(d, usedOnce, target) && decisionWhenEligible(d, decisionCtx)
+    );
+    if (sort === 'costo') return [...base].sort((a, b) => a.cost.capital - b.cost.capital);
+    if (sort === 'alfabetico') return [...base].sort((a, b) => a.label.localeCompare(b.label));
+    return base;
+  }, [buscando, qLower, cat, usedOnce, target, decisionCtx, sort]);
 
   // la proyeccion simula 3 turnos por duplicado: se calcula solo para la
   // decision abierta y se recalcula unicamente si cambia el turno o el objetivo
@@ -100,13 +117,24 @@ export default function DecisionsPanel() {
     <div>
       <div className="section" style={{ position: 'sticky', top: 0, zIndex: 4 }}>
         <h3>
-          {poolLabel}: {available} libre
-          {available !== Math.round(capitalTotal) && (
-            <span className="muted"> (de {Math.round(capitalTotal)}, el resto ya esta en el plan)</span>
-          )}
+          {buscando
+            ? `Politico: ${availablePolitico} libre · Diplomatico: ${availableDiplomatico} libre`
+            : (<>
+                {poolLabel}: {available} libre
+                {available !== Math.round(capitalTotal) && (
+                  <span className="muted"> (de {Math.round(capitalTotal)}, el resto ya esta en el plan)</span>
+                )}
+              </>)}
         </h3>
-        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-          {CATEGORIES.map((c) => (
+        <input
+          type="text"
+          placeholder="Buscar en las 8 categorias (ej: impuesto, tropas, embajador)"
+          value={query}
+          onChange={(e) => { setQuery(e.target.value); setOpen(null); }}
+          style={{ width: '100%', marginBottom: 6 }}
+        />
+        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', alignItems: 'center' }}>
+          {!buscando && CATEGORIES.map((c) => (
             <button
               key={c.id}
               className={cat === c.id ? 'btn-primary' : ''}
@@ -115,6 +143,16 @@ export default function DecisionsPanel() {
               {c.emoji} {c.label}
             </button>
           ))}
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortMode)}
+            title="Orden de la lista"
+            style={{ marginLeft: buscando ? 0 : 'auto' }}
+          >
+            <option value="catalogo">Orden: catalogo</option>
+            <option value="costo">Orden: costo (menor a mayor)</option>
+            <option value="alfabetico">Orden: alfabetico</option>
+          </select>
         </div>
         {orders.length > 0 && (
           <p className="muted" style={{ fontSize: 11.5, marginTop: 8 }}>
@@ -124,15 +162,21 @@ export default function DecisionsPanel() {
       </div>
 
       <div className="section">
+        {buscando && list.length === 0 && (
+          <p className="muted" style={{ fontSize: 12.5 }}>Nada coincide con &quot;{query}&quot;.</p>
+        )}
         {list.map((d) => {
+          const disponible = availableOf(d);
+          const etiquetaPool = d.category === 'diplomacia' ? 'Capital diplomatico' : 'Capital politico';
           const needsTarget = d.needsTarget && !target;
           const q = quote(d.id, d.needsTarget ? target : undefined);
           const costo = q?.cost ?? d.cost.capital;
           const enfriando = (q?.cooldown ?? 0) > 0;
-          const afford = available >= costo;
+          const afford = disponible >= costo;
           const yaEnPlan = orders.some((o) => o.kind === 'decision' && o.id === d.id);
           const disabled = !afford || needsTarget || enfriando;
           const isOpen = open === d.id;
+          const catInfo = CATEGORIES.find((c) => c.id === d.category);
 
           return (
             <div key={d.id}>
@@ -143,7 +187,7 @@ export default function DecisionsPanel() {
                 title={
                   enfriando ? `Ya la usaste: disponible en ${q?.cooldown} ${q?.cooldown === 1 ? 'mes' : 'meses'}`
                     : needsTarget ? 'Elegi un pais en el globo primero'
-                      : afford ? '' : `${poolLabel} insuficiente`
+                      : afford ? '' : `${etiquetaPool} insuficiente`
                 }
               >
                 <strong>
@@ -151,6 +195,7 @@ export default function DecisionsPanel() {
                   <span className={costo > d.cost.capital ? 'warn' : costo < d.cost.capital ? 'good' : 'muted'}>
                     ({costo} cap.{d.cost.fiscal ? ` · ${d.cost.fiscal}% PBI` : ''})
                   </span>
+                  {buscando && catInfo && <span className="muted"> · {catInfo.emoji} {catInfo.label}</span>}
                 </strong>
                 <small>{d.detail}</small>
                 {enfriando && (
