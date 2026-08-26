@@ -23,7 +23,7 @@ export default function ActualizacionesPage() {
         </p>
 
         <div className="card">
-          <h2>🧭 v1.4 — Desglose de KPIs, buscador y menu vertical</h2>
+          <h2>🧭 v1.45 — Desglose de KPIs, buscador y menu vertical</h2>
           <p className="muted" style={{ fontSize: 12, marginTop: -4 }}>
             Mas datos para calcular la jugada, y una interfaz que se organiza como panel de gobierno.
           </p>
