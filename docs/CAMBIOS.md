@@ -6,6 +6,58 @@ Bitácora corta y en orden inverso: lo último arriba. Es lo que tenés que sabe
 
 ---
 
+## ux/desglose-kpis · 26/08/2026 · Desglose por turno de felicidad, estabilidad, crecimiento, inflacion, fiscal y deuda
+
+Extiende el patron de `capitalBreakdown` (ver entrada de abajo) a los 6 KPIs mas pedidos. Mismo
+principio: **snapshots del pais mutable en distintos puntos de `endTurn`, sin instrumentar
+`deterministicTick`/`naturalDrift`/`taxEffects` por dentro.**
+
+### Contrato nuevo
+
+```ts
+export type KpiKey = 'happiness' | 'stability' | 'growth' | 'inflation' | 'fiscal' | 'debt';
+st.kpiBreakdown: Partial<Record<KpiKey, { label: string; value: number }[]>>
+```
+
+Efimero como `capitalBreakdown`/`reactions`: no esta en `snapshot()`/`PersistedState`, no requiere
+`SAVE_VERSION`.
+
+### Como se arma (5 tramos por KPI)
+
+Toma un snapshot de `{happiness, stability, growth, inflation, fiscal, debt}` (`snapKpi`, nueva
+funcion en `lib/store.ts`) en 5 momentos de `endTurn`, todos sobre el mismo objeto mutable
+`countries[playerCode]`:
+
+1. `st.countries[playerCode]` — arranque del turno.
+2. Justo antes de `deterministicTick` — captura decisiones del plan + penalidad por eventos sin
+   responder.
+3. Justo despues de `deterministicTick`, antes del roll de eventos.
+4. Despues del roll de eventos (`rollEvents`/`crisisEvents`/`campaignEvents`), antes de grupos/moral.
+5. Despues de `tickMoral` (via `p2`, mismo punto donde ya vivia esa variable).
+6. Despues de `groupConsequences` (huelga, fuga de capitales, caida de inversion, cacerolazo).
+
+Los 5 tramos resultantes: **"Decisiones y eventos sin responder"** (1→2), **"Motor economico"**
+(2→3, el bucket grande: fusiona `naturalDrift`, `taxEffects`, FX, IMF, Banco Central, deflacion,
+intereses de deuda, `investmentMemory`, shocks de sector), **"Eventos del mes"** (3→4), **"Sistema
+moral"** (4→5) y **"Grupos sociales"** (5→6). Solo se guardan los tramos con valor distinto de 0.
+
+### Que te habilita
+
+Si agregas un mecanismo nuevo que mueva alguno de estos 6 campos **en un punto distinto a estos
+6 checkpoints** (por ejemplo, un efecto que se aplique despues de `groupConsequences`), no aparece
+solo en el desglose — hay que sumar un checkpoint nuevo o meterlo en el tramo mas cercano. No es
+un contrato que haya que respetar al agregar contenido (decisiones/eventos ya funcionan solos,
+caen en el tramo 1 o 3 segun corresponda), solo al tocar motor.
+
+### Verificacion
+
+321 tests (2 nuevos en `tests/store-breakdown.test.ts`, renombrado desde
+`store-capital-breakdown.test.ts`), 5 corridas seguidas sin flakiness. Verificado en vivo con
+Playwright: una decision con efectos en 4 KPIs a la vez (`bajar_impuestos`) deja la linea
+"Decisiones y eventos sin responder" en cada uno de los 4 popovers correspondientes.
+
+---
+
 ## ux/desglose-capital-y-menu · 24/08/2026 · Desglose de capital, buscador de decisiones y menu vertical
 
 Sigue el roadmap de identidad (`docs/IDENTIDAD_JUEGO_DEMOCRACY_PR_PAX.md`): mas datos visibles para
