@@ -625,6 +625,12 @@ export interface ProjectionMetric {
   now: number;
   /** diferencia contra no hacer nada, en el turno 0 (inmediato), +1, +2, +3... */
   deltas: number[];
+  /**
+   * cuanto se mueve esta metrica SOLA, sin la decision (la linea base de
+   * projectDecision sin aplicarle nada) en los mismos turnos que `deltas`.
+   * Separa "esto iba a pasar igual" de "esto lo causaste vos".
+   */
+  naturalDrift: number[];
   tone: 'bueno' | 'malo' | 'neutral';
 }
 

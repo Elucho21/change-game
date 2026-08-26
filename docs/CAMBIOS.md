@@ -6,6 +6,47 @@ Bitácora corta y en orden inverso: lo último arriba. Es lo que tenés que sabe
 
 ---
 
+## ux/desglose-tick-y-preview · 26/08/2026 · Motor economico partido en 3 + tendencia natural en el preview
+
+Dos mejoras sobre el desglose de KPIs (entrada anterior) pedidas por el jugador.
+
+### `deterministicTick` ya no fusiona todo en "Motor economico"
+
+`lib/simulation.ts`: `TickResult` suma `kpiBreakdown: Record<KpiKey, {label,value}[]>`, con 3
+checkpoints DENTRO del tick (mismo principio de snapshot-no-instrumentar-cada-funcion que ya
+usaba el desglose de `endTurn`): **Crisis en curso y gabinete** → **Comercio, impuestos y calle**
+(`naturalDrift` + presion de calle) → **Banco Central, deuda y programas** (FX, IMF, tasa,
+intereses, previsional, empleo, deflacion, infraestructura). `KpiKey`/`snapKpi` se mudaron de
+`lib/store.ts` a `lib/simulation.ts` (el motor compartido con el preview) — `store.ts` ahora
+los importa en vez de definirlos, y solo agrega sus propios tramos (`Decisiones y eventos`,
+`Eventos del mes`, `Sistema moral`, `Grupos sociales`) alrededor de `tick.kpiBreakdown`.
+
+Como `deterministicTick` es la MISMA funcion que usa `projectDecision`, esto no duplica logica:
+el preview podria pedir este desglose tambien si algun dia hace falta, sin tocar el motor de nuevo.
+
+### Preview de decisiones: "tendencia sin actuar"
+
+`lib/types.ts`: `ProjectionMetric` suma `naturalDrift: number[]` (mismo shape que `deltas`, mismos
+indices por turno). `projectDecision` (lib/simulation.ts) ya corria dos simulaciones en paralelo
+(`base` sin decision, `withD` con decision) para armar `deltas` = `withD - base`; ahora tambien
+guarda `base - now` como serie aparte. Cero instrumentacion nueva del motor: es la misma
+`base` que ya se calculaba, solo que antes se descartaba.
+
+`components/DecisionPreview.tsx` pinta una linea chica "tendencia sin actuar: X" debajo de cada
+metrica, solo si `naturalDrift` al cierre del horizonte es distinto de 0 — separa "esto iba a
+pasar igual" de "esto lo causa tu decision".
+
+### Verificacion
+
+323 tests (5 corridas seguidas: `tests/engine.test.ts` con un test nuevo de `naturalDrift`,
+`tests/store-breakdown.test.ts` con un test nuevo que confirma que aparecen los 3 sub-tramos del
+tick), tsc/lint/build limpios. Verificado en vivo con Playwright: el preview de "Bajar impuestos"
+muestra "tendencia sin actuar: -1.1" en Felicidad (la decision suma, la tendencia sola restaba);
+tras 4 turnos, Inflacion mostro "Comercio, impuestos y calle -0.6 / Banco Central, deuda y
+programas +0.5 / Eventos del mes +0.4" en vez de un solo numero fusionado.
+
+---
+
 ## ux/desglose-kpis · 26/08/2026 · Desglose por turno de felicidad, estabilidad, crecimiento, inflacion, fiscal y deuda
 
 Extiende el patron de `capitalBreakdown` (ver entrada de abajo) a los 6 KPIs mas pedidos. Mismo

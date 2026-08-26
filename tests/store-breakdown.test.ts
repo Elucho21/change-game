@@ -60,4 +60,20 @@ describe('desglose de KPIs (felicidad, estabilidad, crecimiento, inflacion, fisc
       expect(lines.every((x) => typeof x.label === 'string' && typeof x.value === 'number' && x.value !== 0)).toBe(true);
     }
   });
+
+  it('el tramo del tick ya no es un solo "Motor economico": aparece alguno de los 3 sub-tramos', () => {
+    useGame.getState().newGame();
+    useGame.getState().start('Argentina', 'normal');
+    const subTramos = ['Crisis en curso y gabinete', 'Comercio, impuestos y calle', 'Banco Central, deuda y programas'];
+
+    let vistoAlgunSubTramo = false;
+    for (let i = 0; i < 6 && !vistoAlgunSubTramo; i++) {
+      useGame.getState().endTurn();
+      const kb = useGame.getState().kpiBreakdown;
+      for (const key of Object.keys(kb) as (keyof typeof kb)[]) {
+        if ((kb[key] ?? []).some((x) => subTramos.includes(x.label))) vistoAlgunSubTramo = true;
+      }
+    }
+    expect(vistoAlgunSubTramo).toBe(true);
+  });
 });
