@@ -73,6 +73,20 @@ import type {
 // MapMode y Layers viven en lib/types.ts (los comparten el store, la UI y el save)
 export type { MapMode, Layers } from './types';
 
+/** Los 6 KPIs con desglose por turno ademas de capital (ver "7c" en endTurn). */
+export type KpiKey = 'happiness' | 'stability' | 'growth' | 'inflation' | 'fiscal' | 'debt';
+
+/** Snapshot liviano de los 6 KPIs de un pais, para diffear en distintos momentos del turno. */
+const snapKpi = (c: Country): Record<KpiKey, number> => ({
+  happiness: c.population.happiness,
+  stability: c.population.stability,
+  growth: c.economy.gdp_growth,
+  inflation: c.economy.inflation,
+  fiscal: c.economy.fiscal_balance,
+  debt: c.economy.debt_to_gdp
+});
+
+
 const RAW = data as unknown as {
   countries: Record<string, Country>;
   relations: Record<string, number>;
@@ -139,6 +153,7 @@ interface GameStore {
   reactions: Reaction[];
   capitalBreakdown: { label: string; value: number }[];
   capitalDiplomaticoBreakdown: { label: string; value: number }[];
+  kpiBreakdown: Partial<Record<KpiKey, { label: string; value: number }[]>>;
   lastActions: string[];
   history: HistoryPoint[];
   selected: string | null;
@@ -269,6 +284,7 @@ const initial = () => ({
   reactions: [] as Reaction[],
   capitalBreakdown: [] as { label: string; value: number }[],
   capitalDiplomaticoBreakdown: [] as { label: string; value: number }[],
+  kpiBreakdown: {} as Partial<Record<KpiKey, { label: string; value: number }[]>>,
   lastActions: [] as string[],
   history: [] as HistoryPoint[],
   selected: null as string | null,
@@ -1447,6 +1463,13 @@ export const useGame = create<GameStore>((set, get) => {
       });
     }
 
+    // desglose por turno de felicidad/estabilidad/crecimiento/inflacion/fiscal/deuda
+    // (ademas del de capital, ver mas abajo): snapshots antes/despues de cada
+    // tramo del turno sobre el mismo objeto mutable countries[playerCode], sin
+    // instrumentar deterministicTick/naturalDrift/taxEffects por dentro.
+    const kpiT0 = snapKpi(st.countries[st.playerCode]);
+    const kpiT1 = snapKpi(countries[st.playerCode]);
+
     // 2. el mundo corre un mes: economia, comercio, rutas, cohesion y capital.
     //    Es la MISMA funcion que usa el preview de consecuencias (lib/simulation.ts),
     //    para que lo que el jugador ve antes de decidir sea lo que realmente pasa.
@@ -1554,6 +1577,7 @@ export const useGame = create<GameStore>((set, get) => {
 
     // 5. eventos del turno
     const player = countries[st.playerCode];
+    const kpiT2 = snapKpi(player);
     // el contexto politico es el que el jugador tenia al empezar el turno:
     // la oposicion de este mes todavia no se recalculo (paso 8). Mismo motivo
     // para moral: el sistema moral de ESTE turno recien se tickea en el paso
@@ -1657,6 +1681,7 @@ export const useGame = create<GameStore>((set, get) => {
         });
       }
     }
+    const kpiT3 = snapKpi(player);
 
     // 5.4b popularidad por sector (Change World Game v1.2): 5 grupos con
     // intereses distintos, capa PARALELA a la felicidad de siempre. Corre
@@ -1806,6 +1831,7 @@ export const useGame = create<GameStore>((set, get) => {
     capital = clamp(capital + mediaCapitalEffect(groups.alta), 0, 100);
 
     const p2 = countries[st.playerCode];
+    const kpiT4 = snapKpi(p2);
 
     // un grupo que cae por debajo del umbral deja de ser paciente y actua
     // (huelga, fuga de capitales, caida de inversion, cacerolazo): antes los
@@ -1840,6 +1866,27 @@ export const useGame = create<GameStore>((set, get) => {
           tone: 'bueno'
         });
       }
+    }
+    const kpiT5 = snapKpi(p2);
+
+    // desglose final: 5 tramos del turno, uno por KPI. Igual que con capital,
+    // no separa mecanismos DENTRO de "Motor economico" (naturalDrift, taxEffects,
+    // FX, IMF, Banco Central, deflacion, intereses de deuda, investmentMemory,
+    // shocks de sector quedan todos fusionados: pasan dentro de deterministicTick).
+    const kpiBreakdown: Partial<Record<KpiKey, { label: string; value: number }[]>> = {};
+    const KPI_KEYS: KpiKey[] = ['happiness', 'stability', 'growth', 'inflation', 'fiscal', 'debt'];
+    for (const k of KPI_KEYS) {
+      const tramos: [string, number][] = [
+        ['Decisiones y eventos sin responder', kpiT1[k] - kpiT0[k]],
+        ['Motor economico', kpiT2[k] - kpiT1[k]],
+        ['Eventos del mes', kpiT3[k] - kpiT2[k]],
+        ['Sistema moral', kpiT4[k] - kpiT3[k]],
+        ['Grupos sociales', kpiT5[k] - kpiT4[k]]
+      ];
+      const lines = tramos
+        .map(([label, raw]) => ({ label, value: Math.round(raw * 10) / 10 }))
+        .filter((t) => t.value !== 0);
+      if (lines.length) kpiBreakdown[k] = lines;
     }
 
     // 7b. cronica de fin de turno: informe corto de que paso, en vez de solo
@@ -1979,6 +2026,7 @@ export const useGame = create<GameStore>((set, get) => {
           imf, street, pension, employment, moral, groups, centralBank, infrastructure, pendingEnrique,
           reactions, lastActions: [],
           capitalBreakdown, capitalDiplomaticoBreakdown,
+          kpiBreakdown,
           pending: [...pending],
           recentEventIds: [...rolled.map((e) => e.id), ...st.recentEventIds].slice(0, 8),
           feed: [...planFeed, ...feed.reverse(), ...st.feed].slice(0, 200),
@@ -2032,6 +2080,7 @@ export const useGame = create<GameStore>((set, get) => {
             moral, groups, centralBank, infrastructure, pendingEnrique,
             reactions, lastActions: [],
             capitalBreakdown, capitalDiplomaticoBreakdown,
+            kpiBreakdown,
             pending: [...pending],
             recentEventIds: [...rolled.map((e) => e.id), ...st.recentEventIds].slice(0, 8),
             feed: [...planFeed, ...feed.reverse(), ...st.feed].slice(0, 200),
@@ -2115,6 +2164,7 @@ export const useGame = create<GameStore>((set, get) => {
       pendingEnrique,
       reactions,
       capitalBreakdown, capitalDiplomaticoBreakdown,
+      kpiBreakdown,
       lastActions: [],
       pending: [...pending],
       recentEventIds: [...rolled.map((e) => e.id), ...st.recentEventIds].slice(0, 8),

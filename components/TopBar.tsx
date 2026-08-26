@@ -12,15 +12,19 @@ type MetricKey = keyof Omit<HistoryPoint, 'turn'>;
 const BAD_UP: MetricKey[] = ['inflation', 'unemployment', 'debt', 'opposition', 'tension', 'oil', 'fx'];
 
 /** Texto corto y fijo de "con que se relaciona" cada KPI, para el popover.
- * No es un desglose dinamico (eso lo tienen capital y capitalDiplomatico,
- * via `breakdown`): es la version barata para los KPIs cuya formula esta
- * repartida en muchas funciones de motor y no vale la pena instrumentar. */
+ * Complementa el desglose dinamico por turno (`breakdown`, felicidad/
+ * estabilidad/crecimiento/inflacion/fiscal/deuda ademas de los dos capital):
+ * el desglose dice CUANTO se movio y por que tramo del turno, esto dice con
+ * que mecanicas se relaciona en general. Para desempleo/tension/petroleo/tipo
+ * de cambio, que no tienen desglose, es la unica pista disponible. */
 function statRelation(metric: MetricKey): string | null {
   switch (metric) {
     case 'stability':
       return 'Se mueve con desempleo, inflacion, deuda arriba de 110% del PBI, presion de calle y corrupcion.';
     case 'growth':
       return 'Depende del comercio vs el arranque de partida, la tasa del Banco Central, impuestos y shocks de sector.';
+    case 'inflation':
+      return 'Reacciona a la tasa del Banco Central, al tipo de cambio, y al deficit cuando la deuda ya esta alta.';
     case 'unemployment':
       return 'Baja con crecimiento sostenido; el sector que crece importa (turismo genera mas empleo que mineria).';
     case 'fx':
@@ -221,7 +225,7 @@ function Stat({
 export default function TopBar({ onGrok, turnFx = false }: { onGrok: () => void; turnFx?: boolean }) {
   const {
     countries, playerCode, turn, capital, capitalDiplomatico, world, pending, politics, active, orders, history, moral,
-    capitalBreakdown, capitalDiplomaticoBreakdown
+    capitalBreakdown, capitalDiplomaticoBreakdown, kpiBreakdown
   } = useGame();
   const endTurn = useGame((s) => s.endTurn);
   const newGame = useGame((s) => s.newGame);
@@ -256,21 +260,24 @@ export default function TopBar({ onGrok, turnFx = false }: { onGrok: () => void;
           tone={capitalDiplomatico < 15 ? 'bad' : capitalDiplomatico > 40 ? 'good' : 'warn'} breakdown={capitalDiplomaticoBreakdown} />
         <Stat label="Felicidad" value={`${p.population.happiness}`} metric="happiness" history={history}
           tone={p.population.happiness < 40 ? 'bad' : p.population.happiness > 65 ? 'good' : ''}
-          insight={statInsight('happiness', insightCtx)} />
+          insight={statInsight('happiness', insightCtx)} breakdown={kpiBreakdown.happiness} />
         <Stat label="Estabilidad" value={`${p.population.stability}`} metric="stability" history={history}
-          tone={p.population.stability < 40 ? 'bad' : p.population.stability > 65 ? 'good' : ''} />
+          tone={p.population.stability < 40 ? 'bad' : p.population.stability > 65 ? 'good' : ''}
+          insight={statInsight('stability', insightCtx)} breakdown={kpiBreakdown.stability} />
         <Stat label="Crecimiento" value={`${e.gdp_growth}%`} metric="growth" history={history}
-          tone={e.gdp_growth < 0 ? 'bad' : 'good'} />
+          tone={e.gdp_growth < 0 ? 'bad' : 'good'}
+          insight={statInsight('growth', insightCtx)} breakdown={kpiBreakdown.growth} />
         <Stat label="Inflacion" value={`${e.inflation}%`} metric="inflation" history={history}
-          tone={e.inflation > 25 ? 'bad' : e.inflation > 10 ? 'warn' : 'good'} />
+          tone={e.inflation > 25 ? 'bad' : e.inflation > 10 ? 'warn' : 'good'}
+          insight={statInsight('inflation', insightCtx)} breakdown={kpiBreakdown.inflation} />
         <Stat label="Desempleo" value={`${e.unemployment}%`} metric="unemployment" history={history}
           tone={e.unemployment > 10 ? 'bad' : ''} />
         <Stat label="Fiscal" value={`${e.fiscal_balance}%`} metric="fiscal" history={history}
           tone={e.fiscal_balance < -3 ? 'bad' : e.fiscal_balance > 0 ? 'good' : 'warn'}
-          insight={statInsight('fiscal', insightCtx)} />
+          insight={statInsight('fiscal', insightCtx)} breakdown={kpiBreakdown.fiscal} />
         <Stat label="Deuda/PBI" value={`${e.debt_to_gdp}%`} metric="debt" history={history}
           tone={e.debt_to_gdp > 90 ? 'bad' : ''}
-          insight={statInsight('debt', insightCtx)} />
+          insight={statInsight('debt', insightCtx)} breakdown={kpiBreakdown.debt} />
         <Stat
           label="Tipo de cambio"
           value={`${p.fx ?? 100}`}

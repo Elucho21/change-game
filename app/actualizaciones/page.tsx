@@ -23,17 +23,19 @@ export default function ActualizacionesPage() {
         </p>
 
         <div className="card">
-          <h2>🧭 v1.4 — Desglose de capital, buscador y menu vertical</h2>
+          <h2>🧭 v1.4 — Desglose de KPIs, buscador y menu vertical</h2>
           <p className="muted" style={{ fontSize: 12, marginTop: -4 }}>
             Mas datos para calcular la jugada, y una interfaz que se organiza como panel de gobierno.
           </p>
 
-          <h3>📊 Que compone tu capital, mes a mes</h3>
+          <h3>📊 Que compone cada KPI, mes a mes</h3>
           <p>
-            El popover de <b>Capital politico</b> y <b>Capital diplomatico</b> (click en la barra superior) ahora
-            muestra, ademas de la evolucion historica, un desglose de este turno: interes por ahorro, generacion
-            pasiva, corrupcion, medios. El resto de los indicadores suma una linea fija de &quot;con que se
-            relaciona&quot; para entender que mecanicas los mueven, no solo el numero.
+            El popover de <b>Capital politico</b>, <b>Capital diplomatico</b>, <b>Felicidad</b>,{' '}
+            <b>Estabilidad</b>, <b>Crecimiento</b>, <b>Inflacion</b>, <b>Fiscal</b> y <b>Deuda/PBI</b> (click en la
+            barra superior) ahora muestra, ademas de la evolucion historica, un desglose de este turno: cuanto
+            vino de tus decisiones, de la economia real, de los eventos, del sistema moral y de los grupos
+            sociales. El resto de los indicadores suma una linea fija de &quot;con que se relaciona&quot; para
+            entender que mecanicas los mueven, no solo el numero.
           </p>
 
           <h3>🔎 Buscador de decisiones en las 8 categorias</h3>
