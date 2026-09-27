@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<!--
+  Impulse World · Promo GV MoneyHouse · Reel 9:16 (1080x1920 · 30fps · 20s)
+
+  EDITAR ACA: todos los textos, colores y fechas viven en data-composition-variables
+  (justo abajo, en <html>). Tambien se editan desde Studio o al renderizar:
+    npx hyperframes render --variables '{"url":"impulseworld.pro"}'
+  Logo real: poner la ruta del PNG en "logoSrc" (ej. "assets/logo-impulse.png").
+  Musica: assets/track.mp3 (fade-out en el ultimo segundo, ver <audio id="bgm">).
+-->
+<html lang="es" data-composition-variables="[
+    {&quot;id&quot;:&quot;colorBg&quot;,&quot;type&quot;:&quot;color&quot;,&quot;label&quot;:&quot;Fondo&quot;,&quot;default&quot;:&quot;#0B0E13&quot;},
+    {&quot;id&quot;:&quot;colorPrimary&quot;,&quot;type&quot;:&quot;color&quot;,&quot;label&quot;:&quot;Primario Impulse&quot;,&quot;default&quot;:&quot;#0F82FF&quot;},
+    {&quot;id&quot;:&quot;colorAccent&quot;,&quot;type&quot;:&quot;color&quot;,&quot;label&quot;:&quot;Acento Impulse&quot;,&quot;default&quot;:&quot;#8FC4FF&quot;},
+    {&quot;id&quot;:&quot;colorSecondary&quot;,&quot;type&quot;:&quot;color&quot;,&quot;label&quot;:&quot;Secundario Impulse&quot;,&quot;default&quot;:&quot;#0B1E3C&quot;},
+    {&quot;id&quot;:&quot;colorText&quot;,&quot;type&quot;:&quot;color&quot;,&quot;label&quot;:&quot;Texto&quot;,&quot;default&quot;:&quot;#E5E7EB&quot;},
+
+    {&quot;id&quot;:&quot;logoSrc&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Logo PNG (vacio = logo tipografico)&quot;,&quot;default&quot;:&quot;&quot;},
+    {&quot;id&quot;:&quot;brandTop&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Marca linea 1&quot;,&quot;default&quot;:&quot;IMPULSE&quot;},
+    {&quot;id&quot;:&quot;brandBottom&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Marca linea 2&quot;,&quot;default&quot;:&quot;WORLD&quot;},
+
+    {&quot;id&quot;:&quot;s1Question&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Escena 1 · pregunta&quot;,&quot;default&quot;:&quot;¿Querés operar con&quot;},
+    {&quot;id&quot;:&quot;s1Amount1&quot;,&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;Escena 1 · monto 1 (K)&quot;,&quot;default&quot;:100},
+    {&quot;id&quot;:&quot;s1Amount2&quot;,&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;Escena 1 · monto 2 (K)&quot;,&quot;default&quot;:200},
+    {&quot;id&quot;:&quot;s1Amount3&quot;,&quot;type&quot;:&quot;number&quot;,&quot;label&quot;:&quot;Escena 1 · monto 3 (K)&quot;,&quot;default&quot;:300},
+
+    {&quot;id&quot;:&quot;s2Tag&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Escena 2 · etiqueta&quot;,&quot;default&quot;:&quot;Promo exclusiva&quot;},
+    {&quot;id&quot;:&quot;s2Title&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Escena 2 · titulo&quot;,&quot;default&quot;:&quot;GV MoneyHouse&quot;},
+
+    {&quot;id&quot;:&quot;s3Buy&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Escena 3 · compras&quot;,&quot;default&quot;:&quot;Comprás un desafío de&quot;},
+    {&quot;id&quot;:&quot;s3BuyAmount&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Escena 3 · monto compra&quot;,&quot;default&quot;:&quot;100K&quot;},
+    {&quot;id&quot;:&quot;s3Get&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Escena 3 · recibis&quot;,&quot;default&quot;:&quot;y recibís una cuenta de&quot;},
+    {&quot;id&quot;:&quot;s3GetAmount&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Escena 3 · monto recibido&quot;,&quot;default&quot;:&quot;300K&quot;},
+
+    {&quot;id&quot;:&quot;s4Tag&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Escena 4 · etiqueta&quot;,&quot;default&quot;:&quot;Bonus&quot;},
+    {&quot;id&quot;:&quot;s4Text&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Escena 4 · texto&quot;,&quot;default&quot;:&quot;Tu cuenta de 100K+ te da acceso&quot;},
+    {&quot;id&quot;:&quot;s4Highlight&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Escena 4 · destacado&quot;,&quot;default&quot;:&quot;GRATIS&quot;},
+    {&quot;id&quot;:&quot;s4Text2&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Escena 4 · cierre&quot;,&quot;default&quot;:&quot;a la arena&quot;},
+    {&quot;id&quot;:&quot;eventDate&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Evento · fecha&quot;,&quot;default&quot;:&quot;7 de octubre&quot;},
+    {&quot;id&quot;:&quot;eventPlace&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Evento · lugar&quot;,&quot;default&quot;:&quot;Infinit Gaming&quot;},
+    {&quot;id&quot;:&quot;eventDoors&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Evento · puertas&quot;,&quot;default&quot;:&quot;Puertas 17:00&quot;},
+
+    {&quot;id&quot;:&quot;s5Label&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Escena 5 · etiqueta&quot;,&quot;default&quot;:&quot;Usá el cupón&quot;},
+    {&quot;id&quot;:&quot;coupon&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Cupón&quot;,&quot;default&quot;:&quot;GVMONEYHOUSE300K&quot;},
+    {&quot;id&quot;:&quot;s5Copy&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Escena 5 · boton&quot;,&quot;default&quot;:&quot;Copiar&quot;},
+    {&quot;id&quot;:&quot;s5Copied&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;Escena 5 · boton copiado&quot;,&quot;default&quot;:&quot;¡Copiado!&quot;},
+
+    {&quot;id&quot;:&quot;validUntil&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;CTA · vigencia&quot;,&quot;default&quot;:&quot;Válido hasta el 7 de diciembre&quot;},
+    {&quot;id&quot;:&quot;url&quot;,&quot;type&quot;:&quot;string&quot;,&quot;label&quot;:&quot;CTA · URL&quot;,&quot;default&quot;:&quot;impulseworld.pro&quot;}
+  ]">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1080, height=1920">
+    <script src="assets/vendor/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: #0b0e13;
+      }
+      #root {
+        --bg: var(--colorBg, #0b0e13);
+        --primary: var(--colorPrimary, #0f82ff);
+        --accent: var(--colorAccent, #8fc4ff);
+        --secondary: var(--colorSecondary, #0b1e3c);
+        --text: var(--colorText, #e5e7eb);
+        --muted: #9aa1ac;
+        --glass-bg: hsl(220 30% 12% / 0.6);
+        --glass-border: hsl(220 30% 25% / 0.55);
+        --glass-highlight: hsl(220 30% 40% / 0.35);
+        --glass-shadow: hsl(213 100% 53% / 0.18);
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Poppins", ui-sans-serif, system-ui, sans-serif;
+      }
+
+      /* ---------- capas persistentes ---------- */
+      .layer {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+      #ambient {
+        overflow: hidden;
+      }
+      .orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(110px);
+      }
+      #orb-a {
+        width: 900px;
+        height: 900px;
+        top: -300px;
+        right: -360px;
+        background: color-mix(in srgb, var(--primary) 42%, transparent);
+      }
+      #orb-b {
+        width: 820px;
+        height: 820px;
+        bottom: -260px;
+        left: -320px;
+        background: color-mix(in srgb, var(--accent) 22%, transparent);
+      }
+      #orb-c {
+        width: 1000px;
+        height: 1000px;
+        top: 460px;
+        left: 40px;
+        background: color-mix(in srgb, var(--secondary) 85%, transparent);
+      }
+      #grid {
+        position: absolute;
+        inset: -120px;
+        background-image:
+          linear-gradient(hsl(220 30% 40% / 0.1) 2px, transparent 2px),
+          linear-gradient(90deg, hsl(220 30% 40% / 0.1) 2px, transparent 2px);
+        background-size: 120px 120px;
+        -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, #000 20%, transparent 80%);
+        mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, #000 20%, transparent 80%);
+      }
+      #flash {
+        background: radial-gradient(
+          circle at 50% 45%,
+          color-mix(in srgb, var(--accent) 70%, transparent),
+          color-mix(in srgb, var(--primary) 30%, transparent) 45%,
+          transparent 75%
+        );
+        opacity: 0;
+        mix-blend-mode: screen;
+        pointer-events: none;
+      }
+
+      .glass {
+        background: var(--glass-bg);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 2px solid var(--glass-border);
+        box-shadow:
+          0 16px 64px var(--glass-shadow),
+          inset 0 2px 0 var(--glass-highlight),
+          inset 0 -2px 0 hsl(0 0% 0% / 0.1);
+      }
+
+      /* logo fijo arriba */
+      #logo-bar {
+        position: absolute;
+        top: 150px;
+        left: 60px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding: 18px 30px 18px 20px;
+        border-radius: 999px;
+      }
+      .logo-mark {
+        width: 60px;
+        height: 60px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, var(--accent), var(--primary) 55%, var(--secondary));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 6px 24px color-mix(in srgb, var(--primary) 55%, transparent);
+      }
+      .logo-mark svg {
+        width: 34px;
+        height: 34px;
+      }
+      .logo-words {
+        display: flex;
+        flex-direction: column;
+        line-height: 1;
+      }
+      .logo-words b {
+        font-weight: 900;
+        font-size: 30px;
+        letter-spacing: 0.06em;
+      }
+      .logo-words span {
+        font-weight: 400;
+        font-size: 19px;
+        letter-spacing: 0.42em;
+        color: var(--accent);
+        margin-top: 4px;
+      }
+      .logo-img {
+        display: none;
+        height: 60px;
+        width: auto;
+      }
+      .has-logo-img .logo-img {
+        display: block;
+      }
+      .has-logo-img .logo-mark,
+      .has-logo-img .logo-words {
+        display: none;
+      }
+
+      /* ---------- escenas ---------- */
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .scene-inner {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 300px 70px 400px;
+        text-align: center;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+        padding: 16px 34px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 36px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+      .chip i {
+        display: block;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--primary);
+        box-shadow: 0 0 18px var(--primary);
+      }
+      .grad {
+        background: linear-gradient(180deg, #ffffff 0%, var(--accent) 55%, var(--primary) 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+
+      /* escena 1 */
+      .s1-q {
+        font-weight: 700;
+        font-size: 76px;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        margin-bottom: 36px;
+      }
+      .s1-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: center;
+        font-weight: 900;
+        font-size: 216px;
+        line-height: 1.08;
+        letter-spacing: -0.04em;
+        font-variant-numeric: tabular-nums;
+      }
+      .s1-row .num,
+      .s1-row .punct,
+      .s1-row .small {
+        display: inline-block;
+        line-height: 1;
+      }
+      .s1-row .small {
+        font-size: 110px;
+        font-weight: 700;
+        color: var(--muted);
+        margin-right: 30px;
+        letter-spacing: 0;
+      }
+      .s1-row .punct {
+        color: var(--primary);
+      }
+
+      /* escena 2 */
+      #candles {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 300px;
+        height: 1300px;
+        opacity: 0.7;
+      }
+      .candle {
+        position: absolute;
+        width: 34px;
+      }
+      .candle .wick {
+        position: absolute;
+        left: 15px;
+        width: 4px;
+        border-radius: 2px;
+      }
+      .candle .body {
+        position: absolute;
+        left: 0;
+        width: 34px;
+        border-radius: 6px;
+      }
+      .candle.up .wick,
+      .candle.up .body {
+        background: var(--primary);
+        box-shadow: 0 0 22px color-mix(in srgb, var(--primary) 60%, transparent);
+      }
+      .candle.down .wick,
+      .candle.down .body {
+        background: hsl(220 25% 34%);
+      }
+      #trend {
+        position: absolute;
+        left: 0;
+        top: 300px;
+        width: 1080px;
+        height: 1300px;
+        overflow: visible;
+      }
+      .s2-title {
+        font-weight: 900;
+        font-size: 150px;
+        line-height: 0.98;
+        letter-spacing: -0.04em;
+        margin-top: 44px;
+        max-width: 960px;
+      }
+      .s2-shade {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse 60% 34% at 50% 50%, color-mix(in srgb, var(--bg) 85%, transparent), transparent 100%);
+      }
+
+      /* escena 3 */
+      .s3-label {
+        font-weight: 700;
+        font-size: 56px;
+        line-height: 1.15;
+        color: var(--muted);
+        max-width: 900px;
+      }
+      .s3-buy {
+        margin: 26px 0 10px;
+        padding: 20px 70px;
+        border-radius: 40px;
+        font-weight: 900;
+        font-size: 150px;
+        line-height: 1;
+        letter-spacing: -0.03em;
+      }
+      .s3-arrow {
+        width: 110px;
+        height: 110px;
+        margin: 18px 0;
+      }
+      .s3-get {
+        font-weight: 900;
+        font-size: 320px;
+        line-height: 0.95;
+        letter-spacing: -0.05em;
+        margin-top: 10px;
+        filter: drop-shadow(0 0 60px color-mix(in srgb, var(--primary) 55%, transparent));
+      }
+
+      /* escena 4 */
+      .s4-text {
+        font-weight: 700;
+        font-size: 80px;
+        line-height: 1.14;
+        letter-spacing: -0.02em;
+        max-width: 940px;
+        margin: 40px 0 56px;
+      }
+      .s4-text .hl {
+        display: inline-block;
+        padding: 0 26px;
+        border-radius: 22px;
+        background: var(--primary);
+        color: #fff;
+        font-weight: 900;
+        box-shadow: 0 10px 50px color-mix(in srgb, var(--primary) 60%, transparent);
+      }
+      .event {
+        width: 880px;
+        border-radius: 40px;
+        padding: 26px 46px;
+        text-align: left;
+      }
+      .event-row {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+        padding: 20px 0;
+        font-size: 54px;
+        font-weight: 700;
+      }
+      .event-row + .event-row {
+        border-top: 2px solid hsl(220 30% 30% / 0.5);
+      }
+      .event-row svg {
+        flex: 0 0 64px;
+        width: 64px;
+        height: 64px;
+      }
+
+      /* escena 5 */
+      .s5-label {
+        font-weight: 700;
+        font-size: 64px;
+        margin-bottom: 44px;
+      }
+      .coupon {
+        position: relative;
+        display: block;
+        width: 960px;
+        padding: 56px 20px;
+        border-radius: 40px;
+        overflow: hidden;
+      }
+      .coupon-border {
+        position: absolute;
+        inset: 14px;
+        border: 4px dashed color-mix(in srgb, var(--accent) 70%, transparent);
+        border-radius: 30px;
+      }
+      .coupon-text {
+        position: relative;
+        font-weight: 900;
+        font-size: 70px;
+        letter-spacing: -0.01em;
+        line-height: 1.1;
+        color: #fff;
+        white-space: nowrap;
+      }
+      .coupon-glow {
+        position: absolute;
+        inset: 0;
+        border-radius: 40px;
+        box-shadow:
+          inset 0 0 0 4px var(--primary),
+          0 0 80px color-mix(in srgb, var(--primary) 70%, transparent);
+        opacity: 0;
+      }
+      .shimmer-mask {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(
+          115deg,
+          transparent 0%,
+          transparent calc(var(--shimmer-pos, -20%) - 12%),
+          rgba(255, 255, 255, 0.75) var(--shimmer-pos, -20%),
+          transparent calc(var(--shimmer-pos, -20%) + 12%),
+          transparent 100%
+        );
+        mix-blend-mode: overlay;
+      }
+      .copy-btn {
+        position: relative;
+        margin-top: 56px;
+        width: 520px;
+        height: 130px;
+        border-radius: 999px;
+        background: var(--primary);
+        box-shadow: 0 14px 50px color-mix(in srgb, var(--primary) 55%, transparent);
+        font-weight: 700;
+        font-size: 50px;
+        color: #fff;
+      }
+      .copy-state {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+      }
+      .copy-state svg {
+        width: 50px;
+        height: 50px;
+      }
+      .ripple {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 160px;
+        height: 160px;
+        margin: -80px 0 0 -80px;
+        border-radius: 50%;
+        border: 6px solid var(--accent);
+        opacity: 0;
+      }
+
+      /* escena 6 */
+      .lockup {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 26px;
+        margin-bottom: 70px;
+      }
+      .lockup .logo-mark {
+        width: 190px;
+        height: 190px;
+        border-radius: 56px;
+      }
+      .lockup .logo-mark svg {
+        width: 110px;
+        height: 110px;
+      }
+      .lockup .logo-words {
+        align-items: center;
+      }
+      .lockup .logo-words b {
+        font-size: 96px;
+      }
+      .lockup .logo-words span {
+        font-size: 46px;
+        margin-top: 10px;
+      }
+      .lockup .logo-img {
+        height: 220px;
+      }
+      .s6-valid {
+        font-weight: 700;
+        font-size: 54px;
+        line-height: 1.15;
+        max-width: 980px;
+        margin-bottom: 50px;
+      }
+      .url-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 22px;
+        padding: 34px 60px;
+        border-radius: 999px;
+        background: var(--primary);
+        color: #fff;
+        font-weight: 900;
+        font-size: 66px;
+        letter-spacing: -0.01em;
+        box-shadow: 0 16px 70px color-mix(in srgb, var(--primary) 60%, transparent);
+      }
+      .url-pill svg {
+        width: 58px;
+        height: 58px;
+      }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-lksm" id="root" data-composition-id="main" data-start="0" data-duration="20" data-width="1080" data-height="1920" data-fps="30">
+      <!-- fondo ambiental (toda la pieza) -->
+      <div data-hf-id="hf-dyov" id="ambient" class="layer clip" data-start="0" data-duration="20" data-track-index="0">
+        <div data-hf-id="hf-nqgw" id="ambient-inner" class="layer">
+          <div data-hf-id="hf-jgro" id="orb-c" class="orb"></div>
+          <div data-hf-id="hf-qvh1" id="orb-a" class="orb" data-layout-allow-overflow=""></div>
+          <div data-hf-id="hf-utl2" id="orb-b" class="orb" data-layout-allow-overflow=""></div>
+          <div data-hf-id="hf-gs5t" id="grid"></div>
+        </div>
+      </div>
+
+      <!-- ESCENA 1 · hook 0-3s -->
+      <section data-hf-id="hf-lmdd" id="s1" class="scene clip" data-start="0" data-duration="3" data-track-index="2">
+        <div data-hf-id="hf-bbya" class="scene-inner" id="s1-inner">
+          <div data-hf-id="hf-ochw" class="s1-q" id="s1-q" data-var-text="s1Question">¿Querés operar con</div>
+          <div data-hf-id="hf-nzbe" class="s1-row" id="s1-r1" data-layout-allow-overlap=""><span data-hf-id="hf-4er5" class="num" id="n1" data-layout-allow-overlap="">100</span>K<span data-hf-id="hf-ytn5" class="punct">,</span></div>
+          <div data-hf-id="hf-f007" class="s1-row" id="s1-r2" data-layout-allow-overlap=""><span data-hf-id="hf-yb5t" class="num" id="n2" data-layout-allow-overlap="">200</span>K</div>
+          <div data-hf-id="hf-oxvo" class="s1-row" id="s1-r3" data-layout-allow-overlap=""><span data-hf-id="hf-82af" class="small">o</span><span data-hf-id="hf-3gq1" class="num" id="n3" data-layout-allow-overlap="">300</span>K<span data-hf-id="hf-tnns" class="punct">?</span></div>
+        </div>
+      </section>
+
+      <!-- ESCENA 2 · promo exclusiva 3-7s -->
+      <section data-hf-id="hf-fk5w" id="s2" class="scene clip" data-start="3" data-duration="4" data-track-index="2">
+        <div data-hf-id="hf-bfo1" id="candles"></div>
+        <svg data-hf-id="hf-y128" id="trend" viewBox="0 0 1080 1300" aria-hidden="true">
+          <path data-hf-id="hf-fed2" id="trend-path" d="" fill="none" stroke="var(--accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <div data-hf-id="hf-2jhr" class="s2-shade"></div>
+        <div data-hf-id="hf-gs0d" class="scene-inner" id="s2-inner">
+          <div data-hf-id="hf-xz7k" class="chip glass" id="s2-tag"><i data-hf-id="hf-wt6k"></i><span data-hf-id="hf-xm0h" data-var-text="s2Tag">Promo exclusiva</span></div>
+          <div data-hf-id="hf-r5dx" class="s2-title grad" id="s2-title" data-var-text="s2Title">GV MoneyHouse</div>
+        </div>
+      </section>
+
+      <!-- ESCENA 3 · compras 100K recibis 300K 7-11s -->
+      <section data-hf-id="hf-hojd" id="s3" class="scene clip" data-start="7" data-duration="4" data-track-index="2">
+        <div data-hf-id="hf-tktc" class="scene-inner" id="s3-inner">
+          <div data-hf-id="hf-vane" class="s3-label" id="s3-l1" data-var-text="s3Buy">Comprás un desafío de</div>
+          <div data-hf-id="hf-pujb" class="s3-buy glass" id="s3-buy" data-var-text="s3BuyAmount">100K</div>
+          <svg data-hf-id="hf-n1pm" class="s3-arrow" id="s3-arrow" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path data-hf-id="hf-krc6" d="M12 4v16M5 13l7 7 7-7" />
+          </svg>
+          <div data-hf-id="hf-3fn8" class="s3-label" id="s3-l2" data-var-text="s3Get">y recibís una cuenta de</div>
+          <div data-hf-id="hf-3647" class="s3-get grad" id="s3-get" data-var-text="s3GetAmount">300K</div>
+        </div>
+      </section>
+
+      <!-- ESCENA 4 · bonus arena 11-15s -->
+      <section data-hf-id="hf-zmdt" id="s4" class="scene clip" data-start="11" data-duration="4" data-track-index="2">
+        <div data-hf-id="hf-qvcj" class="scene-inner" id="s4-inner">
+          <div data-hf-id="hf-p3xy" class="chip glass" id="s4-tag"><i data-hf-id="hf-zeb8"></i><span data-hf-id="hf-k1j3" data-var-text="s4Tag">Bonus</span></div>
+          <div data-hf-id="hf-o9p0" class="s4-text" id="s4-text">
+            <span data-hf-id="hf-gkp8" data-var-text="s4Text">Tu cuenta de 100K+ te da acceso</span>
+            <span data-hf-id="hf-o1ij" class="hl" id="s4-hl" data-var-text="s4Highlight">GRATIS</span>
+            <span data-hf-id="hf-lwn0" data-var-text="s4Text2">a la arena</span>
+          </div>
+          <div data-hf-id="hf-3xek" class="event glass" id="s4-event">
+            <div data-hf-id="hf-l7u5" class="event-row" id="ev1">
+              <svg data-hf-id="hf-g6jt" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect data-hf-id="hf-odke" x="3" y="5" width="18" height="16" rx="3" /><path data-hf-id="hf-6yhn" d="M16 3v4M8 3v4M3 10h18" /></svg>
+              <span data-hf-id="hf-8w2f" data-var-text="eventDate">7 de octubre</span>
+            </div>
+            <div data-hf-id="hf-p5y6" class="event-row" id="ev2">
+              <svg data-hf-id="hf-3ggt" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-e85j" d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z" /><circle data-hf-id="hf-ogar" cx="12" cy="9" r="2.5" /></svg>
+              <span data-hf-id="hf-t7vm" data-var-text="eventPlace">Infinit Gaming</span>
+            </div>
+            <div data-hf-id="hf-t427" class="event-row" id="ev3">
+              <svg data-hf-id="hf-8pd0" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle data-hf-id="hf-1iwn" cx="12" cy="12" r="9" /><path data-hf-id="hf-zcgb" d="M12 7v5l3 2" /></svg>
+              <span data-hf-id="hf-xh14" data-var-text="eventDoors">Puertas 17:00</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ESCENA 5 · cupon 15-18s -->
+      <section data-hf-id="hf-95md" id="s5" class="scene clip" data-start="15" data-duration="3" data-track-index="2">
+        <div data-hf-id="hf-jl7y" class="scene-inner" id="s5-inner">
+          <div data-hf-id="hf-0sni" class="s5-label" id="s5-label" data-var-text="s5Label">Usá el cupón</div>
+          <div data-hf-id="hf-k536" class="coupon glass" id="coupon">
+            <div data-hf-id="hf-fpad" class="coupon-border"></div>
+            <div data-hf-id="hf-nk44" class="coupon-text" id="coupon-text" data-var-text="coupon">GVMONEYHOUSE300K</div>
+            <div data-hf-id="hf-b53i" class="coupon-glow" id="coupon-glow"></div>
+            <div data-hf-id="hf-rnic" class="shimmer-mask" id="coupon-shimmer" data-layout-allow-occlusion=""></div>
+          </div>
+          <div data-hf-id="hf-thb8" class="copy-btn" id="copy-btn" data-layout-allow-overlap="">
+            <div data-hf-id="hf-9u64" class="copy-state" id="copy-a">
+              <svg data-hf-id="hf-op64" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect data-hf-id="hf-djmc" x="9" y="9" width="12" height="12" rx="2.5" /><path data-hf-id="hf-5o6z" d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>
+              <span data-hf-id="hf-vbfo" data-var-text="s5Copy">Copiar</span>
+            </div>
+            <div data-hf-id="hf-kpnr" class="copy-state" id="copy-b">
+              <svg data-hf-id="hf-zdhi" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-ubsc" d="M4 12.5l5 5L20 6.5" /></svg>
+              <span data-hf-id="hf-y41o" data-var-text="s5Copied">¡Copiado!</span>
+            </div>
+            <div data-hf-id="hf-h5aq" class="ripple" id="ripple"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ESCENA 6 · CTA 18-20s -->
+      <section data-hf-id="hf-bp5q" id="s6" class="scene clip" data-start="18" data-duration="2" data-track-index="2">
+        <div data-hf-id="hf-5udl" class="scene-inner" id="s6-inner">
+          <div data-hf-id="hf-yuxz" class="lockup brand" id="s6-lockup">
+            <div data-hf-id="hf-visd" class="logo-mark"><svg data-hf-id="hf-6kxc" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-y7wm" d="M3 17l6-6 4 4 8-8" /><path data-hf-id="hf-fyh4" d="M15 7h6v6" /></svg></div>
+            <div data-hf-id="hf-9pkh" class="logo-words"><b data-hf-id="hf-fnjo" data-var-text="brandTop">IMPULSE</b><span data-hf-id="hf-zry7" data-var-text="brandBottom">WORLD</span></div>
+          </div>
+          <div data-hf-id="hf-2u3q" class="s6-valid" id="s6-valid" data-var-text="validUntil">Válido hasta el 7 de diciembre</div>
+          <div data-hf-id="hf-577o" class="url-pill" id="s6-url">
+            <span data-hf-id="hf-6dog" data-var-text="url">impulseworld.pro</span>
+            <svg data-hf-id="hf-j70o" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-6b5r" d="M5 12h14M13 5l7 7-7 7" /></svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- logo fijo en la esquina superior (toda la pieza) -->
+      <div data-hf-id="hf-fl60" id="logo-layer" class="layer clip" data-start="0" data-duration="20" data-track-index="4">
+        <div data-hf-id="hf-tjmo" id="logo-bar" class="glass brand">
+          <div data-hf-id="hf-9vqp" class="logo-mark"><svg data-hf-id="hf-i03l" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path data-hf-id="hf-kfpm" d="M3 17l6-6 4 4 8-8" /><path data-hf-id="hf-996o" d="M15 7h6v6" /></svg></div>
+          <div data-hf-id="hf-mso5" class="logo-words"><b data-hf-id="hf-immk" data-var-text="brandTop">IMPULSE</b><span data-hf-id="hf-v9kv" data-var-text="brandBottom">WORLD</span></div>
+        </div>
+      </div>
+
+      <!-- destello en cada corte fuerte -->
+      <div data-hf-id="hf-s54e" id="flash" class="layer clip" data-start="0" data-duration="20" data-track-index="5"></div>
+
+      <!-- musica: beat 120 BPM, fade-out 19-20s -->
+      <audio data-hf-id="hf-arh1" id="bgm" src="assets/track.mp3" data-start="0" data-duration="20" data-track-index="10" data-volume="0.9" data-automation="{&quot;version&quot;:1,&quot;lanes&quot;:[{&quot;target&quot;:&quot;volume&quot;,&quot;points&quot;:[{&quot;t&quot;:0,&quot;v&quot;:1},{&quot;t&quot;:19,&quot;v&quot;:1},{&quot;t&quot;:20,&quot;v&quot;:0}]}]}"></audio>
+    </div>
+
+    <script>
+      (function () {
+        const V = window.__hyperframes.getVariables();
+        const $ = (id) => document.getElementById(id);
+
+        // logo PNG opcional
+        if (V.logoSrc) {
+          document.querySelectorAll(".brand").forEach((el) => {
+            const img = document.createElement("img");
+            img.className = "logo-img";
+            img.alt = "Impulse World";
+            img.src = V.logoSrc;
+            el.appendChild(img);
+            el.classList.add("has-logo-img");
+          });
+        }
+
+        // velas deterministicas (PRNG con semilla fija)
+        let seed = 20251007;
+        const rand = () => {
+          seed = (seed * 1664525 + 1013904223) % 4294967296;
+          return seed / 4294967296;
+        };
+        const COUNT = 19;
+        const STEP = 56;
+        const X0 = (1080 - (COUNT - 1) * STEP - 34) / 2;
+        const candlesEl = $("candles");
+        const closes = [];
+        let price = 1120;
+        const candleEls = [];
+        for (let i = 0; i < COUNT; i++) {
+          const up = i % 4 !== 2 && rand() > 0.2;
+          const move = 40 + rand() * 60;
+          const open = price;
+          const close = up ? open - move : open + move * 0.6; // y crece hacia abajo
+          const high = Math.min(open, close) - (8 + rand() * 26);
+          const low = Math.max(open, close) + (8 + rand() * 26);
+          price = close;
+          closes.push({ x: X0 + i * STEP + 17, y: close });
+          const c = document.createElement("div");
+          c.className = "candle " + (up ? "up" : "down");
+          c.style.left = X0 + i * STEP + "px";
+          c.style.top = high + "px";
+          c.style.height = low - high + "px";
+          const wick = document.createElement("div");
+          wick.className = "wick";
+          wick.style.top = "0px";
+          wick.style.height = low - high + "px";
+          const body = document.createElement("div");
+          body.className = "body";
+          body.style.top = Math.min(open, close) - high + "px";
+          body.style.height = Math.max(6, Math.abs(close - open)) + "px";
+          c.appendChild(wick);
+          c.appendChild(body);
+          candlesEl.appendChild(c);
+          candleEls.push(c);
+        }
+        const trend = $("trend-path");
+        trend.setAttribute("d", "M" + closes.map((p) => p.x.toFixed(1) + " " + (p.y - 40).toFixed(1)).join(" L"));
+        const trendLen = trend.getTotalLength();
+        trend.style.strokeDasharray = trendLen;
+
+        const tl = gsap.timeline({ paused: true });
+        const OUT = "expo.out";
+        const SPRING = "back.out(1.7)";
+
+        // fondo: empuje lento de camara + deriva de grilla
+        tl.fromTo("#ambient-inner", { scale: 1 }, { scale: 1.14, duration: 20, ease: "none" }, 0);
+        tl.fromTo("#grid", { y: 0 }, { y: 120, duration: 20, ease: "none" }, 0);
+
+        // logo entra al inicio y queda fijo
+        tl.fromTo("#logo-bar", { opacity: 0, y: -40 }, { opacity: 1, y: 0, duration: 0.5, ease: OUT }, 0.05);
+
+        // destellos en los golpes del beat
+        [3, 7, 11, 15, 18].forEach((t) => {
+          tl.fromTo("#flash", { opacity: 0 }, { opacity: 0.55, duration: 0.05, ease: "none", immediateRender: false }, t);
+          tl.to("#flash", { opacity: 0, duration: 0.35, ease: "power2.out" }, t + 0.05);
+        });
+
+        // salida rapida comun de cada escena
+        const exitScene = (inner, end) => {
+          tl.to(inner, { opacity: 0, scale: 1.08, filter: "blur(14px)", duration: 0.22, ease: "power3.in" }, end - 0.22);
+        };
+
+        // ---- ESCENA 1 (0-3): pregunta + contadores ----
+        tl.fromTo("#s1-q", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.45, ease: OUT }, 0.1);
+        const counters = [
+          ["#s1-r1", "n1", V.s1Amount1, 0.35],
+          ["#s1-r2", "n2", V.s1Amount2, 0.6],
+          ["#s1-r3", "n3", V.s1Amount3, 0.85],
+        ];
+        counters.forEach(([row, id, target, at]) => {
+          const el = $(id);
+          const state = { v: 0 };
+          tl.fromTo(row, { opacity: 0, x: -140, skewX: -12 }, { opacity: 1, x: 0, skewX: 0, duration: 0.45, ease: OUT }, at);
+          tl.fromTo(
+            state,
+            { v: 0 },
+            {
+              v: Number(target),
+              duration: 1.1,
+              ease: "power3.out",
+              onUpdate: () => {
+                el.textContent = Math.round(state.v);
+              },
+            },
+            at,
+          );
+          tl.fromTo(el, { scale: 0.55 }, { scale: 1, duration: 1.1, ease: "power3.out" }, at);
+        });
+        tl.to("#s1-r3", { scale: 1.08, duration: 0.18, ease: "power2.out", yoyo: true, repeat: 1 }, 2.1);
+        exitScene("#s1-inner", 3);
+
+        // ---- ESCENA 2 (3-7): promo exclusiva + velas ----
+        candleEls.forEach((c, i) => {
+          tl.fromTo(c, { opacity: 0, scaleY: 0, transformOrigin: "50% 100%" }, { opacity: 1, scaleY: 1, duration: 0.3, ease: OUT }, 3.05 + i * 0.09);
+        });
+        tl.fromTo(trend, { strokeDashoffset: trendLen }, { strokeDashoffset: 0, duration: 1.8, ease: "power2.inOut" }, 3.3);
+        tl.fromTo("#candles", { y: 40 }, { y: -30, duration: 4, ease: "none" }, 3);
+        tl.fromTo("#s2-tag", { opacity: 0, y: -50, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: SPRING }, 3.1);
+        tl.fromTo("#s2-title", { opacity: 0, y: 120, scale: 1.25, filter: "blur(18px)" }, { opacity: 1, y: 0, scale: 1, filter: "blur(0px)", duration: 0.6, ease: OUT }, 3.3);
+        tl.to("#s2-title", { scale: 1.05, duration: 3.0, ease: "none" }, 3.9);
+        exitScene("#s2-inner", 7);
+        tl.to(["#candles", "#trend"], { opacity: 0, duration: 0.22, ease: "power2.in" }, 6.78);
+
+        // ---- ESCENA 3 (7-11): compras 100K -> recibis 300K ----
+        tl.fromTo("#s3-l1", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.4, ease: OUT }, 7.05);
+        tl.fromTo("#s3-buy", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.45, ease: SPRING }, 7.2);
+        tl.fromTo("#s3-arrow", { opacity: 0, y: -40 }, { opacity: 1, y: 0, duration: 0.4, ease: OUT }, 7.75);
+        tl.to("#s3-arrow", { y: 14, duration: 0.3, ease: "sine.inOut", yoyo: true, repeat: 5 }, 8.2);
+        tl.fromTo("#s3-l2", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.4, ease: OUT }, 8.0);
+        tl.fromTo("#s3-get", { opacity: 0, scale: 2.6, filter: "blur(24px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.55, ease: "expo.out" }, 8.35);
+        tl.to("#s3-get", { scale: 1.06, duration: 1.9, ease: "sine.inOut" }, 8.9);
+        exitScene("#s3-inner", 11);
+
+        // ---- ESCENA 4 (11-15): bonus arena + evento ----
+        tl.fromTo("#s4-tag", { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.4, ease: SPRING }, 11.05);
+        tl.fromTo("#s4-text", { opacity: 0, y: 70 }, { opacity: 1, y: 0, duration: 0.5, ease: OUT }, 11.2);
+        tl.fromTo("#s4-hl", { scale: 0.4, rotation: -8 }, { scale: 1, rotation: -3, duration: 0.5, ease: SPRING }, 11.55);
+        tl.fromTo("#s4-event", { opacity: 0, y: 90 }, { opacity: 1, y: 0, duration: 0.5, ease: OUT }, 12.0);
+        ["#ev1", "#ev2", "#ev3"].forEach((r, i) => {
+          tl.fromTo(r, { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: 0.4, ease: OUT }, 12.2 + i * 0.18);
+        });
+        exitScene("#s4-inner", 15);
+
+        // ---- ESCENA 5 (15-18): cupon + copiar + brillo ----
+        tl.fromTo("#s5-label", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.4, ease: OUT }, 15.05);
+        tl.fromTo("#coupon", { opacity: 0, scale: 1.35 }, { opacity: 1, scale: 1, duration: 0.45, ease: SPRING }, 15.15);
+        tl.fromTo("#coupon-text", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.6, ease: "steps(16)" }, 15.4);
+        tl.fromTo("#copy-btn", { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.4, ease: OUT }, 15.7);
+        tl.set("#copy-b", { opacity: 0 }, 15);
+        // "tap" en el boton
+        tl.to("#copy-btn", { scale: 0.9, duration: 0.1, ease: "power2.in" }, 16.3);
+        tl.to("#copy-btn", { scale: 1, duration: 0.35, ease: SPRING }, 16.42);
+        tl.fromTo("#ripple", { opacity: 1, scale: 0.4 }, { opacity: 0, scale: 3.2, duration: 0.6, ease: "power2.out" }, 16.35);
+        tl.to("#copy-a", { opacity: 0, y: -30, duration: 0.2, ease: "power2.in" }, 16.35);
+        tl.fromTo("#copy-b", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.3, ease: SPRING }, 16.45);
+        // brillo del cupon
+        tl.fromTo("#coupon-glow", { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "power2.out" }, 16.4);
+        tl.fromTo("#coupon-shimmer", { "--shimmer-pos": "-20%" }, { "--shimmer-pos": "120%", duration: 0.8, ease: "power2.inOut" }, 16.4);
+        tl.to("#coupon", { scale: 1.04, duration: 0.15, ease: "power2.out", yoyo: true, repeat: 1 }, 16.4);
+        tl.fromTo("#coupon-shimmer", { "--shimmer-pos": "-20%" }, { "--shimmer-pos": "120%", duration: 0.8, ease: "power2.inOut", immediateRender: false }, 17.25);
+        exitScene("#s5-inner", 18);
+
+        // ---- ESCENA 6 (18-20): CTA ----
+        tl.fromTo("#s6-lockup", { opacity: 0, scale: 0.6, y: 40 }, { opacity: 1, scale: 1, y: 0, duration: 0.5, ease: SPRING }, 18.05);
+        tl.fromTo("#s6-valid", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.4, ease: OUT }, 18.3);
+        tl.fromTo("#s6-url", { opacity: 0, scale: 0.7 }, { opacity: 1, scale: 1, duration: 0.45, ease: SPRING }, 18.5);
+        tl.to("#s6-url", { scale: 1.05, duration: 0.3, ease: "sine.inOut", yoyo: true, repeat: 1 }, 19.1);
+
+        window.__timelines["main"] = tl;
+      })();
+    </script>
+  </body>
+</html>
