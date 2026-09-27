@@ -5,3 +5,5 @@ review/wip*/
 .hf-*/
 *.wav
 output/work-*/
+output/*.mp4
+output/frames/
