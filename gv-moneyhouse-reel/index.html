@@ -1,0 +1,1755 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>GV MoneyHouse — Reel 9:16</title>
+
+    <!-- =====================================================================
+         CONFIG — todo lo editable del reel vive aca.
+         Textos, colores, fechas, marcas, logos y tiempos de corte (CUES).
+         Las RUTAS DE AUDIO (track y SFX) estan en las etiquetas <audio> al
+         principio del <body>: el render lee el atributo src tal cual esta
+         escrito, por eso no pueden salir de este objeto.
+         Las ventanas de cada escena (data-start / data-duration de cada
+         <section class="scene">) tambien son atributos fijos: si moves un
+         corte de escena, actualiza ese atributo y el CUE correspondiente.
+         ===================================================================== -->
+    <script>
+      window.REEL = {
+        duration: 30,
+
+        colors: {
+          black: "#050505",
+          gold: "#D4AF37",
+          goldLight: "#F7E7A6",
+          goldDeep: "#8A6A1C",
+          white: "#FFFFFF",
+          live: "#FF2A2A", // punto "en vivo"
+        },
+
+        // Escena 1 (0-3 s)
+        s1: { big: "4", word: "DÍAS" },
+
+        // Escena 2 (3-6 s)
+        s2: {
+          line1: "UNA CASA.",
+          lines: ["LOS MEJORES", "EDUCADORES", "DE TRADING."],
+          goldLine: 1, // indice de la linea que va en dorado
+        },
+
+        // Escena 3 (6-9 s)
+        s3: {
+          mono: "GV",
+          name: "MONEYHOUSE",
+          tag1: "4 DÍAS DE TRADING, CONTENIDO Y DINÁMICAS EN VIVO",
+          tag2: "CELEBRANDO EL CUMPLEAÑOS DE GIANVICTOR CUEVA",
+        },
+
+        // Escena 4 (9-13 s)
+        s4: {
+          headline: "4 AL 7 DE OCTUBRE",
+          month: "", // etiqueta opcional sobre el contador ("" = oculta)
+          days: ["04", "05", "06", "07"],
+          dayLabel: "DÍA",
+        },
+
+        // Escena 5 (13-18 s). logo: ruta a PNG/SVG (ej. "assets/logos/impulse-world.png").
+        // Con logo: null se dibuja un wordmark tipografico de reemplazo.
+        s5: {
+          label: "JUNTO A",
+          brands: [
+            { name: "IMPULSE WORLD", logo: null, color: "#2F7BFF", icon: "circle" },
+            { name: "WORLD BINARY", logo: null, color: "#00E0A4", icon: "bars" },
+            { name: "MINED", logo: null, color: "#FF7A1A", icon: "triangle" },
+            { name: "FWP", logo: null, color: "#A64DFF", icon: "hex" },
+            { name: "AYNI", logo: null, color: "#FF3D7F", icon: "diamond" },
+          ],
+        },
+
+        // Escena 6 (18-22 s)
+        s6: {
+          label: "DINÁMICAS EN VIVO",
+          items: [
+            "CONCURSO DE SEÑALES",
+            "TORNEO ELEVATE ALLDAY",
+            "DESAFÍO WINRATE",
+            "MASTERCLASS EN VIVO",
+            "PREMIOS PARA LOS QUE MIRAN",
+          ],
+        },
+
+        // Escena 7 (22-26 s)
+        s7: {
+          title: "GRAN FINAL",
+          sub: "EN LA ARENA",
+          venue: "INFINIT GAMING",
+          when: "MIÉRCOLES 7 · 17:00",
+        },
+
+        // Escena 8 (26-30 s)
+        s8: {
+          pre: "ENTRADAS DESDE",
+          currency: "S/",
+          price: 50,
+          live: "EN VIVO POR YOUTUBE",
+          handle: "LINK EN LA BIO", // [URL/HANDLE] -> reemplazar
+        },
+
+        // Tiempos (segundos) alineados a los golpes del track.
+        // Con el track temporal caen exacto; con el real, corre `npm run beats`.
+        cues: {
+          hit1: 0.5, // "4 DIAS"
+          s2: 3.0,
+          s2lines: [4.0, 4.5, 5.0],
+          s3: 6.0,
+          s3sweep: 7.0,
+          s3tags: [7.5, 8.0],
+          whip: 8.7, // inicio del whip pan (aterriza en s4)
+          s4: 9.0,
+          ticks: [10.0, 11.0, 12.0],
+          glitch: 12.85,
+          s5: 13.0,
+          brands: [13.0, 14.0, 15.0, 16.0, 17.0],
+          s6: 18.0,
+          items: [18.0, 18.75, 19.5, 20.25, 21.0],
+          collapse: 21.72,
+          s7: 22.0,
+          s7sub: 23.0,
+          s7info: 24.0,
+          iris: 25.8,
+          s8: 26.0,
+          s8live: 27.0,
+          s8handle: 27.5,
+          s8logo: 28.0,
+          final: 29.0,
+          beatGrid: { from: 6.0, to: 29.0, step: 0.5 }, // pulso de luz de fondo
+          bursts: [0.5, 3.0, 6.0, 9.0, 13.0, 18.0, 22.0, 26.0, 29.0],
+        },
+      };
+    </script>
+
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "Anton";
+        src: url("assets/fonts/Anton-latin.woff2") format("woff2");
+        font-weight: 400;
+      }
+      @font-face {
+        font-family: "Bebas Neue";
+        src: url("assets/fonts/BebasNeue-latin.woff2") format("woff2");
+        font-weight: 400;
+      }
+      @font-face {
+        font-family: "Inter";
+        src: url("assets/fonts/Inter-latin.woff2") format("woff2");
+        font-weight: 100 900;
+      }
+
+      :root {
+        --black: #050505;
+        --gold: #d4af37;
+        --gold-l: #f7e7a6;
+        --gold-d: #8a6a1c;
+        --white: #ffffff;
+        --gold-grad: linear-gradient(180deg, #fff6cf 0%, #f7e7a6 22%, #d4af37 55%, #a8842a 78%, #f0d77e 100%);
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: #050505;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--black);
+        color: var(--white);
+        font-family: "Inter", sans-serif;
+      }
+      .layer {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      #bg-glow {
+        background:
+          radial-gradient(60% 38% at 50% 48%, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0) 70%),
+          radial-gradient(90% 40% at 50% 110%, rgba(212, 175, 55, 0.16), rgba(0, 0, 0, 0) 70%);
+        opacity: 0;
+      }
+      canvas.layer {
+        width: 1080px;
+        height: 1920px;
+      }
+      #shake,
+      #stage {
+        position: absolute;
+        inset: 0;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+      }
+      .xf,
+      .cam {
+        position: absolute;
+        inset: 0;
+      }
+      /* zona segura Reels/TikTok: 10 % arriba (192 px) y 15 % abajo (288 px) */
+      .safe {
+        position: absolute;
+        left: 64px;
+        right: 64px;
+        top: 192px;
+        bottom: 288px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+      .display {
+        font-family: "Anton", sans-serif;
+        font-weight: 400;
+        line-height: 0.92;
+        text-transform: uppercase;
+        letter-spacing: 0.005em;
+      }
+      .bebas {
+        font-family: "Bebas Neue", sans-serif;
+        font-weight: 400;
+        line-height: 1;
+      }
+      .ch {
+        display: inline-block;
+        will-change: transform, opacity, filter;
+      }
+      .gold-text .ch,
+      .gold-fill {
+        background: var(--gold-grad);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .glow {
+        filter: drop-shadow(0 0 18px rgba(212, 175, 55, 0.55)) drop-shadow(0 0 60px rgba(212, 175, 55, 0.25));
+      }
+      .mask {
+        display: block;
+        overflow: hidden;
+        padding: 44px 12px 10px;
+        margin: -44px 0 -10px;
+      }
+      .mask > .line {
+        display: block;
+      }
+
+      /* ---------- Escena 1 ---------- */
+      #s1-wrap {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 192px;
+        bottom: 288px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      #s1-zoom {
+        width: 900px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      #s1-four {
+        display: block;
+        width: 640px;
+        height: 820px;
+      }
+      #s1-word {
+        font-size: 330px;
+        margin-top: -40px;
+        color: var(--white);
+      }
+      .ring {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 400px;
+        height: 400px;
+        margin: -200px 0 0 -200px;
+        border-radius: 50%;
+        border: 10px solid var(--gold);
+        box-shadow:
+          0 0 40px rgba(212, 175, 55, 0.8),
+          inset 0 0 40px rgba(212, 175, 55, 0.6);
+        opacity: 0;
+      }
+
+      /* ---------- Escena 2 ---------- */
+      #s2-line1 {
+        font-size: 215px;
+        white-space: nowrap;
+        margin-bottom: 70px;
+      }
+      #s2-rule {
+        width: 520px;
+        height: 6px;
+        background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        margin-bottom: 60px;
+        transform-origin: 50% 50%;
+      }
+      .s2-l {
+        font-size: 150px;
+        line-height: 1.02;
+      }
+
+      /* ---------- Escena 3 ---------- */
+      #s3-lock {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      #s3-emblem {
+        position: relative;
+        width: 560px;
+        height: 560px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #s3-emblem svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+      }
+      #s3-mono {
+        position: relative;
+        font-size: 330px;
+        letter-spacing: -0.02em;
+        margin-top: 20px;
+      }
+      #s3-name {
+        position: relative;
+        font-size: 150px;
+        letter-spacing: 0.06em;
+        margin-top: 40px;
+      }
+      .sweep {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(105deg, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0.95) 50%, rgba(255, 255, 255, 0) 62%);
+        background-size: 300% 100%;
+        background-position: 100% 0;
+        background-repeat: no-repeat;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        pointer-events: none;
+      }
+      #s3-tags {
+        margin-top: 70px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+      .tag {
+        font-family: "Inter", sans-serif;
+        font-weight: 700;
+        font-size: 34px;
+        letter-spacing: 0.08em;
+        color: rgba(255, 255, 255, 0.9);
+        max-width: 900px;
+      }
+      .tag.gold {
+        color: var(--gold-l);
+      }
+      #s3-shards {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 560px;
+        height: 560px;
+        overflow: visible;
+      }
+      .shard {
+        position: absolute;
+        left: 0;
+        top: 0;
+        background: linear-gradient(135deg, #fff3c4, #d4af37 50%, #7a5c16);
+        clip-path: polygon(50% 0%, 100% 100%, 0% 80%);
+      }
+
+      /* ---------- Escena 4 ---------- */
+      #s4-head {
+        font-size: 128px;
+        white-space: nowrap;
+      }
+      #s4-month {
+        font-size: 96px;
+        letter-spacing: 0.3em;
+        color: var(--gold-l);
+        margin-top: 50px;
+        padding-left: 0.3em;
+      }
+      .roller {
+        position: relative;
+        overflow: hidden;
+      }
+      #s4-roller {
+        height: 560px;
+        width: 760px;
+        margin-top: 10px;
+      }
+      #s4-roll {
+        display: flex;
+        flex-direction: column;
+      }
+      .day {
+        height: 560px;
+        font-size: 620px;
+        line-height: 560px;
+        display: block;
+      }
+      #s4-dayroller {
+        height: 80px;
+        width: 400px;
+        margin-top: 24px;
+      }
+      #s4-dayroll {
+        display: flex;
+        flex-direction: column;
+      }
+      .dl {
+        height: 80px;
+        line-height: 80px;
+        font-family: "Inter", sans-serif;
+        font-weight: 800;
+        font-size: 44px;
+        letter-spacing: 0.3em;
+        padding-left: 0.3em;
+      }
+      #s4-candles {
+        position: absolute;
+        left: 0;
+        bottom: 250px;
+        width: 1080px;
+        height: 620px;
+        opacity: 0.55;
+      }
+      .tick-flash {
+        position: absolute;
+        inset: -40px;
+        background: radial-gradient(closest-side, rgba(247, 231, 166, 0.55), rgba(247, 231, 166, 0));
+        opacity: 0;
+      }
+
+      /* ---------- Escena 5 ---------- */
+      .brand {
+        position: absolute;
+        inset: 0;
+      }
+      .brand-bg {
+        position: absolute;
+        inset: 0;
+      }
+      .brand-lines {
+        position: absolute;
+        inset: 0;
+        opacity: 0.35;
+      }
+      .brand-mark {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .brand-icon {
+        width: 190px;
+        height: 190px;
+        margin-bottom: 50px;
+      }
+      .brand-word {
+        font-size: 170px;
+        line-height: 0.95;
+        max-width: 950px;
+      }
+      .brand-logo {
+        max-width: 820px;
+        max-height: 420px;
+        object-fit: contain;
+      }
+      .brand-idx {
+        font-family: "Inter", sans-serif;
+        font-weight: 700;
+        font-size: 32px;
+        letter-spacing: 0.35em;
+        margin-top: 60px;
+        opacity: 0.85;
+      }
+      #s5-label {
+        position: absolute;
+        top: 250px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 64px;
+        letter-spacing: 0.4em;
+        padding-left: 0.4em;
+        color: rgba(255, 255, 255, 0.8);
+        z-index: 3;
+      }
+      #s5-bar {
+        position: absolute;
+        left: 240px;
+        right: 240px;
+        top: 336px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.15);
+        z-index: 3;
+      }
+      #s5-bar i {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+        background: var(--gold);
+        transform-origin: 0 50%;
+        display: block;
+      }
+
+      /* ---------- Escena 6 ---------- */
+      #s6-label {
+        font-size: 120px;
+        margin-bottom: 70px;
+      }
+      #s6-list {
+        display: flex;
+        flex-direction: column;
+        gap: 34px;
+        width: 952px;
+      }
+      .row {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 30px;
+        text-align: left;
+      }
+      .chip {
+        flex: 0 0 auto;
+        width: 118px;
+        height: 118px;
+        border-radius: 18px;
+        background: var(--gold-grad);
+        color: #1a1204;
+        font-family: "Anton", sans-serif;
+        font-size: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .row-t {
+        font-size: 70px;
+        line-height: 0.98;
+      }
+      .row-line {
+        position: absolute;
+        left: 148px;
+        right: 0;
+        bottom: -16px;
+        height: 3px;
+        background: linear-gradient(90deg, var(--gold), transparent);
+        transform-origin: 0 50%;
+      }
+
+      /* ---------- Escena 7 ---------- */
+      #s7-rig {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 1920px;
+      }
+      .lamp {
+        position: absolute;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: radial-gradient(circle, #ffffff 0%, #fff4cf 40%, rgba(212, 175, 55, 0.4) 70%, rgba(212, 175, 55, 0) 100%);
+        box-shadow:
+          0 0 40px 14px rgba(255, 240, 200, 0.7),
+          0 0 120px 40px rgba(212, 175, 55, 0.35);
+        opacity: 0;
+      }
+      .cone {
+        position: absolute;
+        top: 0;
+        width: 900px;
+        height: 1900px;
+        background: linear-gradient(180deg, rgba(255, 240, 200, 0.42), rgba(255, 230, 170, 0.1) 55%, rgba(255, 230, 170, 0));
+        clip-path: polygon(46% 0%, 54% 0%, 100% 100%, 0% 100%);
+        filter: blur(18px);
+        mix-blend-mode: screen;
+        opacity: 0;
+        transform-origin: 50% 0%;
+      }
+      #s7-floor {
+        position: absolute;
+        left: -100px;
+        right: -100px;
+        bottom: 120px;
+        height: 520px;
+        background: radial-gradient(50% 50% at 50% 50%, rgba(247, 231, 166, 0.35), rgba(212, 175, 55, 0.08) 60%, rgba(0, 0, 0, 0) 100%);
+        opacity: 0;
+      }
+      #s7-title {
+        font-size: 196px;
+        white-space: nowrap;
+      }
+      #s7-sub {
+        font-size: 150px;
+        margin-top: 10px;
+      }
+      #s7-info {
+        margin-top: 90px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 36px 64px;
+        border: 3px solid rgba(212, 175, 55, 0.8);
+        border-radius: 26px;
+        background: rgba(10, 8, 2, 0.55);
+      }
+      #s7-venue {
+        font-size: 96px;
+        letter-spacing: 0.08em;
+        color: var(--gold-l);
+      }
+      #s7-when {
+        font-family: "Inter", sans-serif;
+        font-weight: 700;
+        font-size: 50px;
+        letter-spacing: 0.04em;
+        margin-top: 14px;
+      }
+
+      /* ---------- Escena 8 ---------- */
+      #s8-pre {
+        font-size: 84px;
+        letter-spacing: 0.22em;
+        padding-left: 0.22em;
+        color: rgba(255, 255, 255, 0.92);
+      }
+      #s8-price {
+        font-size: 360px;
+        line-height: 1;
+        margin-top: 10px;
+        white-space: nowrap;
+      }
+      #s8-price .cur {
+        font-size: 190px;
+        margin-right: 20px;
+        vertical-align: 0.62em;
+      }
+      #s8-live {
+        margin-top: 40px;
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        padding: 22px 44px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 2px solid rgba(255, 255, 255, 0.25);
+        font-family: "Inter", sans-serif;
+        font-weight: 800;
+        font-size: 44px;
+        letter-spacing: 0.06em;
+      }
+      #s8-dot {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: var(--live, #ff2a2a);
+        box-shadow: 0 0 24px rgba(255, 42, 42, 0.9);
+      }
+      #s8-handle {
+        margin-top: 34px;
+        font-family: "Inter", sans-serif;
+        font-weight: 600;
+        font-size: 42px;
+        letter-spacing: 0.12em;
+        color: var(--gold-l);
+      }
+      #s8-logo {
+        margin-top: 90px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      #s8-mono {
+        position: relative;
+        font-size: 190px;
+      }
+      #s8-name {
+        position: relative;
+        font-size: 92px;
+        letter-spacing: 0.08em;
+        margin-top: 12px;
+      }
+      #s8-xf {
+        background:
+          radial-gradient(60% 38% at 50% 48%, rgba(212, 175, 55, 0.16), rgba(212, 175, 55, 0) 70%),
+          var(--black);
+      }
+      #iris-ring {
+        position: absolute;
+        left: 540px;
+        top: 900px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: 14px solid var(--gold);
+        box-shadow:
+          0 0 50px rgba(212, 175, 55, 0.9),
+          inset 0 0 50px rgba(212, 175, 55, 0.7);
+        opacity: 0;
+      }
+
+      /* ---------- overlays ---------- */
+      #beam {
+        position: absolute;
+        left: 50%;
+        top: -600px;
+        width: 520px;
+        height: 3200px;
+        margin-left: -260px;
+        background: linear-gradient(90deg, rgba(255, 236, 180, 0), rgba(255, 236, 180, 0.22) 45%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 236, 180, 0.22) 55%, rgba(255, 236, 180, 0));
+        filter: blur(30px);
+        mix-blend-mode: screen;
+        opacity: 0;
+      }
+      #leak {
+        background:
+          radial-gradient(45% 35% at 30% 40%, rgba(255, 214, 120, 0.95), rgba(255, 170, 60, 0) 70%),
+          radial-gradient(40% 30% at 70% 60%, rgba(255, 245, 210, 0.95), rgba(255, 200, 90, 0) 70%),
+          radial-gradient(60% 45% at 50% 50%, rgba(212, 150, 40, 0.8), rgba(212, 150, 40, 0) 75%);
+        mix-blend-mode: screen;
+        opacity: 0;
+      }
+      #flood {
+        background: linear-gradient(180deg, #f7e7a6, #d4af37 55%, #a8842a);
+        opacity: 0;
+      }
+      #flash {
+        background: #fff8e1;
+        opacity: 0;
+      }
+      #vignette {
+        background: radial-gradient(75% 60% at 50% 48%, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.78) 100%);
+      }
+      #grain {
+        inset: -64px;
+        opacity: 0.1;
+        mix-blend-mode: overlay;
+      }
+      #blackout {
+        background: #000;
+        opacity: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="30" data-fps="60" data-width="1080" data-height="1920">
+      <!-- ===================== AUDIO (rutas editables) =====================
+           Track principal: reemplazar assets/bgm.mp3 por el track real.
+           SFX: libreria incluida de HyperFrames (assets/sfx). -->
+      <audio id="bgm" src="assets/bgm.mp3" data-start="0" data-duration="30" data-track-index="10" data-volume="1" data-automation='{"version":1,"lanes":[{"target":"volume","points":[{"t":0,"v":1},{"t":29,"v":1},{"t":30,"v":0}]}]}'></audio>
+      <!-- impactos graves en titulares -->
+      <audio id="sfx-imp-1" src="assets/sfx/impact-bass-1.mp3" data-start="0.5" data-duration="2.1" data-track-index="11" data-volume="0.55"></audio>
+      <audio id="sfx-imp-2" src="assets/sfx/impact-bass-1.mp3" data-start="3" data-duration="2.1" data-track-index="11" data-volume="0.4"></audio>
+      <audio id="sfx-imp-3" src="assets/sfx/impact-bass-1.mp3" data-start="6" data-duration="2.1" data-track-index="11" data-volume="0.55"></audio>
+      <audio id="sfx-imp-4" src="assets/sfx/impact-bass-1.mp3" data-start="22" data-duration="2.1" data-track-index="11" data-volume="0.6"></audio>
+      <audio id="sfx-imp-5" src="assets/sfx/impact-bass-1.mp3" data-start="26" data-duration="2.1" data-track-index="11" data-volume="0.45"></audio>
+      <audio id="sfx-imp-6" src="assets/sfx/impact-bass-2.mp3" data-start="29" data-duration="1" data-track-index="11" data-volume="0.5"></audio>
+      <!-- risers: ultimos 3 s del riser de 10 s, cresta en el corte -->
+      <audio id="sfx-riser-1" src="assets/sfx/riser.mp3" data-start="3" data-duration="3" data-media-start="7.03" data-track-index="12" data-volume="0.45"></audio>
+      <audio id="sfx-riser-2" src="assets/sfx/riser.mp3" data-start="19" data-duration="3" data-media-start="7.03" data-track-index="12" data-volume="0.5"></audio>
+      <!-- whooshes de transicion -->
+      <audio id="sfx-wh-1" src="assets/sfx/whoosh.mp3" data-start="2.6" data-duration="0.57" data-track-index="13" data-volume="0.5"></audio>
+      <audio id="sfx-wh-2" src="assets/sfx/whoosh.mp3" data-start="8.65" data-duration="0.57" data-track-index="13" data-volume="0.55"></audio>
+      <audio id="sfx-wh-3" src="assets/sfx/whoosh-short.mp3" data-start="13.88" data-duration="0.57" data-track-index="13" data-volume="0.35"></audio>
+      <audio id="sfx-wh-4" src="assets/sfx/whoosh-short.mp3" data-start="14.88" data-duration="0.57" data-track-index="13" data-volume="0.35"></audio>
+      <audio id="sfx-wh-5" src="assets/sfx/whoosh-short.mp3" data-start="15.88" data-duration="0.57" data-track-index="13" data-volume="0.35"></audio>
+      <audio id="sfx-wh-6" src="assets/sfx/whoosh-short.mp3" data-start="16.88" data-duration="0.57" data-track-index="13" data-volume="0.35"></audio>
+      <audio id="sfx-wh-7" src="assets/sfx/whoosh-short.mp3" data-start="18.65" data-duration="0.57" data-track-index="13" data-volume="0.3"></audio>
+      <audio id="sfx-wh-8" src="assets/sfx/whoosh-short.mp3" data-start="19.4" data-duration="0.57" data-track-index="13" data-volume="0.3"></audio>
+      <audio id="sfx-wh-9" src="assets/sfx/whoosh-short.mp3" data-start="20.15" data-duration="0.57" data-track-index="13" data-volume="0.3"></audio>
+      <audio id="sfx-wh-10" src="assets/sfx/whoosh-short.mp3" data-start="20.9" data-duration="0.57" data-track-index="13" data-volume="0.3"></audio>
+      <audio id="sfx-wh-11" src="assets/sfx/whoosh.mp3" data-start="25.72" data-duration="0.57" data-track-index="13" data-volume="0.5"></audio>
+      <!-- acentos -->
+      <audio id="sfx-glitch" src="assets/sfx/glitch-1.mp3" data-start="12.85" data-duration="0.6" data-track-index="14" data-volume="0.4"></audio>
+      <audio id="sfx-spark-1" src="assets/sfx/sparkle.mp3" data-start="7" data-duration="1.8" data-track-index="14" data-volume="0.35"></audio>
+      <audio id="sfx-spark-2" src="assets/sfx/sparkle.mp3" data-start="28.3" data-duration="1.7" data-track-index="14" data-volume="0.3"></audio>
+      <audio id="sfx-ping-1" src="assets/sfx/ping.mp3" data-start="10" data-duration="1" data-track-index="15" data-volume="0.22"></audio>
+      <audio id="sfx-ping-2" src="assets/sfx/ping.mp3" data-start="11" data-duration="1" data-track-index="15" data-volume="0.22"></audio>
+      <audio id="sfx-ping-3" src="assets/sfx/ping.mp3" data-start="12" data-duration="1" data-track-index="15" data-volume="0.22"></audio>
+
+      <!-- ===================== CAPAS DE FONDO ===================== -->
+      <div id="bg-glow" class="layer"></div>
+      <canvas id="p-back" class="layer" width="1080" height="1920"></canvas>
+      <div class="layer" style="overflow: hidden"><div id="beam"></div></div>
+
+      <!-- ===================== ESCENAS ===================== -->
+      <div id="shake">
+        <div id="stage">
+          <!-- 1 · 4 DIAS (corte: zoom-through por el "4") -->
+          <section id="s1" class="scene clip" data-start="0" data-duration="3" data-track-index="1">
+            <div class="xf" id="s1-xf">
+              <div class="cam" id="s1-cam">
+                <div class="ring" id="s1-ring1"></div>
+                <div class="ring" id="s1-ring2"></div>
+                <div id="s1-wrap">
+                  <div id="s1-zoom">
+                    <canvas id="s1-four" width="640" height="820"></canvas>
+                    <div id="s1-word" class="display"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 2 · UNA CASA (corte: light leak dorado) -->
+          <section id="s2" class="scene clip" data-start="3" data-duration="3.1" data-track-index="2">
+            <div class="xf" id="s2-xf">
+              <div class="cam" id="s2-cam">
+                <div class="safe">
+                  <div id="s2-line1" class="display"></div>
+                  <div id="s2-rule"></div>
+                  <div id="s2-lines"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 3 · GV MONEYHOUSE (corte: whip pan con blur) -->
+          <section id="s3" class="scene clip" data-start="6" data-duration="3" data-track-index="3">
+            <div class="xf" id="s3-xf">
+              <div class="cam" id="s3-cam">
+                <div class="safe">
+                  <div id="s3-lock">
+                    <div id="s3-emblem">
+                      <div id="s3-shards"></div>
+                      <svg viewBox="0 0 560 560">
+                        <defs>
+                          <linearGradient id="g-stroke" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0" stop-color="#fff3c4" />
+                            <stop offset="0.5" stop-color="#d4af37" />
+                            <stop offset="1" stop-color="#8a6a1c" />
+                          </linearGradient>
+                        </defs>
+                        <path id="s3-dia-out" d="M280 12 L548 280 L280 548 L12 280 Z" fill="none" stroke="url(#g-stroke)" stroke-width="8" />
+                        <path id="s3-dia-in" d="M280 52 L508 280 L280 508 L52 280 Z" fill="none" stroke="url(#g-stroke)" stroke-width="3" opacity="0.7" />
+                      </svg>
+                      <div id="s3-mono" class="display gold-text glow"></div>
+                    </div>
+                    <div id="s3-name" class="display gold-text glow"></div>
+                    <div id="s3-tags">
+                      <div class="mask"><div class="line tag" id="s3-tag1"></div></div>
+                      <div class="mask"><div class="line tag gold" id="s3-tag2"></div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 4 · 4 AL 7 DE OCTUBRE (corte: glitch RGB) -->
+          <section id="s4" class="scene clip" data-start="8.7" data-duration="4.45" data-track-index="4">
+            <div class="xf" id="s4-xf">
+              <div class="cam" id="s4-cam">
+                <svg id="s4-candles" viewBox="0 0 1080 620"></svg>
+                <div class="safe">
+                  <div class="mask"><div id="s4-head" class="line display"></div></div>
+                  <div id="s4-month" class="bebas"></div>
+                  <div id="s4-roller" class="roller">
+                    <div class="tick-flash" id="s4-tflash"></div>
+                    <div id="s4-roll"></div>
+                  </div>
+                  <div id="s4-dayroller" class="roller"><div id="s4-dayroll"></div></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 5 · MARCAS (un corte por golpe; salida: corte seco) -->
+          <section id="s5" class="scene clip" data-start="12.95" data-duration="5.05" data-track-index="5">
+            <div class="xf" id="s5-xf">
+              <div class="cam" id="s5-cam">
+                <div id="s5-brands"></div>
+                <div id="s5-label" class="bebas"></div>
+                <div id="s5-bar"><i id="s5-bar-fill"></i></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 6 · DINAMICAS (corte: colapso a linea / apagon) -->
+          <section id="s6" data-layout-allow-occlusion class="scene clip" data-start="18" data-duration="4" data-track-index="6">
+            <div class="xf" id="s6-xf">
+              <div class="cam" id="s6-cam">
+                <div class="safe">
+                  <div class="mask"><div id="s6-label" class="line display gold-text"></div></div>
+                  <div id="s6-list"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 7 · GRAN FINAL EN LA ARENA (corte: iris dorado) -->
+          <section id="s7" class="scene clip" data-start="22" data-duration="4.3" data-track-index="7">
+            <div class="xf" id="s7-xf">
+              <div class="cam" id="s7-cam">
+                <div id="s7-rig"></div>
+                <div id="s7-floor"></div>
+                <div class="safe">
+                  <div id="s7-title" class="display gold-text glow"></div>
+                  <div class="mask"><div id="s7-sub" class="line display"></div></div>
+                  <div id="s7-info">
+                    <div id="s7-venue" class="bebas"></div>
+                    <div id="s7-when"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 8 · CTA + logo final -->
+          <section id="s8" class="scene clip" data-start="25.8" data-duration="4.2" data-track-index="8">
+            <div class="xf" id="s8-xf">
+              <div class="cam" id="s8-cam">
+                <div class="safe">
+                  <div class="mask"><div id="s8-pre" class="line bebas"></div></div>
+                  <div id="s8-price" class="display gold-text glow"><span class="cur"></span><span class="num">0</span></div>
+                  <div id="s8-live"><div id="s8-dot"></div><span id="s8-live-t"></span></div>
+                  <div id="s8-handle"></div>
+                  <div id="s8-logo">
+                    <div id="s8-mono" class="display gold-text glow"></div>
+                    <div id="s8-name" class="display gold-text glow"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+          <div id="iris-ring"></div>
+        </div>
+      </div>
+
+      <!-- ===================== CAPAS DE FRENTE ===================== -->
+      <canvas id="p-front" class="layer" width="1080" height="1920"></canvas>
+      <div id="leak" class="layer" data-layout-allow-occlusion></div>
+      <div id="flood" class="layer" data-layout-allow-occlusion></div>
+      <div id="flash" class="layer" data-layout-allow-occlusion></div>
+      <div id="vignette" class="layer" data-layout-allow-occlusion></div>
+      <div id="grain" class="layer" data-layout-allow-occlusion></div>
+      <div id="blackout" class="layer" data-layout-allow-occlusion></div>
+
+      <svg width="0" height="0" style="position: absolute">
+        <defs>
+          <!-- motion blur horizontal para el whip pan -->
+          <filter id="mb-x" x="-20%" y="-5%" width="140%" height="110%">
+            <feGaussianBlur id="mb-x-blur" in="SourceGraphic" stdDeviation="0 0" />
+          </filter>
+          <!-- glitch RGB: canales separados + desplazamiento por bandas -->
+          <filter id="rgb" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
+            <feTurbulence id="rgb-turb" type="fractalNoise" baseFrequency="0.0001 0.06" numOctaves="1" seed="3" result="noise" />
+            <feDisplacementMap id="rgb-disp" in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="B" result="d" />
+            <feColorMatrix in="d" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="r" />
+            <feOffset id="rgb-ro" in="r" dx="0" dy="0" result="ro" />
+            <feColorMatrix in="d" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="g" />
+            <feColorMatrix in="d" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="b" />
+            <feOffset id="rgb-bo" in="b" dx="0" dy="0" result="bo" />
+            <feBlend mode="screen" in="ro" in2="g" result="rg" />
+            <feBlend mode="screen" in="rg" in2="bo" />
+          </filter>
+        </defs>
+      </svg>
+    </div>
+
+    <script>
+      (function () {
+        const C = window.REEL;
+        const Q = C.cues;
+        const $ = (s) => document.querySelector(s);
+        const W = 1080;
+        const H = 1920;
+
+        // PRNG con semilla (mulberry32) — nada de Math.random suelto.
+        function rng(seed) {
+          let a = seed >>> 0;
+          return function () {
+            a |= 0;
+            a = (a + 0x6d2b79f5) | 0;
+            let t = Math.imul(a ^ (a >>> 15), 1 | a);
+            t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+          };
+        }
+
+        function split(el, text) {
+          el.textContent = "";
+          el.setAttribute("aria-label", text);
+          return [...text].map((c) => {
+            const s = document.createElement("span");
+            s.className = "ch";
+            s.textContent = c === " " ? " " : c;
+            el.appendChild(s);
+            return s;
+          });
+        }
+
+        // colores del config -> variables CSS
+        const rs = document.documentElement.style;
+        rs.setProperty("--black", C.colors.black);
+        rs.setProperty("--gold", C.colors.gold);
+        rs.setProperty("--gold-l", C.colors.goldLight);
+        rs.setProperty("--gold-d", C.colors.goldDeep);
+        rs.setProperty("--white", C.colors.white);
+        rs.setProperty("--live", C.colors.live);
+        rs.setProperty(
+          "--gold-grad",
+          `linear-gradient(180deg, #fff6cf 0%, ${C.colors.goldLight} 22%, ${C.colors.gold} 55%, ${C.colors.goldDeep} 80%, ${C.colors.goldLight} 100%)`,
+        );
+
+        function build() {
+          const tl = gsap.timeline({ paused: true });
+          const EXPO = "expo.out";
+
+          // ------------------------------------------------------------
+          // utilidades de animacion
+          // ------------------------------------------------------------
+          // letras que entran de a una con motion blur (escala vertical + blur)
+          function lettersIn(chars, t, o = {}) {
+            tl.fromTo(
+              chars,
+              {
+                yPercent: o.y ?? 110,
+                xPercent: o.x ?? 0,
+                opacity: 0,
+                scaleY: o.stretch ?? 1.8,
+                scaleX: o.scaleX ?? 1,
+                rotation: o.rot ?? 0,
+                filter: `blur(${o.blur ?? 14}px)`,
+              },
+              {
+                yPercent: 0,
+                xPercent: 0,
+                opacity: 1,
+                scaleY: 1,
+                scaleX: 1,
+                rotation: 0,
+                filter: "blur(0px)",
+                duration: o.dur ?? 0.55,
+                ease: o.ease ?? "back.out(1.9)",
+                stagger: o.stagger ?? 0.035,
+              },
+              t,
+            );
+          }
+          // reveal por mascara (la linea sube desde abajo de su contenedor)
+          function maskIn(el, t, o = {}) {
+            tl.fromTo(
+              el,
+              { yPercent: o.from ?? 108, filter: "blur(8px)" },
+              { yPercent: 0, filter: "blur(0px)", duration: o.dur ?? 0.6, ease: o.ease ?? "expo.out" },
+              t,
+            );
+          }
+          function flash(t, peak = 0.85, dur = 0.35) {
+            tl.fromTo("#flash", { opacity: peak }, { opacity: 0, duration: dur, ease: "expo.out", immediateRender: false }, t);
+          }
+          // shake de camara, secuencia con semilla
+          const shakeR = rng(99);
+          function shake(t, amp = 18, steps = 7) {
+            for (let i = 0; i < steps; i++) {
+              const k = 1 - i / steps;
+              tl.to(
+                "#shake",
+                {
+                  x: (shakeR() * 2 - 1) * amp * k,
+                  y: (shakeR() * 2 - 1) * amp * k,
+                  duration: 0.035,
+                  ease: "power2.inOut",
+                },
+                t + i * 0.035,
+              );
+            }
+            tl.to("#shake", { x: 0, y: 0, duration: 0.06, ease: "power2.out" }, t + steps * 0.035);
+          }
+          // push-in lento y constante por escena
+          function push(sel, t0, t1, from = 1, to = 1.075) {
+            tl.fromTo(sel, { scale: from }, { scale: to, duration: t1 - t0, ease: "sine.inOut" }, t0);
+          }
+          // barrido de luz volumetrica
+          function beam(t, dir = 1, dur = 1.1, rot = 18) {
+            tl.fromTo(
+              "#beam",
+              { x: -1100 * dir, rotation: rot * dir, opacity: 0 },
+              { x: 1100 * dir, rotation: rot * dir, opacity: 1, duration: dur, ease: "power2.inOut", immediateRender: false },
+              t,
+            );
+            tl.to("#beam", { opacity: 0, duration: 0.25, ease: "power2.in" }, t + dur - 0.25);
+          }
+          // destello de dato clave
+          const GLOW_END = "brightness(1) drop-shadow(0 0 18px rgba(212,175,55,0.55))";
+          function sparkle(el, t, end = "brightness(1) drop-shadow(0 0 0px rgba(255,240,200,0))") {
+            tl.fromTo(
+              el,
+              { filter: "brightness(2.4) drop-shadow(0 0 40px rgba(255,240,200,1))" },
+              { filter: end, duration: 0.5, ease: "expo.out", immediateRender: false },
+              t,
+            );
+          }
+
+          // ------------------------------------------------------------
+          // ESCENA 1 · 0-3 s · "4 DIAS" + shockwave
+          // ------------------------------------------------------------
+          // el "4" se dibuja en canvas para conocer exactamente donde hay tinta
+          // y hacer el zoom-through por el trazo (no por el hueco).
+          const four = $("#s1-four");
+          const fctx = four.getContext("2d");
+          fctx.font = `760px Anton`;
+          fctx.textAlign = "center";
+          fctx.textBaseline = "alphabetic";
+          const g4 = fctx.createLinearGradient(0, 60, 0, 780);
+          g4.addColorStop(0, "#fff6cf");
+          g4.addColorStop(0.22, C.colors.goldLight);
+          g4.addColorStop(0.55, C.colors.gold);
+          g4.addColorStop(0.8, C.colors.goldDeep);
+          g4.addColorStop(1, C.colors.goldLight);
+          fctx.fillStyle = g4;
+          fctx.fillText(C.s1.big, 320, 780);
+          // punto mas "profundo" de la tinta (transformada de distancia aproximada)
+          const img = fctx.getImageData(0, 0, 640, 820).data;
+          const step = 6;
+          const gw = Math.ceil(640 / step);
+          const gh = Math.ceil(820 / step);
+          const dist = new Float32Array(gw * gh);
+          for (let y = 0; y < gh; y++)
+            for (let x = 0; x < gw; x++) dist[y * gw + x] = img[(y * step * 640 + x * step) * 4 + 3] > 128 ? 1e6 : 0;
+          for (let y = 0; y < gh; y++)
+            for (let x = 0; x < gw; x++) {
+              const i = y * gw + x;
+              if (x > 0) dist[i] = Math.min(dist[i], dist[i - 1] + 1);
+              if (y > 0) dist[i] = Math.min(dist[i], dist[i - gw] + 1);
+            }
+          let best = 0;
+          let bx = 320;
+          let by = 500;
+          for (let y = gh - 1; y >= 0; y--)
+            for (let x = gw - 1; x >= 0; x--) {
+              const i = y * gw + x;
+              if (x < gw - 1) dist[i] = Math.min(dist[i], dist[i + 1] + 1);
+              if (y < gh - 1) dist[i] = Math.min(dist[i], dist[i + gw] + 1);
+            }
+          for (let y = 0; y < gh; y++)
+            for (let x = 0; x < gw; x++)
+              if (dist[y * gw + x] > best) {
+                best = dist[y * gw + x];
+                bx = x * step;
+                by = y * step;
+              }
+
+          const word = split($("#s1-word"), C.s1.word);
+          // origen del zoom = punto de tinta, relativo a #s1-zoom (900 px de ancho, canvas centrado arriba).
+          // Sin getBoundingClientRect: las escenas pueden estar ocultas cuando se arma el timeline.
+          const ox = (900 - 640) / 2 + bx;
+          const oy = by;
+
+          // negro total hasta el golpe
+          tl.fromTo(
+            four,
+            { scale: 2.6, opacity: 0, filter: "blur(30px) brightness(3)" },
+            { scale: 1, opacity: 1, filter: "blur(0px) brightness(1)", duration: 0.55, ease: "back.out(1.6)" },
+            Q.hit1,
+          );
+          lettersIn(word, Q.hit1 + 0.18, { stagger: 0.06, dur: 0.6, ease: "back.out(2.2)" });
+          tl.fromTo(
+            ["#s1-ring1", "#s1-ring2"],
+            { scale: 0.2, opacity: 1, borderWidth: 26 },
+            { scale: 5.5, opacity: 0, borderWidth: 2, duration: 1.1, ease: "expo.out", stagger: 0.12 },
+            Q.hit1,
+          );
+          tl.fromTo("#bg-glow", { opacity: 0 }, { opacity: 1, duration: 0.8, ease: "expo.out" }, Q.hit1);
+          flash(Q.hit1, 0.9, 0.5);
+          shake(Q.hit1, 26, 9);
+          push("#s1-cam", Q.hit1, 3.0, 1, 1.06);
+          // zoom-through por el trazo del "4" -> la pantalla se llena de oro
+          tl.fromTo(
+            "#s1-zoom",
+            { scale: 1, transformOrigin: `${ox}px ${oy}px` },
+            { scale: 70, duration: 0.42, ease: "expo.in" },
+            Q.s2 - 0.42,
+          );
+          tl.fromTo("#s1-zoom", { filter: "blur(0px)" }, { filter: "blur(6px)", duration: 0.42, ease: "expo.in", immediateRender: false }, Q.s2 - 0.42);
+          tl.fromTo("#flood", { opacity: 0 }, { opacity: 1, duration: 0.08, ease: "power2.in" }, Q.s2 - 0.08);
+
+          // ------------------------------------------------------------
+          // ESCENA 2 · 3-6 s · "UNA CASA." + educadores (mask reveal)
+          // ------------------------------------------------------------
+          const l1 = split($("#s2-line1"), C.s2.line1);
+          const lines = C.s2.lines.map((txt, i) => {
+            const m = document.createElement("div");
+            m.className = "mask";
+            const l = document.createElement("div");
+            l.className = "line display s2-l" + (i === C.s2.goldLine ? " gold-fill" : "");
+            l.textContent = txt;
+            m.appendChild(l);
+            $("#s2-lines").appendChild(m);
+            return l;
+          });
+          tl.to("#flood", { opacity: 0, duration: 0.45, ease: "expo.out" }, Q.s2);
+          tl.fromTo("#s2-xf", { scale: 1.35 }, { scale: 1, duration: 0.7, ease: "expo.out" }, Q.s2);
+          lettersIn(l1, Q.s2 + 0.05, { stagger: 0.045, dur: 0.6, blur: 18 });
+          tl.fromTo("#s2-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.8, ease: "expo.out" }, Q.s2 + 0.4);
+          lines.forEach((l, i) => maskIn(l, Q.s2lines[i], { dur: 0.65 }));
+          sparkle(lines[C.s2.goldLine].parentNode, Q.s2lines[C.s2.goldLine] + 0.1);
+          shake(Q.s2, 14, 6);
+          push("#s2-cam", Q.s2, 6.1, 1, 1.08);
+          beam(Q.s2 + 0.1, 1, 1.3);
+          // light leak dorado hacia la escena 3
+          tl.fromTo("#leak", { opacity: 0, x: -500, scale: 1 }, { opacity: 1, x: 0, scale: 1.3, duration: 0.3, ease: "power2.in" }, Q.s3 - 0.3);
+          tl.to("#leak", { opacity: 0, x: 500, scale: 1.6, duration: 0.6, ease: "expo.out" }, Q.s3);
+          tl.to("#s2-cam", { filter: "brightness(2.2) blur(6px)", duration: 0.3, ease: "power2.in" }, Q.s3 - 0.3);
+
+          // ------------------------------------------------------------
+          // ESCENA 3 · 6-9 s · GV MONEYHOUSE (piezas que convergen + light sweep)
+          // ------------------------------------------------------------
+          const mono = split($("#s3-mono"), C.s3.mono);
+          const name = split($("#s3-name"), C.s3.name);
+          $("#s3-tag1").textContent = C.s3.tag1;
+          $("#s3-tag2").textContent = C.s3.tag2;
+          // sweep: copia blanca del texto encima del dorado
+          ["#s3-mono", "#s3-name"].forEach((sel) => {
+            const s = document.createElement("span");
+            s.className = "sweep";
+            s.textContent = sel === "#s3-mono" ? C.s3.mono : C.s3.name;
+            $(sel).appendChild(s);
+          });
+          // piezas doradas: arrancan dispersas y convergen al emblema
+          const cx = 280; // centro del emblema (560 x 560); las piezas viven dentro de #s3-emblem
+          const cy = 280;
+          const sr = rng(7);
+          const shards = [];
+          for (let i = 0; i < 46; i++) {
+            const d = document.createElement("div");
+            d.className = "shard";
+            const sz = 30 + sr() * 70;
+            d.style.width = sz + "px";
+            d.style.height = sz * (0.7 + sr() * 0.6) + "px";
+            $("#s3-shards").appendChild(d);
+            const ang = sr() * Math.PI * 2;
+            const rad = 700 + sr() * 700;
+            const tx = cx + (sr() - 0.5) * 460;
+            const ty = cy + (sr() - 0.5) * 460;
+            shards.push({ d, fx: cx + Math.cos(ang) * rad, fy: cy + Math.sin(ang) * rad, tx, ty, rot: (sr() - 0.5) * 720 });
+          }
+          shards.forEach((s, i) => {
+            tl.fromTo(
+              s.d,
+              { x: s.fx, y: s.fy, rotation: s.rot, opacity: 0, scale: 1.4 },
+              { x: s.tx, y: s.ty, rotation: 0, opacity: 1, scale: 1, duration: 0.55, ease: "expo.out" },
+              Q.s3 + i * 0.006,
+            );
+            tl.to(s.d, { x: cx, y: cy, scale: 0, opacity: 0, duration: 0.3, ease: "expo.in" }, Q.s3 + 0.45 + (i % 6) * 0.01);
+          });
+          tl.fromTo(
+            ["#s3-dia-out", "#s3-dia-in"],
+            { strokeDasharray: 1600, strokeDashoffset: 1600 },
+            { strokeDashoffset: 0, duration: 0.9, ease: "expo.inOut", stagger: 0.12 },
+            Q.s3 + 0.35,
+          );
+          tl.fromTo(
+            mono,
+            { scale: 3.2, opacity: 0, filter: "blur(30px)" },
+            { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.55, ease: "back.out(1.7)", stagger: 0.08 },
+            Q.s3 + 0.62,
+          );
+          lettersIn(name, Q.s3 + 0.8, { stagger: 0.035, y: 70, dur: 0.55 });
+          tl.fromTo("#s3-emblem svg", { rotation: -45, scale: 0.6 }, { rotation: 0, scale: 1, duration: 1.1, ease: "expo.out" }, Q.s3 + 0.3);
+          // light sweep sobre el logo
+          tl.fromTo(".sweep", { backgroundPosition: "100% 0" }, { backgroundPosition: "-50% 0", duration: 0.9, ease: "power2.inOut" }, Q.s3sweep);
+          beam(Q.s3sweep - 0.1, -1, 1.1, 22);
+          maskIn("#s3-tag1", Q.s3tags[0]);
+          maskIn("#s3-tag2", Q.s3tags[1]);
+          flash(Q.s3, 0.6, 0.4);
+          shake(Q.s3, 20, 8);
+          push("#s3-cam", Q.s3, Q.whip + 0.3, 1, 1.07);
+          // whip pan: s3 sale a la izquierda, s4 entra desde la derecha, misma curva
+          const whipD = Q.s4 - Q.whip;
+          tl.fromTo("#s3-xf", { x: 0 }, { x: -W, duration: whipD, ease: "power3.inOut" }, Q.whip);
+          tl.fromTo("#s4-xf", { x: W }, { x: 0, duration: whipD, ease: "power3.inOut" }, Q.whip);
+          tl.set(["#s3-xf", "#s4-xf"], { filter: "url(#mb-x)" }, Q.whip);
+          tl.fromTo("#mb-x-blur", { attr: { stdDeviation: "0 0" } }, { attr: { stdDeviation: "70 0" }, duration: whipD / 2, ease: "power3.in" }, Q.whip);
+          tl.to("#mb-x-blur", { attr: { stdDeviation: "0 0" }, duration: whipD / 2, ease: "power3.out" }, Q.whip + whipD / 2);
+          tl.set(["#s3-xf", "#s4-xf"], { filter: "none" }, Q.s4 + 0.01);
+
+          // ------------------------------------------------------------
+          // ESCENA 4 · 9-13 s · fechas con contador rodante + velas
+          // ------------------------------------------------------------
+          $("#s4-head").textContent = C.s4.headline;
+          $("#s4-month").textContent = C.s4.month;
+          if (!C.s4.month) $("#s4-month").style.display = "none";
+          C.s4.days.forEach((d, i) => {
+            const e = document.createElement("div");
+            e.className = "day display gold-text";
+            split(e, d);
+            $("#s4-roll").appendChild(e);
+            const dl = document.createElement("div");
+            dl.className = "dl";
+            dl.textContent = `${C.s4.dayLabel} ${i + 1}`;
+            $("#s4-dayroll").appendChild(dl);
+          });
+          // velas japonesas (random walk alcista con semilla)
+          const cr = rng(42);
+          const svg = $("#s4-candles");
+          const NS = "http://www.w3.org/2000/svg";
+          const n = 22;
+          let price = 520;
+          const pts = [];
+          const candles = [];
+          for (let i = 0; i < n; i++) {
+            const o = price;
+            const c = o - (cr() - 0.36) * 60; // y hacia arriba = alcista
+            const hi = Math.min(o, c) - cr() * 30;
+            const lo = Math.max(o, c) + cr() * 30;
+            price = c;
+            const x = 40 + i * 46;
+            const up = c < o;
+            const wick = document.createElementNS(NS, "line");
+            wick.setAttribute("x1", x + 13);
+            wick.setAttribute("x2", x + 13);
+            wick.setAttribute("y1", hi);
+            wick.setAttribute("y2", lo);
+            wick.setAttribute("stroke", up ? C.colors.gold : "#6d5a2a");
+            wick.setAttribute("stroke-width", 3);
+            const body = document.createElementNS(NS, "rect");
+            body.setAttribute("x", x);
+            body.setAttribute("width", 26);
+            body.setAttribute("y", Math.min(o, c));
+            body.setAttribute("height", Math.max(6, Math.abs(c - o)));
+            body.setAttribute("rx", 3);
+            body.setAttribute("fill", up ? C.colors.gold : "#4a3c1a");
+            svg.appendChild(wick);
+            svg.appendChild(body);
+            candles.push([wick, body]);
+            pts.push(`${x + 13},${(o + c) / 2}`);
+          }
+          const ma = document.createElementNS(NS, "polyline");
+          ma.setAttribute("points", pts.join(" "));
+          ma.setAttribute("fill", "none");
+          ma.setAttribute("stroke", C.colors.goldLight);
+          ma.setAttribute("stroke-width", 4);
+          ma.setAttribute("stroke-linecap", "round");
+          ma.setAttribute("stroke-linejoin", "round");
+          svg.appendChild(ma);
+          const maLen = ma.getTotalLength();
+          candles.forEach(([w, b], i) => {
+            tl.fromTo([w, b], { scaleY: 0, opacity: 0, transformOrigin: "50% 50%" }, { scaleY: 1, opacity: 1, duration: 0.35, ease: "back.out(2)" }, Q.whip + 0.2 + i * 0.12);
+          });
+          tl.fromTo(ma, { strokeDasharray: maLen, strokeDashoffset: maLen }, { strokeDashoffset: 0, duration: 2.8, ease: "power2.inOut" }, Q.s4 + 0.1);
+          tl.fromTo("#s4-candles", { y: 40 }, { y: -20, duration: 4.4, ease: "sine.inOut" }, Q.whip); // parallax lento
+
+          maskIn("#s4-head", Q.s4, { dur: 0.6 });
+          tl.fromTo("#s4-month", { opacity: 0, scaleX: 1.6, filter: "blur(10px)" }, { opacity: 1, scaleX: 1, filter: "blur(0px)", duration: 0.8, ease: "expo.out" }, Q.s4 + 0.15);
+          tl.fromTo("#s4-roller", { scale: 0.7, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(2)" }, Q.s4 + 0.05);
+          sparkle("#s4-roller", Q.s4 + 0.1);
+          Q.ticks.forEach((t, i) => {
+            tl.to("#s4-roll", { y: -560 * (i + 1), duration: 0.42, ease: "back.out(1.5)" }, t);
+            tl.fromTo("#s4-roll", { filter: "blur(0px)" }, { filter: "blur(10px)", duration: 0.1, ease: "power2.in", immediateRender: false }, t);
+            tl.to("#s4-roll", { filter: "blur(0px)", duration: 0.25, ease: "expo.out" }, t + 0.1);
+            tl.to("#s4-dayroll", { y: -80 * (i + 1), duration: 0.4, ease: "back.out(1.7)" }, t + 0.04);
+            tl.fromTo("#s4-tflash", { opacity: 1 }, { opacity: 0, duration: 0.45, ease: "expo.out", immediateRender: false }, t + 0.05);
+            tl.fromTo("#s4-roller", { scale: 1.08 }, { scale: 1, duration: 0.4, ease: "back.out(3)", immediateRender: false }, t);
+          });
+          push("#s4-cam", Q.s4, 13.1, 1, 1.07);
+          beam(Q.s4 + 0.05, 1, 1.2, 14);
+          // glitch RGB hacia la escena 5
+          const gr = rng(1234);
+          tl.set("#stage", { filter: "url(#rgb)" }, Q.glitch);
+          for (let i = 0; i < 8; i++) {
+            const t = Q.glitch + i * 0.035;
+            tl.set("#rgb-ro", { attr: { dx: (gr() * 2 - 1) * 40, dy: (gr() * 2 - 1) * 6 } }, t);
+            tl.set("#rgb-bo", { attr: { dx: (gr() * 2 - 1) * 40, dy: (gr() * 2 - 1) * 6 } }, t);
+            tl.set("#rgb-disp", { attr: { scale: 20 + gr() * 120 } }, t);
+            tl.set("#rgb-turb", { attr: { seed: Math.floor(gr() * 100) } }, t);
+            tl.set("#stage", { x: (gr() * 2 - 1) * 30, skewX: (gr() * 2 - 1) * 4 }, t);
+          }
+          tl.set("#stage", { filter: "none", x: 0, skewX: 0 }, Q.glitch + 0.29);
+          tl.set("#rgb-disp", { attr: { scale: 0 } }, Q.glitch + 0.29);
+
+          // ------------------------------------------------------------
+          // ESCENA 5 · 13-18 s · montaje de marcas, un corte por golpe
+          // ------------------------------------------------------------
+          $("#s5-label").textContent = C.s5.label;
+          const icons = {
+            circle: '<circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="9"/><circle cx="50" cy="50" r="14" fill="currentColor"/>',
+            bars: '<rect x="12" y="50" width="18" height="38" fill="currentColor"/><rect x="41" y="30" width="18" height="58" fill="currentColor"/><rect x="70" y="12" width="18" height="76" fill="currentColor"/>',
+            triangle: '<path d="M50 8 L92 88 L8 88 Z" fill="none" stroke="currentColor" stroke-width="9" stroke-linejoin="round"/><path d="M50 44 L66 74 L34 74 Z" fill="currentColor"/>',
+            hex: '<path d="M50 6 L88 28 L88 72 L50 94 L12 72 L12 28 Z" fill="none" stroke="currentColor" stroke-width="9" stroke-linejoin="round"/><path d="M50 32 L66 41 L66 59 L50 68 L34 59 L34 41 Z" fill="currentColor"/>',
+            diamond: '<path d="M50 6 L94 50 L50 94 L6 50 Z" fill="none" stroke="currentColor" stroke-width="9" stroke-linejoin="round"/><path d="M50 30 L70 50 L50 70 L30 50 Z" fill="currentColor"/>',
+          };
+          const entries = [
+            { from: { scale: 1.7, filter: "blur(24px)" }, ease: "expo.out" },
+            { from: { x: -420, skewX: 18, filter: "blur(18px)" }, ease: "expo.out" },
+            { from: { y: 360, scaleY: 1.5, filter: "blur(18px)" }, ease: "back.out(1.8)" },
+            { from: { rotation: -14, scale: 0.55, filter: "blur(14px)" }, ease: "back.out(2.2)" },
+            { from: { x: 420, skewX: -18, filter: "blur(18px)" }, ease: "expo.out" },
+          ];
+          C.s5.brands.forEach((b, i) => {
+            const t0 = Q.brands[i];
+            const t1 = i < C.s5.brands.length - 1 ? Q.brands[i + 1] : Q.s6;
+            const el = document.createElement("div");
+            el.className = "brand";
+            el.id = `s5-b${i}`;
+            el.innerHTML = `
+              <div class="brand-bg" style="background:radial-gradient(70% 45% at 50% 50%, ${b.color}40, ${b.color}00 70%), radial-gradient(120% 60% at 50% 120%, ${b.color}30, transparent 70%)"></div>
+              <svg class="brand-lines" viewBox="0 0 1080 1920" preserveAspectRatio="none">
+                <line x1="0" y1="560" x2="1080" y2="520" stroke="${b.color}" stroke-width="2"/>
+                <line x1="0" y1="1420" x2="1080" y2="1460" stroke="${b.color}" stroke-width="2"/>
+              </svg>
+              <div class="safe"><div class="brand-mark">
+                ${
+                  b.logo
+                    ? `<img class="brand-logo" src="${b.logo}" alt="${b.name}">`
+                    : `<svg class="brand-icon" viewBox="0 0 100 100" style="color:${b.color};filter:drop-shadow(0 0 24px ${b.color})">${icons[b.icon] || icons.circle}</svg>
+                       <div class="brand-word display" style="text-shadow:0 0 40px ${b.color}88">${b.name}</div>`
+                }
+                <div class="brand-idx" style="color:${b.color}">${String(i + 1).padStart(2, "0")} / ${String(C.s5.brands.length).padStart(2, "0")}</div>
+              </div></div>`;
+            $("#s5-brands").appendChild(el);
+            const mark = el.querySelector(".brand-mark");
+            // visibilidad por corte seco (opacidad 0/1 en el golpe exacto)
+            tl.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.001, ease: "none" }, t0);
+            tl.to(el, { opacity: 0, duration: 0.001, ease: "none" }, t1);
+            const e = entries[i % entries.length];
+            tl.fromTo(
+              mark,
+              { opacity: 0, ...e.from },
+              { opacity: 1, x: 0, y: 0, scale: 1, scaleY: 1, skewX: 0, rotation: 0, filter: "blur(0px)", duration: 0.5, ease: e.ease },
+              t0,
+            );
+            tl.fromTo(mark, { scale: 1 }, { scale: 1.06, duration: t1 - t0 - 0.5, ease: "sine.inOut", immediateRender: false }, t0 + 0.5);
+            tl.fromTo(el.querySelector(".brand-bg"), { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1.1, duration: 0.8, ease: "expo.out" }, t0);
+            tl.fromTo(el.querySelector(".brand-lines"), { x: i % 2 ? 200 : -200 }, { x: i % 2 ? -60 : 60, duration: t1 - t0, ease: "power2.out" }, t0);
+            // flash tintado del color de la marca
+            tl.fromTo("#flash", { opacity: 0.55, backgroundColor: b.color }, { opacity: 0, duration: 0.3, ease: "expo.out", immediateRender: false }, t0);
+            shake(t0, 10, 5);
+          });
+          tl.set("#flash", { backgroundColor: "#fff8e1" }, Q.s6 - 0.01);
+          maskIn("#s5-label", Q.s5 + 0.05, { from: -110 });
+          tl.fromTo("#s5-bar-fill", { scaleX: 0 }, { scaleX: 1, duration: Q.s6 - Q.s5, ease: "power1.inOut" }, Q.s5);
+          push("#s5-cam", Q.s5, Q.s6, 1, 1.05);
+
+          // ------------------------------------------------------------
+          // ESCENA 6 · 18-22 s · dinamicas en rafaga
+          // ------------------------------------------------------------
+          $("#s6-label").textContent = C.s6.label;
+          const rows = C.s6.items.map((txt, i) => {
+            const r = document.createElement("div");
+            r.className = "row";
+            const last = i === C.s6.items.length - 1;
+            r.innerHTML = `<div class="chip">${String(i + 1).padStart(2, "0")}</div><div class="row-t display${last ? " gold-fill" : ""}">${txt}</div><div class="row-line"></div>`;
+            $("#s6-list").appendChild(r);
+            return r;
+          });
+          flash(Q.s6, 1, 0.25); // corte seco en el golpe
+          shake(Q.s6, 22, 7);
+          maskIn("#s6-label", Q.s6, { dur: 0.45 });
+          rows.forEach((r, i) => {
+            const t = Q.items[i] + (i === 0 ? 0.08 : 0);
+            tl.fromTo(
+              r.querySelector(".row-t"),
+              { x: 260, opacity: 0, skewX: -14, filter: "blur(18px)" },
+              { x: 0, opacity: 1, skewX: 0, filter: "blur(0px)", duration: 0.45, ease: "expo.out" },
+              t,
+            );
+            tl.fromTo(r.querySelector(".chip"), { scale: 0, rotation: -90 }, { scale: 1, rotation: 0, duration: 0.45, ease: "back.out(2.6)" }, t);
+            tl.fromTo(r.querySelector(".row-line"), { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: "expo.out" }, t + 0.05);
+            if (i > 0) tl.to(rows[i - 1], { opacity: 0.5, duration: 0.3, ease: "power2.out" }, t);
+            sparkle(r.querySelector(".chip"), t + 0.1);
+            if (i > 0) shake(t, 7, 4);
+          });
+          tl.to(rows.slice(0, -1), { opacity: 1, duration: 0.3, ease: "power2.out", stagger: 0.03 }, Q.items[4] + 0.35);
+          push("#s6-cam", Q.s6, 22, 1, 1.06);
+          beam(Q.s6 + 0.2, -1, 1.2, 12);
+          // colapso a linea (apagon de TV) -> escena 7
+          tl.to("#s6-xf", { scaleY: 0.004, filter: "brightness(3)", duration: 0.2, ease: "expo.in" }, Q.collapse);
+          tl.to("#s6-xf", { scaleX: 0, duration: Q.s7 - Q.collapse - 0.2, ease: "expo.in" }, Q.collapse + 0.2);
+
+          // ------------------------------------------------------------
+          // ESCENA 7 · 22-26 s · GRAN FINAL EN LA ARENA + luces de estadio
+          // ------------------------------------------------------------
+          const title = split($("#s7-title"), C.s7.title);
+          $("#s7-sub").textContent = C.s7.sub;
+          $("#s7-venue").textContent = C.s7.venue;
+          $("#s7-when").textContent = C.s7.when;
+          const rig = $("#s7-rig");
+          const lampXs = [90, 270, 450, 630, 810, 990];
+          const lamps = [];
+          const cones = [];
+          lampXs.forEach((x, i) => {
+            const cone = document.createElement("div");
+            cone.className = "cone";
+            cone.style.left = x - 450 + "px";
+            cone.style.top = "110px";
+            rig.appendChild(cone);
+            cones.push(cone);
+          });
+          lampXs.forEach((x) => {
+            [0, 1].forEach((row) => {
+              const l = document.createElement("div");
+              l.className = "lamp";
+              l.style.left = x - 28 + (row ? 0 : 0) + "px";
+              l.style.top = 82 + row * 70 + "px";
+              rig.appendChild(l);
+              lamps.push(l);
+            });
+          });
+          // las luces se encienden en secuencia (del centro hacia afuera) con parpadeo
+          const order = [2, 3, 1, 4, 0, 5];
+          const fr7 = rng(77);
+          order.forEach((col, k) => {
+            const t = Q.s7 + 0.05 + k * 0.07;
+            const ls = [lamps[col * 2], lamps[col * 2 + 1]];
+            tl.set(ls, { opacity: 1 }, t);
+            tl.set(ls, { opacity: 0.25 }, t + 0.04);
+            tl.set(ls, { opacity: 1 }, t + 0.08);
+            tl.fromTo(ls, { scale: 1.8 }, { scale: 1, duration: 0.4, ease: "expo.out" }, t);
+            tl.set(cones[col], { opacity: 0.9 }, t + 0.02);
+            tl.set(cones[col], { opacity: 0.3 }, t + 0.06);
+            tl.fromTo(cones[col], { opacity: 1 }, { opacity: 0.75, duration: 0.6, ease: "power2.out", immediateRender: false }, t + 0.1);
+            const sw = (col < 3 ? 1 : -1) * (6 + fr7() * 5);
+            tl.fromTo(cones[col], { rotation: -sw }, { rotation: sw, duration: 3.6, ease: "sine.inOut" }, Q.s7);
+          });
+          tl.fromTo("#s7-floor", { opacity: 0, scaleX: 0.4 }, { opacity: 1, scaleX: 1, duration: 0.9, ease: "expo.out" }, Q.s7 + 0.25);
+          flash(Q.s7 + 0.05, 0.7, 0.5);
+          shake(Q.s7, 28, 10);
+          // letras que caen pesadas desde arriba
+          tl.fromTo(
+            title,
+            { yPercent: -160, opacity: 0, scaleY: 1.9, filter: "blur(16px)" },
+            { yPercent: 0, opacity: 1, scaleY: 1, filter: "blur(0px)", duration: 0.6, ease: "back.out(1.6)", stagger: 0.04 },
+            Q.s7 + 0.1,
+          );
+          maskIn("#s7-sub", Q.s7sub, { dur: 0.6 });
+          sparkle($("#s7-sub").parentNode, Q.s7sub + 0.1);
+          tl.fromTo("#s7-info", { opacity: 0, y: 60, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "back.out(1.8)" }, Q.s7info);
+          tl.fromTo("#s7-when", { opacity: 0, scaleX: 1.5, filter: "blur(8px)" }, { opacity: 1, scaleX: 1, filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, Q.s7info + 0.12);
+          sparkle("#s7-venue", Q.s7info + 0.15);
+          push("#s7-cam", Q.s7, 26.3, 1, 1.08);
+
+          // ------------------------------------------------------------
+          // ESCENA 8 · 26-30 s · CTA + logo final
+          // ------------------------------------------------------------
+          $("#s8-pre").textContent = C.s8.pre;
+          $("#s8-price .cur").textContent = C.s8.currency;
+          $("#s8-live-t").textContent = C.s8.live;
+          $("#s8-handle").textContent = C.s8.handle;
+          split($("#s8-mono"), C.s3.mono);
+          split($("#s8-name"), C.s3.name);
+          ["#s8-mono", "#s8-name"].forEach((sel) => {
+            const s = document.createElement("span");
+            s.className = "sweep";
+            s.textContent = sel === "#s8-mono" ? C.s3.mono : C.s3.name;
+            $(sel).appendChild(s);
+          });
+          // iris dorado: el anillo abre y revela la escena 8
+          const iris = { r: 0 };
+          const irisD = Q.s8 - Q.iris + 0.25;
+          const ring = $("#iris-ring");
+          const s8xf = $("#s8-xf");
+          function drawIris() {
+            s8xf.style.clipPath = `circle(${iris.r}px at 540px 900px)`;
+            ring.style.width = ring.style.height = iris.r * 2 + "px";
+            ring.style.marginLeft = ring.style.marginTop = -iris.r + "px";
+          }
+          drawIris();
+          tl.to(iris, { r: 1250, duration: irisD, ease: "power3.inOut", onUpdate: drawIris }, Q.iris);
+          tl.fromTo(ring, { opacity: 1 }, { opacity: 0, duration: 0.2, ease: "power2.in", immediateRender: false }, Q.iris + irisD - 0.2);
+          tl.set(ring, { opacity: 0 }, Q.iris + irisD);
+          tl.fromTo("#s7-xf", { scale: 1, filter: "brightness(1)" }, { scale: 1.25, filter: "brightness(0.5)", duration: irisD, ease: "power3.in" }, Q.iris);
+          tl.fromTo("#s8-cam", { scale: 1.3 }, { scale: 1, duration: 0.9, ease: "expo.out" }, Q.iris);
+          tl.fromTo("#s8-cam", { scale: 1 }, { scale: 1.05, duration: 30 - Q.s8 - 0.9, ease: "sine.inOut", immediateRender: false }, Q.iris + 0.9);
+
+          maskIn("#s8-pre", Q.s8, { dur: 0.55 });
+          const num = $("#s8-price .num");
+          const cnt = { v: 0 };
+          tl.fromTo("#s8-price", { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(2)" }, Q.s8 + 0.1);
+          tl.to(
+            cnt,
+            {
+              v: C.s8.price,
+              duration: 0.8,
+              ease: "expo.out",
+              onUpdate: () => {
+                num.textContent = Math.round(cnt.v);
+              },
+            },
+            Q.s8 + 0.1,
+          );
+          sparkle("#s8-price", Q.s8 + 0.85, GLOW_END);
+          tl.fromTo("#s8-live", { opacity: 0, scale: 0.7, y: 30 }, { opacity: 1, scale: 1, y: 0, duration: 0.5, ease: "back.out(2.2)" }, Q.s8live);
+          tl.fromTo("#s8-dot", { scale: 1 }, { scale: 1.45, duration: 0.25, ease: "power2.out", yoyo: true, repeat: 5 }, Q.s8live + 0.2);
+          tl.fromTo("#s8-handle", { opacity: 0, scaleX: 1.6, filter: "blur(8px)" }, { opacity: 1, scaleX: 1, filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, Q.s8handle);
+          tl.fromTo("#s8-logo", { opacity: 0, scale: 0.8, filter: "blur(20px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.6, ease: "back.out(1.7)" }, Q.s8logo);
+          tl.fromTo("#s8-logo .sweep", { backgroundPosition: "100% 0" }, { backgroundPosition: "-50% 0", duration: 0.8, ease: "power2.inOut" }, Q.s8logo + 0.3);
+          flash(Q.s8, 0.5, 0.35);
+          shake(Q.s8, 14, 6);
+          beam(Q.s8 + 0.3, 1, 1.2, 20);
+          // ultimo golpe: glow del logo, lo demas se apaga, fade a negro
+          tl.to(["#s8-pre", "#s8-price", "#s8-live", "#s8-handle"], { opacity: 0, y: -30, duration: 0.1, ease: "power2.in" }, Q.final);
+          tl.to("#s8-logo", { y: -440, scale: 1.35, duration: 0.6, ease: "expo.out" }, Q.final + 0.1);
+          tl.fromTo(
+            "#s8-logo",
+            { filter: "blur(0px) brightness(1) drop-shadow(0 0 20px rgba(212,175,55,0.5))" },
+            { filter: "blur(0px) brightness(1.8) drop-shadow(0 0 90px rgba(255,220,130,1))", duration: 0.25, ease: "expo.out", immediateRender: false },
+            Q.final,
+          );
+          flash(Q.final, 0.8, 0.4);
+          tl.fromTo("#blackout", { opacity: 0 }, { opacity: 1, duration: 30 - Q.final - 0.2, ease: "power2.in" }, Q.final + 0.15);
+
+          // ------------------------------------------------------------
+          // PARTICULAS + GRANO + PULSO (dibujado como funcion del tiempo)
+          // ------------------------------------------------------------
+          const back = $("#p-back").getContext("2d");
+          const front = $("#p-front").getContext("2d");
+          const pr = rng(2024);
+          const dust = [];
+          for (let i = 0; i < 150; i++) {
+            const depth = pr(); // 0 lejos, 1 cerca
+            dust.push({
+              x: pr() * W,
+              y: pr() * H,
+              r: 0.8 + depth * 2.6,
+              v: 18 + depth * 70,
+              sw: 10 + pr() * 30,
+              ph: pr() * Math.PI * 2,
+              a: 0.25 + depth * 0.55,
+            });
+          }
+          const bokeh = [];
+          for (let i = 0; i < 14; i++) {
+            bokeh.push({ x: pr() * W, y: pr() * H, r: 30 + pr() * 60, v: 90 + pr() * 80, ph: pr() * 6.28, a: 0.06 + pr() * 0.1 });
+          }
+          const sparks = [];
+          Q.bursts.forEach((b, bi) => {
+            const cxs = 540;
+            const cys = 900;
+            for (let i = 0; i < 70; i++) {
+              const ang = pr() * Math.PI * 2;
+              const sp = 500 + pr() * 1400;
+              sparks.push({ t0: b, x: cxs, y: cys, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, life: 0.7 + pr() * 0.9, r: 1.2 + pr() * 3 });
+            }
+          });
+          // textura de grano (semilla) + posiciones por frame a 24 fps
+          const gcan = document.createElement("canvas");
+          gcan.width = gcan.height = 256;
+          const gctx = gcan.getContext("2d");
+          const gd = gctx.createImageData(256, 256);
+          const grr = rng(555);
+          for (let i = 0; i < gd.data.length; i += 4) {
+            const v = Math.floor(grr() * 255);
+            gd.data[i] = gd.data[i + 1] = gd.data[i + 2] = v;
+            gd.data[i + 3] = 255;
+          }
+          gctx.putImageData(gd, 0, 0);
+          const grain = $("#grain");
+          grain.style.backgroundImage = `url(${gcan.toDataURL()})`;
+          const bgGlow = $("#bg-glow");
+          const beats = [];
+          for (let t = Q.beatGrid.from; t <= Q.beatGrid.to + 1e-6; t += Q.beatGrid.step) beats.push(+t.toFixed(3));
+
+          function envAt(t) {
+            // intensidad global de particulas: negro total antes del primer golpe
+            if (t < Q.hit1) return 0;
+            return Math.min(1, (t - Q.hit1) / 0.6);
+          }
+          function draw(t) {
+            const k = envAt(t);
+            back.clearRect(0, 0, W, H);
+            front.clearRect(0, 0, W, H);
+            if (k > 0) {
+              back.globalCompositeOperation = "lighter";
+              for (const p of dust) {
+                const y = (((p.y - p.v * t) % H) + H) % H;
+                const x = p.x + Math.sin(t * 0.8 + p.ph) * p.sw;
+                const tw = 0.6 + 0.4 * Math.sin(t * 3 + p.ph * 3);
+                back.fillStyle = `rgba(232,196,90,${p.a * tw * k})`;
+                back.beginPath();
+                back.arc(x, y, p.r, 0, 6.2832);
+                back.fill();
+              }
+              front.globalCompositeOperation = "lighter";
+              for (const b of bokeh) {
+                const y = (((b.y - b.v * t) % (H + 200)) + H + 200) % (H + 200) - 100;
+                const x = b.x + Math.sin(t * 0.5 + b.ph) * 40;
+                const gr2 = front.createRadialGradient(x, y, 0, x, y, b.r);
+                gr2.addColorStop(0, `rgba(247,231,166,${b.a * k})`);
+                gr2.addColorStop(1, "rgba(247,231,166,0)");
+                front.fillStyle = gr2;
+                front.beginPath();
+                front.arc(x, y, b.r, 0, 6.2832);
+                front.fill();
+              }
+              for (const s of sparks) {
+                const dt = t - s.t0;
+                if (dt < 0 || dt > s.life) continue;
+                const f = 1 - Math.exp(-dt * 3.2);
+                const x = s.x + (s.vx * f) / 3.2;
+                const y = s.y + (s.vy * f) / 3.2 + 120 * dt * dt;
+                const a = 1 - dt / s.life;
+                front.fillStyle = `rgba(255,226,140,${a})`;
+                front.beginPath();
+                front.arc(x, y, s.r * (0.5 + a), 0, 6.2832);
+                front.fill();
+              }
+            }
+            // pulso de luz al beat
+            let last = -99;
+            for (const b of beats) if (b <= t) last = b;
+            const pulse = t >= Q.beatGrid.from ? Math.exp(-(t - last) * 7) * 0.45 : 0;
+            bgGlow.style.filter = `brightness(${1 + pulse})`;
+            // grano a 24 fps
+            const gf = Math.floor(t * 24);
+            const gx = (Math.imul(gf + 1, 2654435761) >>> 0) % 256;
+            const gy = (Math.imul(gf + 7, 40503) >>> 0) % 256;
+            grain.style.backgroundPosition = `${gx}px ${gy}px`;
+          }
+          const clock = { t: 0 };
+          draw(0);
+          tl.fromTo(clock, { t: 0 }, { t: C.duration, duration: C.duration, ease: "none", onUpdate: () => draw(clock.t) }, 0);
+
+          window.__timelines["main"] = tl;
+          if (window.__hfForceTimelineRebind) window.__hfForceTimelineRebind();
+        }
+
+        document.fonts.load("760px Anton").then(() => document.fonts.ready).then(build);
+      })();
+    </script>
+  </body>
+</html>
