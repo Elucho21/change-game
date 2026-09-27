@@ -1,0 +1,25 @@
+{
+  "name": "c2c-video",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Video explicativo del Programa C2C de Impulse World (Remotion)",
+  "scripts": {
+    "studio": "remotion studio",
+    "render:vertical": "remotion render C2C-Vertical out/c2c-vertical.mp4 --codec=h264 --crf=18",
+    "render:horizontal": "remotion render C2C-Horizontal out/c2c-horizontal.mp4 --codec=h264 --crf=18",
+    "render": "npm run render:vertical && npm run render:horizontal",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.529",
+    "@remotion/google-fonts": "4.0.529",
+    "@remotion/transitions": "4.0.529",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "remotion": "4.0.529"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "typescript": "^5.6.0"
+  }
+}
