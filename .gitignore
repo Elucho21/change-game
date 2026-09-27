@@ -6,3 +6,5 @@ out/
 *.tsbuildinfo
 next-env.d.ts
 engine/_weo_raw.json
+
+__pycache__/
