@@ -1622,8 +1622,8 @@
           shake(Q.s8, 14, 6);
           beam(Q.s8 + 0.3, 1, 1.2, 20);
           // ultimo golpe: glow del logo, lo demas se apaga, fade a negro
-          tl.to(["#s8-pre", "#s8-price", "#s8-live", "#s8-handle"], { opacity: 0, y: -30, duration: 0.2, ease: "power2.in", stagger: 0.02 }, Q.final);
-          tl.to("#s8-logo", { y: -440, scale: 1.35, duration: 0.6, ease: "expo.out" }, Q.final);
+          tl.to(["#s8-pre", "#s8-price", "#s8-live", "#s8-handle"], { opacity: 0, y: -30, duration: 0.1, ease: "power2.in" }, Q.final);
+          tl.to("#s8-logo", { y: -440, scale: 1.35, duration: 0.6, ease: "expo.out" }, Q.final + 0.1);
           tl.fromTo(
             "#s8-logo",
             { filter: "blur(0px) brightness(1) drop-shadow(0 0 20px rgba(212,175,55,0.5))" },
