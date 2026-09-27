@@ -1,0 +1,15 @@
+{
+  "name": "gv-moneyhouse-reel",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx --yes hyperframes@0.8.80 preview",
+    "check": "npx --yes hyperframes@0.8.80 check",
+    "lint": "npx --yes hyperframes@0.8.80 lint .",
+    "temp-track": "python3 scripts/make-temp-track.py",
+    "beats": "python3 scripts/analyze-beatgrid.py assets/bgm.mp3 -o audiomap.json && python3 scripts/suggest-cues.py",
+    "render": "npx --yes hyperframes@0.8.80 render . -q delivery --fps 60 -o output/gv-moneyhouse-reel.mp4",
+    "frames": "bash scripts/scene-frames.sh",
+    "publish": "npx --yes hyperframes@0.8.80 publish"
+  }
+}

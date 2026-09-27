@@ -1,0 +1,7 @@
+node_modules/
+renders/
+snapshots/
+review/wip*/
+.hf-*/
+*.wav
+output/work-*/
